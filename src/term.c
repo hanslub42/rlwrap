@@ -56,7 +56,8 @@ init_terminal(void)
 {                               /* save term settings and determine term type */
   char *term_buf;
   int  tgetent_returnvalue;
-  
+  int  we_are_on_hp_ux11;
+
   if (!isatty(STDIN_FILENO))
     myerror("stdin is not a tty");
   if (tcgetattr(STDIN_FILENO, &saved_terminal_settings) < 0)
@@ -81,9 +82,11 @@ init_terminal(void)
   term_cr = NULL;
   term_clear_line = NULL;
   term_cursor_hpos = NULL;
-
+   
+  we_are_on_hp_ux11 = tgetent(term_buf,"QzBgt57gr6xwxw"); /* Ought to return 0 (no termcap entry) except on HP-UX 11 */
   tgetent_returnvalue = tgetent(term_buf, term_name);
-  if (tgetent_returnvalue > 0 ) {
+  if (tgetent_returnvalue > 0 || 
+      (tgetent_returnvalue == 0 && we_are_on_hp_ux11))  { /* On weird and scary HP-UX 11 succesful tgetent() returns 0 */  
     term_backspace      = my_tgetstr("le");
     term_cr             = my_tgetstr("cr");
     term_clear_line     = my_tgetstr("ce"); /* was: @@@ my_tgetstr("dl1") */
