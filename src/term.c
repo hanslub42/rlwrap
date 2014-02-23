@@ -83,7 +83,8 @@ init_terminal(void)
   term_clear_line = NULL;
   term_cursor_hpos = NULL;
    
-  we_are_on_hp_ux11 = tgetent(term_buf,"QzBgt57gr6xwxw"); /* Ought to return 0 (no termcap entry) except on HP-UX 11 */
+  
+  we_are_on_hp_ux11 = tgetent(term_buf, "vt100") == 0 && tgetent(term_buf,"QzBgt57gr6xwxw") == -1; 
   tgetent_returnvalue = tgetent(term_buf, term_name);
   if (tgetent_returnvalue > 0 || 
       (tgetent_returnvalue == 0 && we_are_on_hp_ux11))  { /* On weird and scary HP-UX 11 succesful tgetent() returns 0 */  
