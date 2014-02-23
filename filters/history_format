@@ -1,0 +1,56 @@
+#!/usr/bin/env perl
+
+# filter to implement the old -F (--history-format) option, which was badly implemented and never
+# used anyway. The simplicity of this script shows the usefulness of the filter concept. 
+# As a bonus, it is much easier to modify than the original rlwrap source code
+
+use lib ($ENV{RLWRAP_FILTERDIR} or ".");
+use RlwrapFilter;
+use POSIX qw(strftime);
+use strict;
+
+
+my ($raw_input, $prompt);
+
+my $filter = new RlwrapFilter;
+my $name = $filter -> name;
+my $format = join " ", @ARGV; # you may specify the format without quotes (as in -z 'history_format -- %D') 
+my ($prefix) = ($format =~ /^(.*?)\%/);
+$prefix ||= $format;
+
+
+
+
+$filter -> help_text("Usage: rlwrap -z '$name <format>' <command>\n".
+		     "Append <format> to every history item, and strip it off again when input is accepted\n" .
+                     "escape codes in <format> will be replaced: %D by the current working directory,\n" .
+                     "%P by the current prompt and %C by the command name, and all the remaining escape codes\n" .
+                     "as understood by strftime (3)") ;
+
+$filter -> input_handler(\&strip_off);
+$filter -> echo_handler(sub{$raw_input});
+$filter -> history_handler(sub {strip_off($_) . " " . expand($format)});
+$filter -> prompt_handler(sub{$prompt = $_});
+$filter -> run;
+
+
+
+
+sub expand {
+  my ($format) = @_;
+  my $expanded = POSIX::strftime($format, localtime(time));
+  my $pwd = eval {$filter -> cwd};
+  $pwd = "?" if $@;
+  my $command_name = ($filter -> command_line)[0];
+  $expanded =~ s/%P/$prompt/g;
+  $expanded =~ s/%C/$command_name/g;
+  $expanded =~ s/%D/$pwd/g;
+  return $expanded;
+}
+
+sub strip_off {
+  ($raw_input) = @_;
+  my $stripped = $raw_input;
+  $stripped =~ s/ ?\Q$prefix\E.*//;
+  return $stripped;
+}

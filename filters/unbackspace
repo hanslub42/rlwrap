@@ -1,0 +1,25 @@
+#!/usr/bin/env perl
+
+use lib ($ENV{RLWRAP_FILTERDIR} or ".");
+use RlwrapFilter;
+use strict;
+
+
+my $filter = new RlwrapFilter;
+my $name = $filter -> name;
+
+$filter -> help_text("Usage: rlwrap -z $name <command>\n".
+		     "remove backspaces from output\n".
+		     "(after letting them 'eat' their preceding characters)");
+
+$filter -> echo_handler(\&eat_backspaces);
+$filter -> output_handler(\&eat_backspaces);
+$filter -> run;
+
+sub eat_backspaces {
+  while(s/.\x08//g) {} # let them eat
+  s/\x08//g;           # remove the rest
+  s/\r<//g;            # specially for mysql (hrmpf...!)
+  s/\r//g;
+  return $_;
+}

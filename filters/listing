@@ -1,0 +1,51 @@
+#!/usr/bin/env perl
+
+use lib ($ENV{RLWRAP_FILTERDIR} or ".");;
+use RlwrapFilter;
+use strict;
+
+
+my $filter = new RlwrapFilter;
+my $name = $filter -> name;
+my $command_line = $filter -> command_line;
+
+$ENV{RLWRAP_FILTERDIR} or die "RLWRAP_FILTERDIR is not defined!\n";
+chdir $ENV{RLWRAP_FILTERDIR} or die "cannot chdir to $ENV{RLWRAP_FILTERDIR}: $!\n";
+
+
+if ($command_line =~ /\w/) {
+  die("This filter is only used to get a list of filters via 'rlwrap -z listing'\n".
+      "It is not usable as a filter (and would do nothing useful)\n");
+}
+
+
+
+
+$filter -> send_output_oob("The following filters can be found in  $ENV{RLWRAP_FILTERDIR}\n");
+while (<*>) {
+  next if /.pm$|^\#|~$|^$name$/ or (not -x); #$ 
+  my $fname = $_;
+  my $info = get_info($fname);
+  next unless $info;
+  my $line = sprintf("%-30.30s %s\n", $fname, $info);
+  $filter -> send_output_oob($line);
+}
+
+
+   
+
+$filter -> run;
+
+
+
+sub get_info {
+  my ($fname) = @_;
+  { delete $ENV{RLWRAP_COMMAND_PID}; # make filter talk over STDIN and STDOUT 
+    open INFO, "cat /dev/null | ./$fname 2>/dev/null |";
+  }
+ <INFO>; # throw away 1st line
+  my $info =  <INFO>; # get hold of 2nd line
+  chomp($info);
+  close INFO;
+  return ($? ? undef : $info);
+}

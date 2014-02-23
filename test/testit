@@ -1,0 +1,24 @@
+#!/bin/sh
+
+# This script should be called from the rlwrap-x.xx top directory (normally by 'make check')
+
+# if perl -e 1
+# then
+# 	src/rlwrap -dr -f README perl test/testclient
+# 	exit $?
+# else
+# 	echo "Perl is needed for this test"
+# 	exit 77 
+# fi
+
+echo
+echo
+echo '*****************************************************************************'
+echo '*                                                                           *'
+echo '*  Testing rlwrap from within "make" causes problems with signal handling   *'
+echo '*          therefore, you should do it by hand:                             *'
+echo '*          $ src/rlwrap perl test/testclient                                *'
+echo '*                                                                           *'
+echo '*****************************************************************************'
+echo
+echo
