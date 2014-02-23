@@ -1,0 +1,63 @@
+PREREQUISITES
+
+To build rlwrap, you'll need an ANSI C compiler (gcc will certainly
+do) and GNU readline 4.2 or later. rlwrap should compile on most
+unices and unix-like environments like linux, the BSDs, OS/X, solaris,
+HP/UX, QNX, AIX and cygwin (special thanks to PolarHome for their
+"dinosaur zoo" of ageing Unix systems!)
+
+INSTALLATION
+
+./configure
+make
+make install 
+
+CONFIGURATION OPTIONS
+
+configure can be called with a number of options (e.g. if you want to
+install rlwrap in a non-standard place). Do 
+
+./configure --help
+
+to see them all. Most of them are not specific to rlwrap, except the
+following three:
+
+--enable-spy-on-readline : If we want to keep the display tidy when
+re-sizing the terminal window or printing multi-line prompts, we have
+to know whether or not readline is in horizontal-scroll-mode
+(i.e. wheter long lines are scrolled or wrapped). At present, this
+involves a look at a private readline variable - if you feel guilty
+about that, disable this option.
+
+--enable-homegrown-redisplay: some people report ddouble echoing of
+user input. Enabling this option will cure the problem - though the
+display will then flicker over slow connections (cf. BUGS)
+
+--enable-debug: Adds a --debug option to rlwrap's repertoire. This
+will make rlwrap write debug information to a file /tmp/rlwrap.debug
+(cf. the output of rlwrap --help for more info)
+
+
+UNINSTALLATION
+
+To uninstall, do 'make uninstall'
+
+INSTALLING AS NON-ROOT
+
+If you want to install rlwrap as non-root, you should call configure with 
+the --prefix option, like:
+
+./configure --prefix=$HOME 
+
+after which 'make install' will install rlwrap in $HOME/bin
+
+You may have to install GNU readline  (e.g using ./configure
+--prefix=$HOME in the readline source directory)
+
+rlwrap's configure script will not find this installation automatically, but
+
+./configure --prefix=$HOME CFLAGS=-I$HOME/include CPPFLAGS=-I$HOME/include LDFLAGS=-L$HOME/lib 
+
+should work. You can add '-static' to LDFLAGS if you want to build a statically linked rlwrap.
+
+

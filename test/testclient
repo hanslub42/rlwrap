@@ -1,0 +1,411 @@
+#!/usr/bin/env perl
+
+# You can use this test program to grill rlwrap - I wrote it in perl because I'm lazy
+
+# TODO: use Term::ReadKey if available
+
+use strict;
+use Getopt::Std;
+eval "use Term::ReadKey";
+my $have_ReadKey = not $@;
+
+my $opt_d;
+getopts('d:');
+
+my $debug_file = $opt_d;
+if ($debug_file) {
+  open DEBUG, ">$debug_file" or die "Couldn't not open $debug_file: $!\n";
+}
+
+
+use vars qw($prompting $prompt);
+$|=1;
+
+
+use POSIX qw(:termios_h  :signal_h setsid);
+my ($term, $oterm, $fd_stdin, $errorcode, $sigset_blocked);
+my $verbose = 1;
+
+
+$prompt = (my $original_prompt = "pid %p, type :h for help > ");
+
+
+sub lprint($);
+
+init();
+lprint "\n\n";
+help();
+while(1) {
+  local $prompting = 1;
+  prompt();
+  $_ = <>;
+  defined $_ or exit 0;
+  /^:b/ and run_bash();
+  /^:c\b/ and change_prompt();
+  /^:C/ and countdown();
+  /^:cd(\s+(.*))?/  and chdir($2 ? $2 : $ENV{HOME});
+  /^:d/ and die_eloquently();
+  (/^:e\s*([+-]?\d+)?/) and exit ($1 || 0);
+  /^:f/ and do_fork();
+  /^:h/ and help();
+  /^:H/ and hanky_panky();
+  /^:l/ and long_and_difficult_string();
+  /^:p/ and pass();
+  /^:P/ and print_chunky(scalar `cat $0`);
+  /^:r/ and reset_prompt();
+  /^:R/ and raw();
+  /^:s/ and segfault();
+  /^:t/ and trickle();
+  /^:S/ and trickle2();
+  /^:u/ and utf8();
+  /^:T/ and test_controlling_terminal();
+  /^:v/ and toggle_verbosity();
+  /^!!(.*)/ and perl($1);
+  /^!([^!].*)/ and shell($1);
+  /^:w/ and ridiculously_wide_prompt();
+  /^(:|!)/ or show_input($_);
+}
+
+########################### subs ################################################
+
+
+sub init {
+  my (@signals_to_block);
+  $fd_stdin = fileno(STDIN);
+  # system ("reset");
+  $sigset_blocked = POSIX::SigSet->new;
+  $sigset_blocked -> fillset() or die "Could not fill \$sigset_blocked: $!\n";
+
+  $term     = POSIX::Termios->new();
+  $term->getattr($fd_stdin);
+  $oterm     = $term->getlflag();
+
+  install_signal_handlers();
+
+}
+
+
+sub help {
+  print <<EOF;
+This program copies lines from standard input to standard
+output (just like cat). Input lines that start with : or !
+are special, and are useful to test rlwraps behaviour when the
+client does things like:
+
+! <cmd> run <cmd> in shell
+!!<exp> evaluate Perl expression <exp>
+:b run ./bash or bash (the "gold standard" readline app) with current prompt
+:c change prompt
+:cd [<dir>] chdir to <dir> (or \$HOME)
+:C countdown in prompt
+:d die eloquently
+:e [N] exit (with error code N)
+:f fork and let child take over (parent waits)
+:h help
+:H hanky-panky with backspace and carriage return
+:l print a long and difficult text
+:p ask "passsword"
+:P print chunky
+:r reset prompt
+:R raw mode (char-at-a-time)
+:s and sefgault
+:S and trickle slowly
+:t trickle output (10 chars)
+:T test controlling terminal
+:u try some utf-8
+:v toggle verbosity (e.g. when receiving a signal)
+:w ridiculously wide prompt
+
+EOF
+}
+
+sub prompt {
+  my $sprompt = shift || $prompt;
+  return unless $prompt;
+  my $pid = $$;
+  $sprompt =~ s/%p/$pid/g;
+  $sprompt =~ s/%t/`tty`/eg;
+  my $pwd = `pwd`;
+  $pwd =~ s/^$ENV{HOME}/~/;
+  $sprompt =~ s/%d/$pwd/eg;
+  $sprompt =~ s/\n//g;
+  lprint $sprompt;
+}
+
+
+sub run_bash {
+  my $bashprompt = $prompt;
+  $bashprompt =~ s/\e(\[[\d;]*m)/\\[\\e$1\\]/g;
+  my $rcfile = "/tmp/bashprompt.$$";
+  open OUT, ">$rcfile";
+  print OUT "PS1=\"$bashprompt\"\n";
+  close OUT;
+  system "bash --rcfile $rcfile";
+  unlink $rcfile;
+}
+
+sub pass {
+  noecho();
+  prompt (local $prompt = "Password: ");
+  my $input = <>;
+  show_input($input);
+  cooked();
+}
+
+
+
+sub do_fork {
+  my $pid;
+  return unless ($pid = fork);
+  waitpid($pid,0);
+  exit 0;
+}
+
+sub shell {
+  local $prompting;
+  my($command) = @_;
+  system($command);
+  cooked();
+}
+
+sub perl {
+  local $prompting;
+
+  my($exp) = @_;
+  my $result = eval $exp;
+  if ($@) {
+    print "error: $@\n";
+  } else {
+    print "OK, result = $result\n";
+  }
+  cooked();
+}
+
+sub trickle {
+  local $prompting;
+  my $i;
+  foreach my $c (split " ", ("trickle, trackle, trockle, " x 4) . ">") {
+    print "$c ";
+    print "\n" if ++$i % 2 == 0;
+    sleep 1;
+  }
+  my $input = <>;
+  show_input($input);
+}
+
+sub trickle2 {
+  local $prompting;
+  my $i;
+  foreach my $c (split //, "trickle, trackle > ") {
+    print $c;
+    sleep 1;
+  }
+  my $input = <>;
+  show_input($input);
+}
+
+sub hanky_panky {
+  for (my $i = 99; $i > 95 ; $i--) {
+    print "$i bottles of beer on the wall, $i bottles of beef";
+    sleep 1; print "\br";
+    sleep 1; print "\r";
+  }
+  print "\nYawn!\n"
+}
+    
+
+sub countdown {
+  local $prompting;
+  for (my $i = 9; $i >= 0; $i--) {
+    print "\r countdown: $i >";
+    sleep 1;
+  }
+  my $input = <>;
+  show_input($input);
+}
+
+sub test_controlling_terminal {
+  if (not open DEVTTY, ">/dev/tty") {
+    print "I could not open /dev/tty, so there's no controlling terminal ($!)\n";
+  } else {
+    print DEVTTY  "found controlling terminal: /dev/tty speaking here!\n";
+  }
+}
+
+
+sub show_input {
+  my ($input) = @_;
+  defined $input or exit;
+  $input =~ s/\r?\n$//;
+  my $comment = "";
+  length $input or $comment = "(nothing)";
+  lprint "\nYou typed '$input' $comment\n";
+}
+
+sub change_prompt {
+  my $input;
+  my ($termwidth) = eval "GetTerminalSize"; 
+  { local $prompt = "New prompt here > ";
+    my $redblah = red("blah");
+    lprint "\%p -> pid, \%t -> tty, %d -> pwd, red{blah} -> $redblah, 4*x -> xxxx" .($have_ReadKey ? ", %w -> termwidth\n" : "\n");
+    prompt();
+    $input = <>;
+    $input =~ s/\r?\n$//;
+    $input =~ s/\%w/$termwidth/ge;
+    $input =~ s/\((\d.*?)\)/eval($1)/ge;
+    $input =~ s/(\d+)\*([^ {}]+)/$2 x $1/ge;
+    $input =~ s/red\{(.*?)\}/red($1)/eg;
+  }
+  $prompt = $input;
+}
+
+sub segfault {
+  kill 'SEGV', $$;
+}
+
+sub red {
+  my ($text) = @_;
+  return kleur($text,31);
+}
+
+sub blue {
+  my ($text) = @_;
+  return kleur($text,34);
+}
+
+sub kleur {
+  my ($text, $kleurcode) = @_;
+  $text = "\e[1;${kleurcode}m$text\e[0m"  if $ENV{TERM} =~ /ansi|xterm|rxvt|cygwin|linux/;
+  return $text;
+}
+
+sub long_and_difficult_string {
+  my $text = (red("hot") . " and ". blue("cold"). ", ") x 1000;
+  print "$text\n$text\n$text\n";
+}
+
+sub reset_prompt {
+  $prompt = $original_prompt;
+}
+
+sub ridiculously_wide_prompt {
+  $prompt = "Supercalifragilistic, " x 10; # 220
+  $prompt .= "Expialidocious > ";         # + 17 = 237 
+}
+
+sub utf8 {
+  $prompt = "Íslenska: ";
+  printf "Ég  get etið gler án þess að meiða mig\n";
+}
+
+sub raw {
+  cbreak();
+  my $key;
+  prompt (local $prompt = "Press Any Key >");
+  sysread(STDIN, $key, 1);
+  my $c = ord $key;
+  cooked();
+  lprint "\nYou typed a '$key' (ASCII $c)\n";
+
+}
+
+sub toggle_verbosity {
+  $verbose = not $verbose;
+  print ($verbose ? "verbose now\n" : "not verbose now\n");
+}
+
+sub die_eloquently {
+  my $last_words =  <<EOF;
+  Then, as the life ebbed out of you, you answered, O knight
+Patroclus: "Hector, vaunt as you will, for Jove the son of Saturn
+and Apollo have vouchsafed you victory; it is they who have vanquished
+me so easily, and they who have stripped the armour from my shoulders;
+had twenty such men as you attacked me, all of them would have
+fallen before my spear. Fate and the son of Leto have overpowered
+me, and among mortal men Euphorbus; you are yourself third only in the
+killing of me. I say further, and lay my saying to your heart, you too
+shall live but for a little season; death and the day of your doom are
+close upon you, and they will lay you low by the hand of Achilles
+son of Aeacus."
+  When he had thus spoken his eyes were closed in death, his soul left
+his body and flitted down to the house of Hades, mourning its sad fate
+and bidding farewell to the youth and vigor of its manhood.
+EOF
+$last_words =~ s/\s+/ /g;
+  print "\n$last_words\n";
+  exit 0;
+}
+
+sub print_chunky {
+  my ($text) = @_;
+  local $| = undef;
+  while ($text) {
+    syswrite STDOUT, substr($text, 0, int(rand(20)), "");
+    select(undef, undef, undef, 0.01);
+
+  }
+}
+  
+sub handle_signal {
+  my ($sig) = @_;
+  my ($old_sigset);
+  sigprocmask(SIG_BLOCK, $sigset_blocked, $old_sigset) or die "Could not block signals: $!\n";
+  print ($sig =~ /INT/ ? "Caught $sig (type :e to exit)\n" : "Caught $sig\n") if $verbose;
+  prompt() if $prompting and $verbose;
+  sigprocmask(SIG_UNBLOCK, $old_sigset)  or die "Could not unblock signals: $!\n";
+}
+
+
+
+
+sub install_signal_handlers {
+  foreach my $signal (keys %SIG) {
+      $SIG{$signal} = \&handle_signal unless ($signal =~ /CHLD|CLD|TSTP|NUM|_/);
+    }
+}
+
+
+sub cbreak {
+  $term->setlflag($oterm & ~(ECHO|ECHOK|ICANON));
+  $term->setcc(VTIME, 1);
+  $term->setattr($fd_stdin, TCSANOW);
+}
+
+sub cooked {
+  return unless defined $fd_stdin;
+  $term->setlflag($oterm);
+  $term->setcc(VTIME, 0);
+  $term->setattr($fd_stdin, TCSANOW);
+}
+
+sub noecho {
+  $term->setlflag($oterm & ~(ECHO));
+  $term->setcc(VTIME, 0);
+  $term->setattr($fd_stdin, TCSANOW);
+}
+
+sub END {
+   local $?; # because POSIX::Termios functions call system() and may thus reset $?
+   cooked();
+   lprint "\n";
+ }
+
+
+sub lprint($) {
+  my ($text) = @_;
+
+  eval '"a" =~ /[[:^print:]]/'; # check whether this perl knows (negated) POSIX character class syntax (not before perl 5.6.0?)
+  if (! $@) {
+    $text =~ s/([[:^print:^\n^\r]])/sprintf("\\x%02x", (unpack "c", $1))/eg; # show unprintable characters in hex;
+  }
+  if ($debug_file) {
+    syswrite DEBUG, $text;
+  }
+
+  print $text;
+}
+
+
+# Local variables:
+# mode:cperl
+# End:

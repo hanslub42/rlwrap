@@ -1,0 +1,59 @@
+#!/usr/bin/env perl
+
+use lib ($ENV{RLWRAP_FILTERDIR} or ".");
+use RlwrapFilter;
+use strict;
+use Getopt::Std;
+
+our ($opt_l);
+getopts("l");
+
+
+
+my $logfile = $ARGV[0] || "/tmp/filterlog.$$";
+open LOG, ">$logfile" or die "Couldn't write to $logfile: $!\n";
+my $oldfh = select(LOG); $| = 1; select($oldfh); # flush LOG after each write
+
+
+my $filter = new RlwrapFilter(message_handler => \&logit);
+
+$filter -> help_text(
+	"Usage: rlwrap -z 'logger [-l] logfile' <command>\n" .
+	"log messages to a file (for debugging)\n".
+	"give logfile name as an argument, -l for long format\n" .
+  "useful in a pipeline (rlwrap -z 'pipeline logger in:filter:logger out')");
+
+$filter -> run;
+
+
+# a message_handler is seldom used (as it cannot change messages, only examine them) 
+# It gets called with the tag as its second argument
+sub logit {
+  my ($message, $tag) = @_;
+  my $tagname = $filter -> tag2name($tag);
+  $tagname =~ s/^TAG_//;
+  my $mangled = $message;
+  $mangled =~ s/\n/\\n/g; # make unprintable characters printable
+  $mangled =~ s/\r/\\r/g;
+  $mangled =~ s/\t/\\t/g;
+  $mangled =~ s/\x1b/\\e/g;
+  $mangled =~ s/([[:cntrl:]])/sprintf("\\x%02x", unpack("C", $1))/ge;
+  
+  format LOG =
+  @<<<<<<<<<<<<<<<<<<<<    ^<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+  $tagname                 $mangled
+                           ^<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+                           $mangled
+                           ^<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+                           $mangled
+
+.
+
+  if ($opt_l) {
+    print LOG "$tagname $mangled\n";
+  } else {
+    write LOG;
+  }
+  return $message;
+}
+

@@ -1,0 +1,183 @@
+#!/usr/bin/env perl
+
+# This is a rather complicated filter to build pipelines from other filters. It is
+# also useful to test signal and filter death handling by rlwrap.
+
+use POSIX;
+use strict;
+use Config;
+use Data::Dumper;
+
+use lib $ENV{RLWRAP_FILTERDIR};
+use RlwrapFilter;
+use strict;
+
+my %sig_num;
+my @sig_name;
+
+# print help text when run as 'rlwrap -z pipeline' (without command) 
+if ($ENV{RLWRAP_COMMAND_PID}== 0) {
+  RlwrapFilter ->new(help_text => help()) -> run;
+  exit; # not reached
+}
+
+# use signal *names* when reporting errors 
+init_signal_names();
+
+# pipeline cannot be used stand-alone (wouldn't be useful anyway)
+die "I need an argument. Use the 'null' filter if you need a NOP\n" unless @ARGV;
+
+# split command line into pipe segments
+my $pipeline         = join ' ', @ARGV;
+my @components       = split /\s*(?<!\\):\s*/, $pipeline; # split on ':' (if not preceded by backslash)
+foreach (@components) {
+  s/\\:/:/g;         # translate escape sequence '\:' to ':'
+}
+
+# buy the pipes and do some plumbing before we build the house
+my $pipeline_length  = scalar @components;
+my $pipes            = get_pipes($pipeline_length -  1); # [[21,22], [23,24] ...] are the fd's of the created pipes
+my $ins_and_outs     = braid_a_chain($ENV{RLWRAP_INPUT_PIPE_FD}, $pipes, $ENV{RLWRAP_OUTPUT_PIPE_FD}); # [[5,21], [22,23], ..., [28,6]]
+my @all_pipes        = flatten($ins_and_outs); # [5,21,22,23,...,28,6]
+
+# spawn components
+my (%pids, @pids);
+for (my $n = 0; $n < $pipeline_length; $n++) {
+  $pids[$n] = spawn_component($components[$n], $ins_and_outs -> [$n] -> [0], $ins_and_outs -> [$n] -> [1]);
+}
+
+
+my $Npids = @pids;
+
+
+# keep only the output pipe open (for error messages)
+foreach my $fd (@all_pipes) {
+  POSIX::close($fd) unless $fd == $ENV{RLWRAP_OUTPUT_PIPE_FD};
+}
+
+
+# now wait for them all to die
+for (my $Ndeadpids = 0; $Ndeadpids < $Npids; $Ndeadpids ++) {
+  my $deadpid;
+  eval {
+    $SIG{ALRM} = sub { die "alarm\n" };
+
+    alarm 1 if $Ndeadpids; # become impatient after first child has died
+    $deadpid = wait();
+    if ($deadpid> 0  and $Ndeadpids == 0) { # first dead child - report it
+      my $exit_value = $? >> 8;
+      my $signal_num = $? & 127;
+      my $dumped_core = $? & 128;
+      my $signal_name = $sig_name[$signal_num];
+      $signal_name = ($signal_name ? "SIG$signal_name" : "signal -$signal_num");
+      warn "child filter '$pids{$deadpid}' (PID $deadpid) died with exit value $exit_value" .
+	  ($signal_num ? " (killed by $signal_name)" : "") .
+	  ($dumped_core ? " (core dumped)" : "") .
+	  "\n";
+    }
+    alarm 0;
+  };
+  last if ($@); # timeout or strange error
+  delete $pids{"$deadpid"}; # cross $pid from list of living
+}
+
+# OK, waited long enough. Zap the die-hards now!
+
+$SIG{CHLD} = 'IGNORE';
+foreach my $pid (keys %pids) {
+  kill -9, $pid;
+}
+
+
+############################## subroutines ################################
+
+sub get_pipes {
+  my ($how_many) = @_;
+  my @pipes;
+  for (my $i = 0; $i < $how_many; $i++) {
+    my ($read, $write) = POSIX::pipe() or die "Couldn't allocate pipe: $!\n";
+    push @pipes, [$write, $read]; # input end first!
+  }
+  return \@pipes;
+}
+
+
+
+sub spawn_component  {
+  my ($command_line, $input_pipe_fd, $output_pipe_fd) = @_;
+  my @command_and_args = split /\s/, $command_line;
+  if (my $pid = fork()) {
+    die "fork error " unless $pid > 0;
+    $pids{"$pid"} = $command_line;
+    return $pid;
+  } else {
+    $ENV{RLWRAP_INPUT_PIPE_FD}  =  $input_pipe_fd; # connect child to the right pipes
+    $ENV{RLWRAP_OUTPUT_PIPE_FD} =  $output_pipe_fd;
+    foreach my $fd (@all_pipes) { # close all other pipes
+      POSIX::close($fd) unless is_in ($fd, $input_pipe_fd, $output_pipe_fd);
+    }
+
+    exec @command_and_args;
+    # the original  FILTER_IN and FILTER_OUT are still open (they were duped with ">&$fd", not re-used with ">&=$fd"
+    # this is important as the DIE handler uses FILTER_OUT
+    die "Couldn't exec '$command_and_args[0]': $!\n";
+  }
+}
+
+
+sub init_signal_names {
+  unless($Config{sig_name} && $Config{sig_num}) {
+    return;
+  } else {
+    my @names = split ' ', $Config{sig_name};
+    @sig_num{@names} = split ' ', $Config{sig_num};
+    foreach (@names) {
+      $sig_name[$sig_num{$_}] ||= $_;
+    }
+  }
+}
+
+######################### some lispy list handlers #####################
+
+sub braid_a_chain {   # braid_a_chain(1,[2,3,4,5],6) = [[1,2],[3,4],[5,6]]
+  my ($first, $listref, $last) = @_;
+  return [[$first, $last]] if (not ($listref and $listref -> [0]));
+  my ($next_in, $next_out) = @{$listref->[0]};
+  shift @$listref; #
+  my $chain = braid_a_chain($next_out, $listref, $last);
+  unshift @$chain, [$first, $next_in] ;
+  return $chain;
+}
+
+sub flatten { # flatten ([[1], [2,3,4,], ["a"]]) = (1,2,3,4,"a")
+  my ($x) = @_;
+  my @flattened;
+  return $x unless ref($x) eq 'ARRAY';
+  foreach my $el (@$x) {
+    push @flattened, flatten($el);
+  }
+  return @flattened
+}
+
+
+sub is_in { # test for list membership
+  my($el, @set) = @_;
+  foreach my $member (@set) {
+    return 1 if $el == $member;
+  }
+  return 0;
+}
+
+sub help {
+  my (undef, $myself) = ($0 =~ m#(.*)/([^/]+)#);
+  $myself ||= $0;
+
+  return <<EOF;
+Usage: rlwrap [-options] -z '$myself filter_1:filter_2:..., filter_n' <command>
+combines the effects of 2 or more filters
+messages will be passed through filter_1, ..., filter_n.
+Use a backslash to pass a ':' that is not meant as a pipe symbol, e.g:
+rlwrap -z '$myself prompt hello\\: : logger out' command
+EOF
+}
+

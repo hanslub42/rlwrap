@@ -1,0 +1,434 @@
+0.37  Commands that emit "status lines" using backspaces and carriage 
+      returns could confuse rlwrap
+
+      removed test program kaboom.c that triggered an internal
+      gcc error on armel platforms.
+
+      rlwrap uses C strings internally, and thus cannot cope with
+      command output that contains zero bytes (padding). It used to
+      replace these with spaces, now the zero bytes are removed.
+
+      if the RLWRAP_HOME is set, but $RLWRAP_HOME doesn't exist, rlwrap
+      will create it
+
+      typo: SIGERR instead of SIG_ERR in signals.c
+      
+0.36  Entering a line from vi command mode would echo the input twice 
+
+      Output from very busy commands would not always be printed on time
+
+      When rlwrap kills itself after a command crash it will not dump 
+      core, in order to avoid clobbering command's much more interesting 
+      core dump.
+
+      Premature filter death is now reported properly (it used to only 
+      say: "EOF reading from filter" or "Broken pipe writing to filter") 
+
+0.35  config.{guess,sub} have been updated to version 2009-12-13
+      
+      Corrected array bounds error in my_putstr("") (which could make
+      rlwrap write an extra newline when exiting, but might even crash
+      on some systems)
+
+      Many small improvements and fixes for multi-line input: 
+
+        Multi-line inputs are now written to the inferior command one
+        line at a time, so that command's response (e.g. a continuation
+        prompt) can be interleaved with the echo'ed (multi-line) input.
+      
+        Calling an external editor will no longer obliterate the prompt,
+        and line/column positions are now correct.
+
+        After a multi-line edit in vi-mode, the cursor will no longer
+        end up one line too high.
+      
+      CTRL-D on an empty line was handed directly to command, but also 
+      (erroneously) put in readline's input buffer
+
+      Many small fixes and improvements in signal handling: 
+        
+         SIGSEGV, and other "error" signals like SIGFPE, are now unblocked
+         all of the time, so that rlwrap can always clean up after a crash.
+
+         Since version 0.25 rlrwap's transparency extends to signals: if
+         the inferior command segfaults, rlwrap will kill itself with a
+         SIGSEGV. In order to get the bug reports where they belong,
+         rlwrap now reports explicitly that it has not crashed itself.
+
+         rlwrap's call to sigaction forgot to set the signal mask (!)
+
+         Continuing after CTRL-Z on QNX now wakes up command  
+
+      Added --one-shot (-o) and --only-cook (-O) options
+
+      debug log is now in a format that works well with emacs' grep-mode
+    
+      rlwrap's bindable readline function names (like rlwrap-call-editor) are
+      now in hyphen-style instead of underscore_style (use of the 
+      old_style_names will now be flagged as an error)
+
+      Filters can now prevent a prompt from being cooked by "rejecting" it.
+      
+      Rlwrapfilter.pm would set $_ incorrectly in echo and output handlers.
+
+      RlwrapFilter.pm manpage is now created by newer (and less buggy) 
+      version of pod2man
+
+      Added EXAMPLES section and -t option to rlwrap manpage
+
+0.34  Binding wide (e.g. utf-8) chars in .inputrc now works 
+      
+      prefix arguments are now correctly reset (M-5 a b now 
+      yields aaaaab instead of aaaaabbbbb)
+      
+
+0.33  rlwrap incorrectly fed terminfo-style capnames ("dl1") instead of
+      termcap codes ("dl") into tgetstr(). On newer Debian systems this
+      exposed a bug where random garbage would be printed by rlwrap
+
+      Hyphens in rlwrap manpage are now all properly escaped
+
+      RlwrapFilter.pm now only re-sets $filter->cumulative_output when an 
+      INPUT message is received
+
+
+0.32  Major new feature: filtering. Filters sit between rlwrap and the
+      wrapped command, re-writing command output, input, prompts,
+      history, and completion word lists. 
+
+      System-wide filters live in DATADIR/rlwrap/filters (where DATADIR = 
+      /usr/local/share by default, installation-dependent) Because of this, 
+      completions now live in DATADIR/rlwrap/completions (until now: 
+      DATADIR/rlwrap)  
+
+      To make filter writing easy, a perl module RlwrapFilter.pm has
+      been added. It doesn't become part of your perl installation, but lives
+      in DATADIR/rlwrap/filters
+
+      rlwrap didn't properly check errno after reading from inferior pty. 
+      This could lead to a spurious "read error on master pty"
+
+      Instead of using crusty old signal(), signal handlers are now set
+      by sigaction() without SA_RESTART (BSD semantics) Different
+      syscall-restarting behaviour among systems caused hard-to-trace
+      bugs
+     
+      Now copies inferior pty's c_oflags to stdout before
+      output. (some editors like joe would mess up the screen)
+   
+      prompt handling logic has been streamlined. Coloured prompt handling is 
+      reliable now, even for long prompts.
+    
+      At program exit, rlwrap now outputs a newline only when the client 
+      didn't.       
+
+      Added -g, -I, -N, -S, -w and -z options
+
+      Removed -F option (and added a filter to replace it)
+
+      -p option now takes colour names (-pYellow)
+
+      rlwrap (and readline) uses C strings internally, which could cause problems
+      with commands that output '\0' bytes. In direct mode, such
+      characters are left untouched, but in readline mode they are
+      replaced by spaces.
+
+      the tools directory has been updated, so that configure will 
+      feel at home even on newer systems
+
+      tested on SunOS, AIX, FreeBSD, HP/UX, QNX (thanks to polarhome.com), as 
+      well as cygwin and linux
+
+0.30  rlwrap can now use putenv() on machines that don't have 
+      setenv() (like some Solaris systems)
+
+      EOF on stdin (e.g. by pressing CTRL-D) would end prompt colouring.
+
+      added -q option 
+
+0.29  added -A option to handle (ANSI-)coloured prompts
+
+      added -p option to colourise uncoloured prompts 
+
+      added -t option to set terminal type for client command
+
+      rlwrap now copies its terminal settings from the client
+      even when this has put its terminal in single-keypress
+      (uncooked) mode. A rlwrapped emacs will now respond to CTRL-C 
+      and CTRL-G as it should.
+
+      fixed a long-standing bug where long output lines with the -r option 
+      would put mutilated words into the completion list. Drawback: 
+      prompts are not put into the completion list anymore (bug or feature?).
+           
+      rlwrap now handles output to the client before input from the
+      client, and only handles keyboard input when all client I/O has
+      been handled. This will make rlwrap a little better behaved when
+      handling large chunks of (pasted) input, especially with colourised
+      prompts
+      
+      error messages and warnings now include the rlwrap version number 
+      
+      rlwrap now prints a warning when started in vi mode when the 
+      terminal is too dumb to support upwards cursor movement
+      
+      added a very simple custom malloc/free debugger for use with the 
+      --debug option. Rather fragile and not well tested, use with care.
+
+      Whenever TERM is not set, rlwrap assumes vt100. Set TERM=dumb if
+      you really have a dumb terminal.
+
+      rlwrap now leaves the handling of multi-line prompts and edit
+      buffers to readline (except when in horizontal-scroll mode or when 
+      configured with --enable-homegrown-redisplay).  
+
+      whenever --always-readline is set, SIGWINCH not passed to 
+      client command immediately, but only *after* accepting a line.
+
+      multi-byte prompts and input no longer confuse rlwrap (provided 
+      your readline lib supports multi-byte characters)
+
+      --spy-on-readline now enabled by default
+     
+      the configure script will now find term.h on cygwin
+
+      dropped the assumption that tgetent() and friends are only ever
+      declared in term.h; rlwrap now has proper terminal handling also
+      under SunOS.
+	
+      the rlwrap source should again be fit for consumption by older
+      (C91 compliant) compilers
+      
+      
+0.28  fixed rlwrap bug that caused termcap problems on Fedora Core 6 
+      (thanks Tung Nguyen)
+
+0.27  when stdin is not a terminal, rlwrap will now exec() the
+      specified command instead of complaining
+
+      when stdout or stderr is not a terminal, rlwrap will re-open
+      it to /dev/tty (the users terminal) after forking off the
+      specified command (so "rlwrap cat > file" will work as a 
+      quick and dirty line editor)
+
+      rlwrap now remembers inputs of length 1
+
+      -D option to tell rlwrap how agressively it should weed out 
+      duplicate history entries 
+
+      -H option added (history format string)
+
+      Added temporary fix for termcap weirdness on Fedora Core 6
+
+      new -t option for a quick check of terminal capabilities 
+      (requires configuration with --enable-debug)
+
+      rlwrap -s 0 <command> will now zap <commands> history
+
+      fixed broken reporting of unrecognised options
+
+0.26  configure on FreeBSD 6.0 still didn't find libutil
+
+      some files were unnecessarily kept open (thanks Stephan Springl)
+
+      on each platform, rlwrap -h now accurately reflects whether
+      rlwrap can use long options or optional arguments
+
+0.25  rlwrap would print input twice when in vi-mode
+     
+      rlwrap under FreeBSD 6.0 now uses openpty() from libutil (config
+      script fixed)
+
+      -P option added (one-shot rlwrap with pre-given prompt)
+
+      Until now, whem the underlying command was killed by a signal,
+      rlwrap would just exit with exit code 0. Now rlwrap will
+      cleanup, reset its signal handlers and then send the same signal
+      to itself - so that rlwraps parent (usually a shell) doesn't see 
+      the difference with an un-rlwrapped command
+
+0.24  rlwrap -r would mess up commands output (strtok() strikes again!)         
+ 
+      -i option added to make completion case-insensitive    
+
+      -m option added in order to handle multi-line input 
+      
+      rlwrap now writes to underlying command using non-blocking writes 
+      and select(). This prevents deadlocks which could occur with very 
+      large inputs.
+
+      corrected some manpage clumsiness 
+
+0.23  Completion word lists are now kept in red-black trees 
+      (cf. http://libredblack.sourceforge.net/), dramatically speeding up 
+      startup with large completion lists.
+     
+      rlwrap copies terminal settings from client, so that wrapping 
+      programs that manipulate their terminal (like emacs and vim) 
+      should be transparent.
+
+      rlwrap -C1 <command_without_arguments> is now accepted
+      
+0.22  Added key binding to enter a line while keeping it out of the 
+      history list (Control+O by default)
+
+0.21  Added --history-filename option.
+
+      Negative history size now means: don't write or truncate history 
+      
+      Updated helper scripts (like config.sub) in ./tools
+
+      multiple -f options again work correctly
+
+      --enable-homegrown-redisplay configuration option added 
+      (kludge to circumvent display problems like sometimes 
+      reported on Solaris)      
+      
+      All unsafe string handling functions (strcpy, sprintf,..) replaced 
+      by their safe equivalents - using strlcat and consorts when available.
+
+      --enable-spy-on-readline configuration option to keep display tidy 
+      when resizing terminal
+
+0.19  Fixed pty type finding code in configure.ac (newer FreeBSD's 
+      were recognised as cygwin)
+
+      Helper scripts moved to separate ./tools directory
+
+0.18  rlwrap could hang when trying to run a non-existent command.
+
+0.17  EOF on stdin would send rlwrap into infinite loop.
+
+      Small bugfixes in testclient, which now works with perl 5.8 and
+      cygwin.
+
+0.16  ptys can be found and correctly opend on many more systems
+      (thanks to code taken from rxvt).
+      
+      Makefiles now generated by automake.
+
+      Much beter debugging, -d option now takes optional bitmask
+      to report only certain events.
+
+      System-wide completion files now in $datadir/rlwrap 
+      (normally /usr/local/share/rlwrap).
+
+      -C and -n options added, -a option can take an argument (to 
+      prevent password logging when using this option).
+
+      assert() macro used for run-time consistency checks.
+
+      CTRL-D on empty line now sends EOF to client even on SunOS.
+ 
+      manpage displays correctly even when using troff instead of groff.
+
+      Long options now in --dash-style instead of --underscore_style.
+
+0.15  Fixed a bug where rlwrap would segfault with -f option.
+
+0.14  Fixed a few portability problems.
+
+0.13  Duplicate history entries are avoided at all times, even across 
+      invocations.
+
+      Tries to chdir into the slave command's working directory before
+      attempting filename completion (only on OS'es where this is found 
+      under /proc/<pid>/cwd, like linux and SunOS).
+
+      Now honours 'set horizontal-scroll-mode off' in .inputrc.
+
+      Slave pty is never closed in parent (even after slave's death), 
+      preventing long timeouts in OSes with streams-based pty IO.
+ 
+      Lots of small fixes to adapt to gcc 3.x's more finicky behaviour
+      (e.g. avoiding multi-line strings, not automaticaly including system 
+      includes in Makefile.in). 
+  
+      configure rewrites manpage to reflect rlwraps capabilities on each 
+      platform.
+
+      history searching with CTRL-R (backwards-search-history) now works,
+      !-completion is cleaned up (could even segfault in previous versions).
+
+      SIGSEGV is now caught in order to reset terminal.
+
+0.12  When slave pty's ECHO flag is unset (e.g. when entering a password)
+      rlwrap now displays asterisks for every input character like this: 
+      Password: ******
+
+      Better handling of very long prompts, or very narrow terminal windows.
+      If the prompt is wider than the current terminal, rlwrap assumes
+      that it has wrapped around and uses the last (wrapped) line of 
+      it as the new prompt.
+
+      Slave pty is opened (and remains open) in parent, allowing slave side 
+      to be monitored instead of master.
+
+      testclient (a perl script) has been added, uncovering quite a few 
+      embarassing bugs.
+
+      system-wide completion word lists (in $sysconfdir/rlwrap) can be used.
+      
+
+0.11  If the tcgetattr() call to determine the pty's echo mode fails at
+      startup, rlwrap now sleeps for 1 second before trying again
+      once. (on FreeBSD, the first call will normally fail, but (most of 
+      the time) not the second, due to a race condition that  
+      ought to be fixed by some form of synchronisation between parent 
+      and child)
+
+      --libdir and --includedir for configure now work, as well as 
+      LDFLAGS=xxxx ./configure. 
+
+      Filename completion now works again (when -c option is set).
+
+      User input is now echoed correctly when the pty's echo mode cannot be 
+      determined (in that case a warning is printed at startup that
+      passwords will be saved in the history file).
+      
+
+0.10: logging (-l option) implemented.
+	
+      history_filename and completion_filename now live on the heap
+      instead of in fixed-length buffers.
+
+0.07: Readline mode is entered (by registering callback) with the 
+      first keypress of a new line, not before. All command output before  that
+      will just be written to stdout unchanged (long lines could become garbled
+      in 0.06 and earlier).
+      
+      Signal handling (esp. SIGTSTP and SIGWINCH) is much improved.
+
+      The -a option forces rlwrap to use readline, which is useful if you
+      want to rlwrap a command that already uses readline.
+   
+      <TAB> is now bound to menu-complete by default: it will cylce through all
+      possible completions, instead of listing them all, as in 0.06.
+
+0.06: Transparent mode (immediately handing down keypresses) is now 
+      automatic whenever the pty has its ICANON flag unset.
+      
+      readline  version 4.2 is now mandatory.
+
+      Cleanup of code, eliminating many bugs, possibly introducing
+      others (ugh!)
+
+      Application name (used by readline) is now set to command name.
+
+      Duplicate history entries are not remembered.
+
+      Manpage updated: environment variable RLWRAP_HOME is now documented.
+
+0.04: When started in transparent mode, now properly returns to it after 
+      each readline edit.
+
+      Senses the pty's ECHO flag. When this is unset, rlwrap doesn't echo
+      user input. Neither is it put in the history list (which would contain 
+      passwords etc. otherwise).
+ 
+0.03: Now uses .<command>_history and .<command>_completions
+      files (by default in $HOME).
+
+0.02: A couple of #ifdefs for portability (tested on BSDI and Digital Unix).
+
+0.01: Initial version.

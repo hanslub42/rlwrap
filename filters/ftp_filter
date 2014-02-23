@@ -1,0 +1,130 @@
+#!/usr/bin/env perl
+
+# this filter demonstrates a (rather whacky and extreme) use of 'cloak_and_dagger'
+# cloak_and_dagger is used for
+#   - finding the working directories (local and remote)
+#   - finding the legal ftp commands
+#   - completing (local or remote) filenames and directories
+
+use lib ($ENV{RLWRAP_FILTERDIR} or ".");
+
+
+use RlwrapFilter;
+use strict;
+
+
+
+
+my $at_first_prompt = 1;
+my $ftp_prompt = "ftp> ";
+my @ftp_commands;
+my %completion_types =
+  (cd     => ['remote', 'directories'],
+   lcd    => ['local', 'directories'],
+   get    => ['remote','files','local','directories'],
+   put    => ['local', 'files','remote','directories']);
+
+
+my $filter = new RlwrapFilter;
+my ($local_dir_filename_column, $remote_dir_filename_column);
+
+$filter -> help_text("usage: rlwrap [-aword:] -z ftp_filter ftp\n" .
+		     "run plain Netkit ftp with completion for commands, local and remote files\n" .
+		     "(demo filter to show the use of the cloak_and_dagger method)");  
+$filter -> prompt_handler(\&prompt);
+$filter -> completion_handler(\&complete);
+$filter -> cloak_and_dagger_verbose(0); # set to 1 to spy on cloak_and_dagger dialogue
+
+
+die "This filter works only with plain vanilla ftp\n"
+  unless !$ENV{RLWRAP_COMMAND_PID} or $ENV{RLWRAP_COMMAND_LINE} =~ /^ftp/;
+
+$filter -> run;
+
+
+############################ subroutines ####################################
+
+sub listing {
+  my ($dir, $where, $what) = @_;
+  $dir ||= ".";
+  my $command = ($where eq "local" ? "!ls -la $dir|cat" : "ls $dir");
+  my @lines = split /\r?\n/, $filter -> cloak_and_dagger($command, $ftp_prompt, 2);
+  my $colnoref = ($where eq "local" ? \$local_dir_filename_column : \$remote_dir_filename_column);
+  if (not $$colnoref) { # find out which column of listing has the filename
+      my $dotdotline = (grep /\.\./, @lines)[0]; # .. should always be there 
+      #print STDERR $dotdotline;
+      my @fields = split /\s+/, $dotdotline;
+      for (my $i = 0; $i < @fields; $i++) {
+	  if ($fields[$i] eq "..") {
+	    $$colnoref =  $i;
+	    last;
+	  }
+      }
+      die "couldn't determine filename column of $where listing\n" unless defined $$colnoref;
+  }
+  my $pattern = ($what eq "directories" ? "^d" : "^-");
+  @lines = grep /$pattern/, @lines if $$colnoref > 0; # makes only sense if there is a column with drwxr-xr-x
+  my @results = map {(split /\s+/, $_)[$$colnoref] } @lines;    
+  return @results;
+}
+
+
+
+sub pwd {
+  my($where) = @_;
+  my $command = ($where eq "local" ? "!pwd" : "pwd");
+  my $result = $filter -> cloak_and_dagger($command, $ftp_prompt, 1);
+  my $pattern = ($where eq "local" ? "(.*?)\r?\n" : '"(.*?)"');
+  my ($pwd) = ($result =~ /$pattern/);
+  return $pwd ;
+}
+
+sub prompt {
+  my ($prompt) =  @_;
+  if ($prompt eq $ftp_prompt) {
+    commands() unless @ftp_commands;
+  } else {
+    return $prompt;
+  }
+  my ($local, $remote) = map {pwd($_)} qw(local remote);
+  $local =~ s/^$ENV{HOME}/~/;
+  my $rtext = ($remote ? "(remote: $remote)" : "(not connected)");
+  return "$local $rtext > ";
+}
+
+
+sub test {
+  my $listing = join ', ', listing (".", "remote", "directories");
+  $filter -> send_output_oob("\n Hier: <$listing>\n");
+}
+
+sub commands {
+  my $help_text = $filter -> cloak_and_dagger("help", $ftp_prompt, 0.5);
+  @ftp_commands = grep /^[a-z]\w/, (split /\s+/, $help_text);
+  $at_first_prompt = 0;
+}
+
+sub complete {
+  my($line, $prefix, @completions) =@_;
+
+  my $nwords = scalar split /\s+/, $line;
+  $nwords++ unless $prefix;   # TAB at start of a new (empty) argument
+  if ($nwords <= 1) {
+    push @completions, grep /^$prefix/, @ftp_commands;
+    return @completions;
+  }
+  
+
+  my ($command) = ($line =~ /\s*(\S+)/);
+  my (undef, $dir, $name_prefix) = ($prefix =~ m#((.*)/)?([^/]*)#);
+  $dir ||= ".";
+  my $narg = $nwords-2;
+  if ($completion_types{$command}->[2*$narg]) {
+    my @candidates = listing($dir,
+			     $completion_types{$command}->[2*$narg],
+			     $completion_types{$command}->[2*$narg+1]);
+    push @completions, grep /^$name_prefix/, @candidates;
+    return @completions;
+  }
+  return @completions;
+}

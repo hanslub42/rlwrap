@@ -1,0 +1,83 @@
+#!/usr/bin/env perl
+
+# this filter tests the use of echo and input handlers
+# it also completes by returning a macro expansion which doens't need to start with the prefix
+# (zsh users are used to this)
+
+use lib ($ENV{RLWRAP_FILTERDIR} or ".");
+use RlwrapFilter;
+use strict;
+
+my(%expansions, $last_raw_input);
+my $saved_macros = $ARGV[0];
+read_macros();
+$SIG{__DIE__} = \&save_macros;
+
+
+
+my $filter = new RlwrapFilter;
+my $name = $filter -> name;
+$filter -> help_text(help());
+$filter -> input_handler(\&expand_and_record_macros); # expand macros in input
+$filter -> echo_handler(sub {$last_raw_input});   # but echo the raw (un-expanded) input
+$filter -> completion_handler(\&complete_macro);
+$filter -> run;
+
+sub expand_and_record_macros {
+	my ($unexpanded) = @_;
+	my $expanded = $last_raw_input = $unexpanded;
+  $expanded =~ s/\$(\w+)(\(\((.*?)\)\))?/findmacro($1,$3)/ge;
+	return $expanded;
+}
+
+sub findmacro {
+	my($macro,$expansion) = @_;
+	return $expansions{$macro} = $expansion if $expansion;
+	return $expansions{$macro};
+}
+
+sub complete_macro {
+	my($line, $prefix, @completions) = @_;
+	# print STDERR "prefix <$prefix>\n";
+	if ($prefix =~ /^\$(\w+)$/) {
+		my $expansion = $expansions{$1};
+		unshift @completions, $expansion if $expansion;
+	}
+	return @completions;
+}
+
+sub read_macros {
+	return unless $saved_macros;
+	if (-f $saved_macros) {
+		-w $saved_macros or die "$saved_macros exists but is not writable!\n";
+		open MACROS, $saved_macros or die  "$saved_macros exists but is not readable!\n";
+		while(<MACROS>) {
+			chomp;
+			my($macro, $expansion) = /(\S+)\s+(.*)/;
+			$expansions{$macro} =  $expansion;
+		}
+	}
+}
+
+sub save_macros {
+	return unless $saved_macros;
+	open MACROS, ">$saved_macros" or die  "cannot write to $saved_macros: $!\n"; # ths error may be lost 
+        foreach my $macro (sort keys %expansions) {
+		print MACROS "$macro $expansions{$macro}\n";
+	}
+}
+
+sub help {
+	return <<EOF;
+Usage: rlwrap -z '$name [<saved_macros>]' <command>
+simple on-the-fly macro processing
+type \$macro to use a macro
+type \$macro<TAB> to expand it right now
+\$macro((ex pan sion)) to (re-)define
+macros are kept in <saved_macros> between sessions
+EOF
+}
+
+
+
+

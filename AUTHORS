@@ -1,0 +1,16 @@
+Chet Ramey <chet at po.cwru.edu>: author of the amazing readline 
+library, around which rlwrap is but a thin wrapper.
+
+Hans Lub hlub@knoware.nl: most of the rlwrap code, except for:
+
+- ptytty.c, wich was taken practically unchanged from rxvt
+  (currently maintained by Geoff C. Wing  <gcw@rxvt.org>),
+  together with the corresponding part of configure.ac
+
+- completion.c which contains the redblack tree implementation written
+  by Damian Ivereigh <damian@cisco.com> (with contributions by 
+  Ben Woodard, Eric S. Raymond and Matthias Andree)
+
+Jon Olsson (jon at vexed.se) contributed patches to weed out unsafe
+strcat and strcpy calls
+ 

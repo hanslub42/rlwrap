@@ -1,0 +1,106 @@
+#!/usr/bin/env perl
+
+# this filter tests rlwrap's tolerance for very heavily cooked prompts.
+# it uses the seldom-used xterm 256-colour mode (which may or may not work in your 
+# other terminal emulators like rxvt) 
+
+
+use lib ($ENV{RLWRAP_FILTERDIR} or ".");
+use RlwrapFilter;
+use strict;
+
+my $X11_colour_table = "/usr/share/X11/rgb.txt"; # change this if your rgb.txt is somewhere else
+my $colours_were_declared;
+my $rampsize = 72; # my urxvt cannot do more
+
+my $filter = new RlwrapFilter;
+my $name = $filter -> name;
+
+$filter -> help_text("Usage: rlwrap -z '$name <colour1>--<colour2> <command>\n".
+		     "paint the prompt in colour gradient between X11 colours <colour1> and <colour2>\n".
+		     "spaces in colour names must be replaced by underscores, e.g. lemon_chiffon--pale_turquoise");
+
+
+$filter -> prompt_handler(\&paint);
+
+$filter -> run;
+
+sub paint {
+  my ($bland) = @_;
+  init() unless $colours_were_declared;
+  return apply_ramp($bland, $rampsize);
+}
+
+sub colour2rgb {
+  my ($colourname) = @_;
+  if (not open COLOURS, $X11_colour_table) {
+    warn "Cannot read $X11_colour_table: trying to find another rgb.txt\n";
+    undef $X11_colour_table;
+    my $rgbs = `locate rgb.txt` or die "cound not use 'locate' to find rgb.txt\n";
+    my @rgbs = split /\r?\n/, $rgbs;
+    foreach my $rgb (sort {length($a) <=> length($b) } @rgbs) {
+      next unless $rgb; # skip empty list element
+      $filter -> send_output_oob("trying $rgb ...\n");
+      if (open COLOURS, $rgb) {
+	$X11_colour_table = $rgb; # remember for next colour
+	last;
+      }
+    }
+    die "cound not find readable rgb.txt\n" unless  $X11_colour_table;
+    $filter -> send_output_oob("Edit $ENV{RLWRAP_FILTERDIR}/$name to get rid of these messages\n");
+  }
+  while (<COLOURS>) {
+    my ($R, $G, $B) = /(\d+)\s+(\d+)\s+(\d+)\s+$colourname/i;
+    return ($R, $G, $B) if defined $R;
+  }
+  die "Colour <$colourname> not found in $X11_colour_table\n";
+}
+
+
+
+sub declare_rgb {
+  my ($index, $r, $g, $b) = @_;
+  foreach my $arg (qw($index $r $g $b)) {
+    die "arg $arg out of range\n" if eval "\$$arg > 255 or \$$arg < 0";
+  }
+  $filter -> send_output_oob(
+     sprintf("\x1b]4;%d;rgb:%2.2x/%2.2x/%2.2x\x1b\\", $index, $r,$g,$b)); # This declares colour # $index to have RGB vaues $r,$g,$b
+}
+
+
+sub init {
+  my ($col1, $col2) = ($ARGV[0] =~ /(.*)--(.*)/);
+  die ($filter->help_text) unless $col2;
+  foreach ($col1, $col2) {
+    s/_/ /g;
+  }
+  declare_colour_ramp($rampsize, colour2rgb($col1), colour2rgb($col2));
+}
+
+sub declare_colour_ramp {
+    my($size, $r1, $g1, $b1, $r2, $g2, $b2) = @_;
+    for (my $i = 0; $i< $size; $i++) {
+	declare_rgb(16+$i, ramp($r1, $r2, $i/$size), ramp($g1, $g2, $i/$size), ramp($b1, $b2, $i/$size));
+    }
+    $colours_were_declared = 1;
+}
+
+sub ramp { # intermediate value 100*$frac % between $val1 and $val2 
+    my ($val1, $val2, $frac) = @_;
+    return int ($val1 + $frac * ($val2-$val1));
+}
+
+
+sub apply_ramp {
+    my ($text, $rampsize) = @_;
+    return $text unless $text =~ /\S/;
+    my @text = split //, $text; # text -> ('t', 'e', 'x', 't')
+
+    for (my $i = 0; $i < @text; $i++){
+	my $colour = 16 + int(($rampsize -1) * $i / @text);
+	die "colour index $colour out of range" if $colour < 16 or $colour >= 16 + $rampsize;
+	$text[$i]= "\x01\x1b[38;5;${colour}m\x02" . $text[$i];  # ESC[38;5;$colour is the xterm code to swithc to $colour, the \x01 and \x02 are
+                                                                # readline "ignore codes" to tell readline that the sequence is unprintable 
+    }
+    return (join '', @text) . "\x01\x1b[0m\x02";
+}
