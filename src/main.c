@@ -676,7 +676,7 @@ read_options_and_command_name(int argc, char **argv)
   
   full_program_name = mysavestring(argv[0]);
   program_name = mybasename(full_program_name);	/* normally "rlwrap"; needed by myerror() */
-  rl_basic_word_break_characters = " \t\n\r(){}[],+-=&^%$#@\";|\\";
+  rl_basic_word_break_characters = " \t\n\r(){}[],'+-=&^%$#@\";|\\";
 
   opterr = 0;			/* we do our own error reporting */
 
