@@ -1,3 +1,7 @@
+0.40  compiling with gcc -O2 made rlwrap hang after CTRL-D on empty line
+      
+      HP-UX 11 has weird tgetent() return values, confusing rlwrap 
+
 0.37  Commands that emit "status lines" using backspaces and carriage 
       returns could confuse rlwrap
 
