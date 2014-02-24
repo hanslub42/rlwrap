@@ -54,6 +54,7 @@ init_readline(char *prompt)
   rl_add_defun("rlwrap-dump-all-keybindings", dump_all_keybindings,-1);
   rl_add_defun("rlwrap-call-editor", munge_line_in_editor, -1);
 
+  /* rlwrap bindable function names with underscores are deprecated: */
   rl_add_defun("rlwrap_accept_line_and_forget", please_update_alaf,-1);
   rl_add_defun("rlwrap_call_editor", please_update_ce,-1);
   
@@ -557,7 +558,7 @@ munge_line_in_editor(int count, int key)
     search_and_replace("\n", multiline_separator, rewritten_input, 0, NULL,
                        NULL);
   for(p = rewritten_input2; *p ;p++)
-    if(*p < ' ')
+    if(*p >= 0 && *p < ' ') /* @@@FIXME: works for UTF8, but not UTF16 or UTF32 (Mention this in manpage?)*/ 
       *p = ' ';        /* replace all control characters (like \r) by spaces */
 
 
