@@ -287,13 +287,13 @@ AC_CHECK_FUNC(tgetent,
 
 AC_CHECK_LIB(readline,readline,[READLINELIB=-lreadline],
 	AC_MSG_ERROR([
-
 You need the GNU readline library(ftp://ftp.gnu.org/gnu/readline/ ) to build
 this program!
-
 ]), [$READLINE_SUPPLIB])
 
 LIBS="$LIBS $READLINELIB $READLINE_SUPPLIB"
+
+AC_CHECK_HEADER([readline/readline.h],[],AC_MSG_ERROR([readline.h not found - you may need to install a readline development package]))
 
 AC_MSG_CHECKING(whether your readline headers know about rl_set_screen_size)
 AC_EGREP_HEADER([rl_set_screen_size],[readline/readline.h], true , 
