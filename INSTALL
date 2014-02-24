@@ -12,6 +12,15 @@ INSTALLATION
 make
 make install 
 
+If ./configure is not found, you may have to create it by
+
+aclocal
+autoconf
+autoheader
+automake --add-missing
+
+
+
 CONFIGURATION OPTIONS
 
 configure can be called with a number of options (e.g. if you want to
