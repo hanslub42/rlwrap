@@ -2,6 +2,14 @@
       
       HP-UX 11 has weird tgetent() return values, confusing rlwrap 
 
+      On Solaris, rlwrap would sometimes fail with "TIOCSWINSZ failed on 
+      slave pty"
+   
+      Single quote ' is now word-breaking by default 
+
+      multi-line edit would mangle upper ASCII and UTF-8 (and still does 
+      that to UTF16 :( ) 
+
 0.37  Commands that emit "status lines" using backspaces and carriage 
       returns could confuse rlwrap
 
