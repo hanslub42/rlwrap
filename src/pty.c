@@ -74,10 +74,6 @@ my_pty_fork(int *ptr_master_fd,
       if (tcsetattr(STDIN_FILENO, TCSANOW, slave_termios) < 0)
         myerror("tcsetattr failed on slave pty");
 
-    if (slave_winsize != NULL)
-      if (ioctl(STDIN_FILENO, TIOCSWINSZ, slave_winsize) < 0)
-        myerror("TIOCSWINSZ failed on slave pty");
-
 
     return (0);
   } else {                      /* parent */
@@ -112,6 +108,11 @@ my_pty_fork(int *ptr_master_fd,
     }
     if (renice && !nice(1)) /* impossible */
       myerror("could not increase my own niceness"); 
+
+    if (slave_winsize != NULL)
+      if (ioctl(fdm, TIOCSWINSZ, slave_winsize) < 0) /* this assumes that master and slave have identical winsizes */
+        myerror("TIOCSWINSZ failed on master pty"); 
+
     return (pid); /* returns in parent and in child (and pid lets us determine who we are) */
   }
 }
