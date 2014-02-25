@@ -1,5 +1,7 @@
 package RlwrapFilter;
 
+require 5.006;
+
 use strict;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK $AUTOLOAD);
 
@@ -34,9 +36,11 @@ use constant REJECT_PROMPT                    => "_THIS_CANNOT_BE_A_PROMPT_";
 my $we_are_running_under_rlwrap = defined $ENV{RLWRAP_COMMAND_PID};
 
 
-# die() and warn() must communicate via rlwrap, not via STDERR
-$SIG{__DIE__}  = \&die_with_error_message;
-$SIG{__WARN__} = \&warn_with_info_message;
+# die() and warn() must communicate via rlwrap, not via STDERR (but not when running under perl -c)
+unless ($^C){
+  $SIG{__DIE__}  = \&die_with_error_message;
+  $SIG{__WARN__} = \&warn_with_info_message;
+}
 
 # automagically have a setter/getter for every key of %$self
 sub AUTOLOAD {
