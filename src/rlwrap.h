@@ -188,6 +188,7 @@ extern int always_readline;
 extern int complete_filenames;
 extern pid_t command_pid;
 extern char *command_line;
+extern char *extra_char_after_completion;
 extern int i_am_child;
 extern int nowarn;
 extern int debug;

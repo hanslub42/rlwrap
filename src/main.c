@@ -29,6 +29,7 @@ char *password_prompt_search_string = NULL;  /* (part of) password prompt (argum
 int ansi_colour_aware = FALSE;               /* -A option: make readline aware of ANSI colour codes in prompt */
 int complete_filenames = FALSE;	             /* -c option: whether to complete file names        */
 int debug = 0;			             /* -d option: debugging mask                        */
+char *extra_char_after_completion = NULL;    /* -e option: override readlines's default completion_append_char (space) */
 int history_duplicate_avoidance_policy =
   ELIMINATE_SUCCESIVE_DOUBLES;               /* -D option: whether and how to avoid duplicate history entries */
 char *history_format = NULL;                 /* -F option: format to append to history entries            */
@@ -60,10 +61,10 @@ int i_am_child = FALSE;		     /* Am I child or parent? after forking, child will
 int ignore_queued_input = FALSE;     /* read and then ignore all characters in input queue until it is empty (i.e. read would block) */
 int received_WINCH = FALSE;          /* flag set in SIGWINCH signal handler: start line edit as soon as possible */
 int prompt_is_still_uncooked = TRUE; /* The main loop consults this variable to determine the select() timeout: when TRUE, it is
-                                                   a few millisecs, if FALSE, it is infinite.						
-                                                   TRUE just after receiving command output (when we still don't know whether we have a
-                                                   prompt), and, importantly, at startup (so that substitute prompts get displayed even with
-                                                   programs that don't have a startup message, such as cat)  */
+                                        a few millisecs, if FALSE, it is infinite.						
+                                        TRUE just after receiving command output (when we still don't know whether we have a
+                                        prompt), and, importantly, at startup (so that substitute prompts get displayed even with
+                                        programs that don't have a startup message, such as cat)  */
 						
 int we_just_got_a_signal_or_EOF = FALSE;  /* When we got a signal or EOF, and the program sends something that ends in a newline, take it
 					     as a response to user input - i.e. preserve a cooked prompt and just print the new output after it */
@@ -93,11 +94,11 @@ static void test_main(void);
 
 /* options */
 #ifdef GETOPT_GROKS_OPTIONAL_ARGS
-static char optstring[] = "+:a::Ab:cC:d::D:f:F:g:hH:iIl:nNm::oO:p::P:q:rRs:S:t:Tvw:z:";
+static char optstring[] = "+:a::Ab:cC:d::D:e:f:F:g:hH:iIl:nNm::oO:p::P:q:rRs:S:t:Tvw:z:";
 /* +: is not really documented. configure checks wheteher it works as expected
    if not, GETOPT_GROKS_OPTIONAL_ARGS is undefined. @@@ */
 #else
-static char optstring[] = "+:a:Ab:cC:d:D:f:F:g:hH:iIl:nNm:oO:p:P:q:rRs:S:t:Tvw:z:";	
+static char optstring[] = "+:a:Ab:cC:d:D:e:f:F:g:hH:iIl:nNm:oO:p:P:q:rRs:S:t:Tvw:z:";	
 #endif
 
 #ifdef HAVE_GETOPT_LONG
@@ -108,6 +109,7 @@ static struct option longopts[] = {
   {"complete-filenames", 	no_argument, 		NULL, 'c'},
   {"command-name", 		required_argument, 	NULL, 'C'},
   {"debug", 			optional_argument, 	NULL, 'd'},
+  {"extra-char-after-completion", required_argument,    NULL, 'e'},
   {"history-no-dupes", 		required_argument, 	NULL, 'D'},
   {"file", 			required_argument, 	NULL, 'f'},
   {"history-format", 		required_argument, 	NULL, 'F'},
@@ -727,6 +729,11 @@ read_options_and_command_name(int argc, char **argv)
       if (history_duplicate_avoidance_policy < 0 || history_duplicate_avoidance_policy > 2)
         myerror("%s option with illegal value %d, should be 0, 1 or 2",
                 current_option('D', longindex), history_duplicate_avoidance_policy);
+      break;
+    case 'e':
+      extra_char_after_completion = mysavestring(optarg); 
+      if (strlen(extra_char_after_completion) > 1) 
+        myerror("-e (--extra-char-after-completion) argument should be at most one character");
       break;
     case 'f':
       if (strncmp(optarg, ".", 10) == 0)

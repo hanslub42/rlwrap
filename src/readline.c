@@ -69,6 +69,14 @@ init_readline(char *prompt)
     bindkey(7, dump_all_keybindings,"emacs-standard; vi-insert; vi-move; vi-command" /* "emacs-ctlx; emacs-meta" */); /* CTRL-G */
   
 
+
+  if (extra_char_after_completion) {
+    if(*extra_char_after_completion) 
+      rl_completion_append_character = *extra_char_after_completion;
+    else
+      rl_completion_suppress_append = TRUE;
+  }     
+
   /* rl_variable_bind("gnah","gnerp"); It is not possible to create new readline variables (only functions) */
   rl_catch_signals = 0;
   rl_initialize();		/* This has to happen *before* we set rl_redisplay_function, otherwise
