@@ -43,7 +43,7 @@ re\-write prompts. If you don't need them (and you probably don't),
 you can skip the rest of this manpage.
 .SH OPTIONS
 .TP
-.OL \-a \-\-always\-readline [\fI<password_prompt>\fP] 
+.OL \-a \-\-always\-readline [\fIpassword_prompt\fP] 
 Always remain in "readline mode", regardless of \fIcommand\fP's terminal settings.
 Use this option if you want to use \fBrlwrap\fP with \fIcommand\fPs that already
 use readline.  
@@ -67,7 +67,7 @@ long input lines. This option will make rlwrap better behaved in such cases.
 If the prompt contains anything fancier than ANSI colour codes, this option
 may actually make things worse.
 .TP
-.OL  \-b \-\-break\-chars  \fI<list_of_characters>\fP
+.OL  \-b \-\-break\-chars  \fIlist_of_characters\fP
 Consider the specified characters word\-breaking (whitespace is
 always word\-breaking). This determines what is considered a "word",
 both when completing and when building a completion word list from
@@ -80,7 +80,7 @@ Complete filenames (filename completion is always case\-sensitive, even with the
 \-i option)
 .CW
 .TP
-.OL \-C \-\-command\-name \fI<command_name>|<N>\fP
+.OL \-C \-\-command\-name \fIcommand_name|N\fP
 Use \fIcommand_name\fP instead of \fIcommand\fP to determine the names of
 history and completion files, and to initialise readline (as specified in
 ~/.inputrc). A numeric argument N > 0 means: use the Nth argument counting
@@ -92,6 +92,10 @@ If \fIn\fP = \fB0\fP, all inputs are kept in the history list, if
 \fIn\fP = \fB1\fP (this is the default) consecutive duplicates are dropped
 from the list, while \fIn\fP = \fB2\fP will make \fBrlwrap\fP drop all
 previous occurrences of the current input from the list.
+.TP
+.OL \-e \-\-extra-char-after-completion \fIchar\fP
+By default, rlwrap appends a space after any inserted completion text. Use this 
+option to change this to '' (don't insert anything) or some other character.
 .TP
 .OL \-f \-\-file \fIfile\fP
 Split \fIfile\fP into words and add them to the completion word list. This
@@ -130,7 +134,7 @@ Don't print warnings.
 \fIcommand\fP is waiting for one of its children, it switches to direct mode, handing down all keypresses immediately.
 With this option commands that need \-\-always\-readline can call editors and pagers and still be usable. 
 .TP
-.OL \-m \-\-multi\-line [\fI<newline_substitute>\fP]
+.OL \-m \-\-multi\-line [\fInewline_substitute\fP]
 Enable multi\-line input using a "newline substitute" character
 sequence (" \\ ", [space\-backslash\-space] by default). Newline
 substitutes are translated to newlines before sending the input to
@@ -145,11 +149,11 @@ Send an EOF to \fIcommand\fP after accepting the first line of input
 .OL \-O \-\-only\-cook \fIregexp\fP
 Only ever "cook" prompts that match \fIregexp\fP 
 .TP
-.OL \-p \-\-prompt\-colour [\fI<colour_name>|<Colour_name>|<colour_spec>\fP]
+.OL \-p \-\-prompt\-colour [\fIcolour_name|Colour_name|colour_spec\fP]
 Use one of the colour names \fIblack, red, green, yellow, blue, cyan, purple (=magenta)\fP or \fIwhite\fP, or an ANSI\-conformant <colour_spec> to colour any prompt displayed by
 \fIcommand\fP. An uppercase colour name (\fIYellow\fP or \fIYELLOW\fP ) gives a bold prompt.  Prompts that already contain
 (colour) escape sequences or one of the readline "ignore markers" (ASCII 0x01 and 0x02) are not coloured. This option implies \-\-ansi\-colour\-aware.
-\fI<colour spec>\fP has the form
+\fIcolour spec\fP has the form
 <attr>;<fg>[;<bg>] Example: \-p'1;31' will give a bold red prompt on the
 current background (this is the default when no argument is
 given). Google for 'ANSI color' to learn more about colour codes.
@@ -159,7 +163,7 @@ given). Google for 'ANSI color' to learn more about colour codes.
 Start \fBrlwrap\fP with  \fItext\fP in its edit buffer (this will automatically
 set the \-\-always\-readline option). 
 .TP
-.OL \-q \-\-quote\-characters \fI<list_of_characters>\fP
+.OL \-q \-\-quote\-characters \fIlist_of_characters\fP
 Assume that the given characters act as quotes, e.g. when matching
 parentheses. Take care to escape the list properly for your shell (example: \-q "\\"'", which happens to be the
 default, or \-q "\\"" which will be better for Lisp users) 
@@ -171,32 +175,32 @@ Put all words seen on in\- and output on the completion list.
 Make \fBrlwrap\fP nicer than \fIcommand\fP (cf \fBnice (1)\fP). This may prevent \fBrlwrap\fP from 
 interrupting \fIcommand\fP to display a prompt when \fIcommand\fP is still "thinking" about what to output next.
 .TP
-.OL \-s \-\-histsize \fI<N>\fP
+.OL \-s \-\-histsize \fIN\fP
 Limit the history list to N entries, truncating the history file
 (default: 300). A negative size \-N means the same as N, but treats the history file as read\-only.
 .TP
-.OL \-S \-\-substitute\-prompt \fI<prompt>\fP
+.OL \-S \-\-substitute\-prompt \fIprompt\fP
 Substitute the specified prompt for  \fIcommand\fP's own prompt. Mainly useful when  \fIcommand\fP doesn't have a prompt.
 .TP
-.OL \-t \-\-set\-term\-name \fI<name>\fP
-Set \fIcommand\fP's TERM to \fI<name>\fP. Programs that confuse \fBrlwrap\fP with fancy screen control codes can sometimes be tamed by specifying \fB\-t dumb\fP 
+.OL \-t \-\-set\-term\-name \fIname\fP
+Set \fIcommand\fP's TERM to \fIname\fP. Programs that confuse \fBrlwrap\fP with fancy screen control codes can sometimes be tamed by specifying \fB\-t dumb\fP 
 .TP
 .OL \-v \-\-version
 Print rlwrap version.
 .TP
-.OL \-w \-\-wait\-before\-prompt \fI<timeout>\fP
+.OL \-w \-\-wait\-before\-prompt \fItimeout\fP
 In order to determine if  \fIcommand\fP's last output is a prompt, \fBrlwrap\fP waits \fItimeout\fP millisecs after receiving it.
 Only when no more output has arrived, it is cooked (coloured, filtered and/or replaced by a substitute prompt) and displayed as a prompt.
 Before this the prompt is displayed "uncooked". Most users won't notice, but heavy cookers can prepend the timeout with a minus sign,
 making rlwrap hold back the prompt until it has been cooked ("patient mode"). This will prevent flashing of the prompt, but it will also interfere with 
 long output lines and make switches from direct to readline mode less reliable. Default timeout: 40 ms  
 .TP
-.OL \-z \-\-filter  \fI<filter>\fP
+.OL \-z \-\-filter  \fIfilter\fP
 Use a filter to change \fBrlwrap\fP's behaviour. A filter can be used to keep certain input out of the history, 
 to change the prompt, to implement simple macros or programmable completion.. \fBrlwrap\fP comes with a special \fBperl\fP module
 (cf. \fBRlwrapFilter(3pm)\fP) for easy filter writing. A number of example filters are installed in the directory 
-@DATADIR@/rlwrap/filters. "rlwrap \-z \fI<filter>\fP" displays information about a filter, "rlwrap \-z listing" lists all currently installed filters.
-If \fI<filter>\fP needs arguments, you should quote the whole filter command line: 
+@DATADIR@/rlwrap/filters. "rlwrap \-z \fIfilter\fP" displays information about a filter, "rlwrap \-z listing" lists all currently installed filters.
+If \fIfilter\fP needs arguments, you should quote the whole filter command line: 
 .nf
 
     rlwrap \-z 'filter args' command
