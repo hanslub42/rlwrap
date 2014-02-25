@@ -298,7 +298,7 @@ main_loop()
     }	
     
     if (nfds < 0) {		/* exception  */	
-      if (errno == EINTR) {	/* interrupted by signal */
+      if (errno == EINTR || errno == 0) {	/* interrupted by signal, or by a cygwin bug (errno == 0) :-( */
 	continue;
       }	else
 	myerror("select received exception");
