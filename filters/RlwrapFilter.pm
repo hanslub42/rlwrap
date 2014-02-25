@@ -358,8 +358,8 @@ sub  send_ignore_oob {
 }
 
 sub die_with_error_message {
-  die $@ if $^S; # make die() within eval do the right thing
   my ($error_message) = @_;
+  die $error_message if $^S; # make die() within eval do the right thing
   my $myself = $0;
   $myself =~ s#^.*/([^.]+)$#$1#;
   write_message(TAG_ERROR, "$myself: $error_message");
