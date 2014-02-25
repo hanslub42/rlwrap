@@ -200,8 +200,8 @@ AC_CACHE_CHECK(for pty/tty type, ptyttylib_cv_ptys,
     AC_CHECK_HEADERS([pty.h])    
  else if test x$ac_cv_func__getpty = xyes; then
     ptyttylib_cv_ptys=SGI4
- else if test -c /dev/ttyp20; then
-    ptyttylib_cv_ptys=SCO
+ else if test -c /dev/ttyp20 -a ! -c /dev/ptmx; then 
+   ptyttylib_cv_ptys=SCO
  else if test -c /dev/ptym/clone; then
     ptyttylib_cv_ptys=HPUX
  else if test x$ptyttylib_cv_func_getpt = xyes; then
