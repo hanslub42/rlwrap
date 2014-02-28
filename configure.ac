@@ -163,7 +163,7 @@ AC_TYPE_SIGNAL
 # Let groff -Tman know whether we have long options
 AC_CHECK_FUNC([getopt_long], [AC_SUBST(HAVE_LONG_OPTS,[yes])],[AC_SUBST(HAVE_LONG_OPTS,[no])])
 
-AC_CHECK_FUNCS(getopt_long isastream  mkstemp pselect putenv readlink sched_yield )
+AC_CHECK_FUNCS(getopt_long isastream  mkstemps pselect putenv readlink sched_yield )
 AC_CHECK_FUNCS(setenv setitimer setsid setrlimit sigaction snprintf strlcpy strlcat strnlen system)
 
 # Try to determine the kind of pty support on this system

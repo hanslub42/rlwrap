@@ -473,36 +473,19 @@ my_redisplay()
 static int
 munge_line_in_editor(int count, int key)
 {
-  int line_number = 0, column_number = 0, tmpfile_OK, ret, tmpfile_fd, bytes_read;
+  int line_number = 0, column_number = 0,  ret, tmpfile_fd, bytes_read;
   size_t tmpfilesize;
-  char *p, *tmpdir, *tmpfilename, *text_to_edit;
+  char *p, *tmpfilename, *text_to_edit;
   char *editor_command1, *editor_command2, *editor_command3, *editor_command4,
     *line_number_as_string, *column_number_as_string;
-  char *input, *rewritten_input, *rewritten_input2, **possible_tmpdirs, **possible_editor_commands;
+  char *input, *rewritten_input, *rewritten_input2,  **possible_editor_commands;
 
 
   if (!multiline_separator)
     return 0;
 
-  possible_tmpdirs = list4(getenv("TMPDIR"), getenv("TMP"), getenv("TEMP"), "/tmp");
-  possible_editor_commands = list4(getenv("RLWRAP_EDITOR"), getenv("EDITOR"), getenv("VISUAL"), "vi +%L");
+  tmpfile_fd = open_unique_tempfile(multi_line_tmpfile_ext, &tmpfilename);
 
-  /* create temporary filename */
-#ifdef HAVE_MKSTEMP
-  tmpdir = first_of(possible_tmpdirs);
-  tmpfilename = add3strings(tmpdir, "/rlwrap_", "XXXXXX");
-  tmpfile_OK = mkstemp(tmpfilename);
-#else
-  tmpfilename = mymalloc(L_tmpnam);
-  tmpfile_OK = (int)tmpnam(tmpfilename); /* manpage says: Never use this function. Use mkstemp(3) instead */
-#endif
-  if (!tmpfile_OK)
-    myerror("could not find unique temporary file name");
-
-  /* write current input to it, replacing the newline substitute (multiline_separator) with the real thing */
-  tmpfile_fd = open(tmpfilename, O_CREAT | O_WRONLY, S_IRUSR | S_IWUSR);
-  if (tmpfile_fd < 0)
-    myerror("could not create temporary file %s", tmpfilename);
   text_to_edit =
     search_and_replace(multiline_separator, "\n", rl_line_buffer, rl_point,
                        &line_number, &column_number);
@@ -512,7 +495,7 @@ munge_line_in_editor(int count, int key)
     myerror("couldn't close temporary file %s", tmpfilename); 
 
   /* find out which editor command we have to use */
-
+  possible_editor_commands = list4(getenv("RLWRAP_EDITOR"), getenv("EDITOR"), getenv("VISUAL"), "vi +%L");
   editor_command1 = first_of(possible_editor_commands);
   line_number_as_string = as_string(line_number);
   column_number_as_string = as_string(column_number);
@@ -523,9 +506,6 @@ munge_line_in_editor(int count, int key)
     search_and_replace("%C", column_number_as_string, editor_command2, 0,
                        NULL, NULL);
   editor_command4 = add3strings(editor_command3, " ", tmpfilename);
-
-  
-  
   
 
   /* call editor, temporarily restoring terminal settings */    

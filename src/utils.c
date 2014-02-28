@@ -302,6 +302,37 @@ void set_ulimit(int resource, long value) {
   #endif
 }
 
+
+
+
+
+
+
+int open_unique_tempfile(const char *suffix, char **tmpfile_name) {
+  char **tmpdirs = list4(getenv("TMPDIR"), getenv("TMP"), getenv("TEMP"), "/tmp");
+  char *tmpdir = first_of(tmpdirs);
+  int tmpfile_fd;
+
+  if (!suffix) 
+    suffix = "";
+ 
+  *tmpfile_name = mymalloc(MAXPATHLEN+1);
+
+#ifdef HAVE_MKSTEMPS
+  snprintf3(*tmpfile_name, MAXPATHLEN, "%s/rlwrap_%s_XXXXXX%s", tmpdir, command_name, suffix); 
+  tmpfile_fd = mkstemps(*tmpfile_name, strlen(suffix));  /* this will write into *tmpfile_name */
+#else
+  static int tmpfile_counter = 0;
+  snprintf5(*tmpfile_name, MAXPATHLEN, "%s/rlwrap_%s_%d_%d%s", tmpdir, command_name, command_pid, tmpfile_counter++, suffix);
+  tmpfile_fd = open(*tmpfile_name, O_CREAT | O_WRONLY, S_IRUSR | S_IWUSR);
+#endif
+  if (tmpfile_fd < 0)
+    myerror("could not create temporary file %s", tmpfile_name);
+  free(tmpdirs);
+  return tmpfile_fd;
+}  
+
+
 /* private helper function for myerror() and mywarn() */
 static void
 utils_warn(const char *message, va_list ap)

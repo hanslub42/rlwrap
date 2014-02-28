@@ -129,14 +129,20 @@ char *strchr(), *strrchr();
 
 
 #ifdef  HAVE_SNPRINTF           /* don't rely on the compiler understanding variadic macros */
-# define snprintf0(buf,bufsize,format)                  snprintf(buf,bufsize,format)
-# define snprintf1(buf,bufsize,format,arg1)             snprintf(buf,bufsize,format,arg1)
-# define snprintf2(buf,bufsize,format,arg1,arg2)        snprintf(buf,bufsize,format,arg1,arg2)
+# define snprintf0(buf,bufsize,format)                           snprintf(buf,bufsize,format)
+# define snprintf1(buf,bufsize,format,arg1)                      snprintf(buf,bufsize,format,arg1)
+# define snprintf2(buf,bufsize,format,arg1,arg2)                 snprintf(buf,bufsize,format,arg1,arg2)
+# define snprintf3(buf,bufsize,format,arg1,arg2,arg3)            snprintf(buf,bufsize,format,arg1,arg2,arg3)
+# define snprintf4(buf,bufsize,format,arg1,arg2,arg3,arg4)       snprintf(buf,bufsize,format,arg1,arg2,arg3,arg4)
+# define snprintf5(buf,bufsize,format,arg1,arg2,arg3,arg4,arg5)  snprintf(buf,bufsize,format,arg1,arg2,arg3,arg4,arg5)
 #else
-# define snprintf0(buf,bufsize,format)                  sprintf(buf,format)
-# define snprintf1(buf,bufsize,format,arg1)             sprintf(buf,format,arg1)
-# define snprintf2(buf,bufsize,format,arg1,arg2)        sprintf(buf,format,arg1,arg2)
-# define vsnprintf(buf,bufsize,format,ap)               vsprintf(buf,format,ap)
+# define snprintf0(buf,bufsize,format)                           sprintf(buf,format)
+# define snprintf1(buf,bufsize,format,arg1)                      sprintf(buf,format,arg1)
+# define snprintf2(buf,bufsize,format,arg1,arg2)                 sprintf(buf,format,arg1,arg2)
+# define snprintf3(buf,bufsize,format,arg1,arg2,arg3)            sprintf(buf,format,arg1,arg2,arg3)
+# define snprintf4(buf,bufsize,format,arg1,arg2,arg3,arg4)       sprintf(buf,format,arg1,arg2,arg3,arg4)
+# define snprintf5(buf,bufsize,format,arg1,arg2,arg3,arg4,arg5)  sprintf(buf,format,arg1,arg2,arg3,arg4,arg5)
+# define vsnprintf(buf,bufsize,format,ap)                        vsprintf(buf,format,ap)
 #endif
 
 
@@ -197,6 +203,7 @@ extern int one_shot_rlwrap;
 extern char *substitute_prompt;
 extern char *history_format;
 extern char *forget_regexp;
+extern char *multi_line_tmpfile_ext;
 extern char *prompt_regexp;
 extern int renice;
 extern int ignore_queued_input;
@@ -296,9 +303,10 @@ void  write_patiently2(int fd, const void *buffer, int count, int uninterruptibl
 void  mysetenv(const char *name, const char *value);
 void  set_ulimit(int resource, long value);
 void  usage(int status);
+int   open_unique_tempfile(const char *suffix, char **tmpfile_name);
 void  mywarn(const char *message, ...);
 void  myerror(const char *message, ...);
-void *mymalloc(size_t size);
+void  *mymalloc(size_t size);
 void  myfree(void *ptr);
 void  mysetsid(void);
 void  close_open_files_without_writing_buffers(void);

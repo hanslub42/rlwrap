@@ -35,6 +35,7 @@ int history_duplicate_avoidance_policy =
 char *history_format = NULL;                 /* -F option: format to append to history entries            */
 char *forget_regexp = NULL;                  /* -g option: keep matching input out of history           */
 int pass_on_sigINT_as_sigTERM =  FALSE;      /* -I option: send a SIGTERM to client when a SIGINT is received */
+char *multi_line_tmpfile_ext = NULL;         /* -M option: tmpfile extension for multi-line editor */
 int nowarn = FALSE;		             /* -n option: suppress warnings */
 int commands_children_not_wrapped =  FALSE;  /* -N option: always use direct mode when <command> is waiting */
 int one_shot_rlwrap = FALSE;                 /* -o option: whether to close the pty after writing the first line to <command> */
@@ -94,11 +95,11 @@ static void test_main(void);
 
 /* options */
 #ifdef GETOPT_GROKS_OPTIONAL_ARGS
-static char optstring[] = "+:a::Ab:cC:d::D:e:f:F:g:hH:iIl:nNm::oO:p::P:q:rRs:S:t:Tvw:z:";
+static char optstring[] = "+:a::Ab:cC:d::D:e:f:F:g:hH:iIl:nNM:m::oO:p::P:q:rRs:S:t:Tvw:z:";
 /* +: is not really documented. configure checks wheteher it works as expected
    if not, GETOPT_GROKS_OPTIONAL_ARGS is undefined. @@@ */
 #else
-static char optstring[] = "+:a:Ab:cC:d:D:e:f:F:g:hH:iIl:nNm:oO:p:P:q:rRs:S:t:Tvw:z:";	
+static char optstring[] = "+:a:Ab:cC:d:D:e:f:F:g:hH:iIl:nNM:m:oO:p:P:q:rRs:S:t:Tvw:z:";	
 #endif
 
 #ifdef HAVE_GETOPT_LONG
@@ -119,11 +120,12 @@ static struct option longopts[] = {
   {"case-insensitive", 		no_argument, 		NULL, 'i'},
   {"pass-sigint-as-sigterm",    no_argument,            NULL, 'I'},
   {"logfile", 			required_argument, 	NULL, 'l'},
+  {"multi-line", 		optional_argument, 	NULL, 'm'},
+  {"multi-line-ext",            required_argument,      NULL, 'M'},
   {"no-warnings", 		no_argument, 		NULL, 'n'},
   {"no-children",               no_argument,            NULL, 'N'},
   {"one-shot",                  no_argument,            NULL, 'o'},
   {"only-cook",                 required_argument,      NULL, 'O'},
-  {"multi-line", 		optional_argument, 	NULL, 'm'},
   {"prompt-colour",             optional_argument,      NULL, 'p'},
   {"pre-given", 		required_argument, 	NULL, 'P'},
   {"quote-characters",          required_argument,      NULL, 'q'},
@@ -761,6 +763,7 @@ read_options_and_command_name(int argc, char **argv)
       multiline_separator =
         (check_optarg('m', remaining) ? mysavestring(optarg) : " \\ ");
       break;
+    case 'M': multi_line_tmpfile_ext = mysavestring(optarg); break;
     case 'N': commands_children_not_wrapped = TRUE; break;
     case 'o': 
       one_shot_rlwrap = TRUE;
