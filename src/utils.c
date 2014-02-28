@@ -318,12 +318,12 @@ int open_unique_tempfile(const char *suffix, char **tmpfile_name) {
  
   *tmpfile_name = mymalloc(MAXPATHLEN+1);
 
-#ifdef HAVE_MKSTEMPS
-  snprintf3(*tmpfile_name, MAXPATHLEN, "%s/rlwrap_%s_XXXXXX%s", tmpdir, command_name, suffix); 
+#ifdef HAVE_MKSTESMPS
+  snprintf4(*tmpfile_name, MAXPATHLEN, "%s/%s_%s_XXXXXX%s", tmpdir, program_name, command_name, suffix); 
   tmpfile_fd = mkstemps(*tmpfile_name, strlen(suffix));  /* this will write into *tmpfile_name */
 #else
   static int tmpfile_counter = 0;
-  snprintf5(*tmpfile_name, MAXPATHLEN, "%s/rlwrap_%s_%d_%d%s", tmpdir, command_name, command_pid, tmpfile_counter++, suffix);
+  snprintf6(*tmpfile_name, MAXPATHLEN, "%s/%s_%s_%d_%d%s", tmpdir, program_name, command_name, command_pid, tmpfile_counter++, suffix);
   tmpfile_fd = open(*tmpfile_name, O_CREAT | O_WRONLY, S_IRUSR | S_IWUSR);
 #endif
   if (tmpfile_fd < 0)

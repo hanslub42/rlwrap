@@ -135,6 +135,8 @@ char *strchr(), *strrchr();
 # define snprintf3(buf,bufsize,format,arg1,arg2,arg3)            snprintf(buf,bufsize,format,arg1,arg2,arg3)
 # define snprintf4(buf,bufsize,format,arg1,arg2,arg3,arg4)       snprintf(buf,bufsize,format,arg1,arg2,arg3,arg4)
 # define snprintf5(buf,bufsize,format,arg1,arg2,arg3,arg4,arg5)  snprintf(buf,bufsize,format,arg1,arg2,arg3,arg4,arg5)
+# define snprintf6(buf,bufsize,format,arg1,arg2,arg3,arg4,arg5,arg6)  snprintf(buf,bufsize,format,arg1,arg2,arg3,arg4,arg5,arg6)
+
 #else
 # define snprintf0(buf,bufsize,format)                           sprintf(buf,format)
 # define snprintf1(buf,bufsize,format,arg1)                      sprintf(buf,format,arg1)
@@ -142,6 +144,7 @@ char *strchr(), *strrchr();
 # define snprintf3(buf,bufsize,format,arg1,arg2,arg3)            sprintf(buf,format,arg1,arg2,arg3)
 # define snprintf4(buf,bufsize,format,arg1,arg2,arg3,arg4)       sprintf(buf,format,arg1,arg2,arg3,arg4)
 # define snprintf5(buf,bufsize,format,arg1,arg2,arg3,arg4,arg5)  sprintf(buf,format,arg1,arg2,arg3,arg4,arg5)
+# define snprintf6(buf,bufsize,format,arg1,arg2,arg3,arg4,arg5,arg6)  sprintf(buf,format,arg1,arg2,arg3,arg4,arg5,arg6)
 # define vsnprintf(buf,bufsize,format,ap)                        vsprintf(buf,format,ap)
 #endif
 
