@@ -275,7 +275,7 @@ int dont_wrap_command_waits() {
   static int wchan_fd;
   static int been_warned = 0;
   char buffer[BUFFSIZE];
-  int nread;
+  int nread, result = FALSE;
 
   DEBUG_RANDOM_SLEEP;
   if (!commands_children_not_wrapped)
@@ -295,16 +295,16 @@ int dont_wrap_command_waits() {
     }
     return FALSE;
   }     
+
+
   if (((nread = read(wchan_fd, buffer, BUFFSIZE -1)) > 0)) {
     buffer[nread] =  '\0';
-    assert(!buffer[nread]); 
     DPRINTF1(DEBUG_READLINE, "read commands wchan: <%s> ", buffer);
-    if (strstr(buffer, "wait")) /* @@@ HEY! does this always work? */
-      return TRUE;
+    result = (strstr(buffer, "wait") != NULL);
   }
   close(wchan_fd);
   DEBUG_RANDOM_SLEEP;
-  return FALSE;
+  return result;
 }       
 
 
