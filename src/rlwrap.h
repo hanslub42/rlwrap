@@ -108,13 +108,11 @@ char *strchr(), *strrchr();
 #endif
 
 
-#ifdef HAVE_PTY_H
+#ifdef HAVE_PTY_H /* glibc (even if BSD) */
 #  include <pty.h>
-#endif
-#ifdef HAVE_LIBUTIL_H
+#elif HAVE_LIBUTIL_H /* BSD, non-glibc */
 #  include <libutil.h>
-#endif
-#ifdef HAVE_UTIL_H
+#elif HAVE_UTIL_H /* BSD, other varriants */
 #  include <util.h>
 #endif
 
