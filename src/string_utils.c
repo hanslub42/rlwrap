@@ -510,7 +510,7 @@ void test_unbackspace (const char *input, const char *expected_result) {
 
 
 /* TODO @@@ replace the following obscure and unsafe functions using the regex library */
-static void  match_and_copy_ESC_sequence (const char **original, char **copy);
+static void  copy_ordinary_char_or_ESC_sequence(const char **original, char **copy);
 static void match_and_copy(const char *charlist, const char **original, char **copy);
 static int matches (const char *charlist, char c) ;
 static void copy_next(int n, const char **original, char **copy);
@@ -528,10 +528,7 @@ mark_invisible(const char *buf)
     return mysavestring(buf); /* "invisible" parts already marked */
     
   while (**original) {
-    /* printf ("orig: %p, copy: %p, result: %s @ %p\n", *original, *copy, result, result); */
-    match_and_copy_ESC_sequence(original, copy);
-    /* match_and_copy_unprintable(original, copy); */
-    copy_next(1, original, copy);
+    copy_ordinary_char_or_ESC_sequence(original, copy); 
     assert(*copy - scratchpad < padsize);
   }
   **copy = '\0';
@@ -542,10 +539,12 @@ mark_invisible(const char *buf)
 
 
 static void
-match_and_copy_ESC_sequence (const char **original, char **copy)
+copy_ordinary_char_or_ESC_sequence (const char **original, char **copy)
 {
-  if (**original != ESCAPE || ! matches ("[]", *(*original + 1)))
+  if (**original != ESCAPE || ! matches ("[]", *(*original + 1))) {
+    copy_next(1, original, copy);
     return;       /* not an ESC[ sequence */
+  }
   *(*copy)++ = RL_PROMPT_START_IGNORE;
   copy_next(2, original, copy);
   match_and_copy(";0123456789", original, copy);
