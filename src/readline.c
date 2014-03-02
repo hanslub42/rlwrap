@@ -627,7 +627,8 @@ move_cursor_to_start_of_prompt(int erase)
 
 	
   promptlen_on_screen =  colourless_strlen_unmarked(saved_rl_state.cooked_prompt ? saved_rl_state.cooked_prompt : saved_rl_state.raw_prompt, termwidth);
-  curpos = (within_line_edit ? 1 : 0); /* if the user has pressed a key the cursor will be 1 past the current prompt */ 
+  curpos = (within_line_edit ? 1 : 0); /* if the user has pressed a key the cursor will be 1 past the current prompt */
+  assert(termwidth > 0); 
   number_of_lines_in_prompt = 1 +  ((promptlen_on_screen + curpos -1) / termwidth); /* integer arithmetic! (e.g. 171/80 = 2) */
   cr(); 
   for (count = 0; count < number_of_lines_in_prompt -1; count++) {

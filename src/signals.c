@@ -291,8 +291,8 @@ adapt_tty_winsize(int from_fd, int to_fd)
   ret = ioctl(from_fd, TIOCGWINSZ, &winsize);
   DPRINTF1(DEBUG_SIGNALS, "ioctl (..., TIOCGWINSZ) = %d", ret);
   if (winsize.ws_col != old_winsize.ws_col || winsize.ws_row != old_winsize.ws_row) { 
-    if (always_readline &&!dont_wrap_command_waits())                       /* if --always_readline option is set, the client will probably spew a */
-      deferred_adapt_commands_window_size = TRUE;   /* volley of control chars at us when its terminal is resized. Hence we don't do it now */
+    if (always_readline &&!dont_wrap_command_waits())  /* if --always_readline option is set, the client will probably spew a */
+      deferred_adapt_commands_window_size = TRUE;      /* volley of control chars at us when its terminal is resized. Hence we don't do it now */
     else {  
       ret = ioctl(to_fd, TIOCSWINSZ, &winsize); 
       DPRINTF1(DEBUG_SIGNALS, "ioctl (..., TIOCSWINSZ) = %d", ret);
@@ -328,6 +328,7 @@ void wipe_textarea(struct winsize *old_winsize)
     promptlength = colourless_strlen((saved_rl_state.cooked_prompt ? saved_rl_state.cooked_prompt:  saved_rl_state.raw_prompt), NULL, old_winsize -> ws_col); 
     linelength = (within_line_edit ? strlen(rl_line_buffer) : 0) + promptlength;
     point = (within_line_edit ? rl_point : 0) + promptlength;
+    assert(old_winsize -> ws_col > 0);
     lineheight = (linelength == 0 ? 0 : (1 + (max(point, (linelength - 1)) / old_winsize -> ws_col)));
     if (lineheight > 1 && term_cursor_up != NULL && term_cursor_down != NULL) {
       /* i.e. if we have multiple rows displayed, and we can clean them up first */
