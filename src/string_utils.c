@@ -616,7 +616,8 @@ colourless_strlen(const char *str, char **pcopy_without_ignore_markers, int term
   int visible = TRUE;
   int column = 0;
   int length = strlen(str);
-  char *p, *q, *copy_without_ignore_markers;
+  const char *p; 
+  char *q, *copy_without_ignore_markers;
   
 
   assert(termwidth >= 0);
@@ -639,7 +640,7 @@ colourless_strlen(const char *str, char **pcopy_without_ignore_markers, int term
       }
       break;
     case '\b':
-      if (visible & q > copy_without_ignore_markers) {
+      if ((visible && q > copy_without_ignore_markers)) {
         q -= 1;
         column -= 1;
         if (termwidth && column < 0) 
@@ -656,7 +657,7 @@ colourless_strlen(const char *str, char **pcopy_without_ignore_markers, int term
     }
   } 
   *q = '\0';
-  DPRINTF4(DEBUG_READLINE, "colourless_strlen(\"%s\", 0x%lx, %d) = %d",
+  DPRINTF4(DEBUG_READLINE, "colourless_strlen(\"%s\", 0x%lx, %d) = %ld",
            mangle_string_for_debug_log(str, MANGLE_LENGTH), (long) pcopy_without_ignore_markers,
            termwidth,  q - copy_without_ignore_markers);  
   if (pcopy_without_ignore_markers)
