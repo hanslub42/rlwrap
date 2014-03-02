@@ -70,9 +70,8 @@ init_terminal(void)
   if (ioctl(STDIN_FILENO, TIOCGWINSZ, &winsize) < 0)
     myerror("Could not get terminal size");
   
-  DPRINTF2(DEBUG_TERMIO, "winsize.ws_row: %d; winsize.ws_col: %d", winsize.ws_row, winsize.ws_col);
-
-  if (winsize.ws_row == 0)
+  DPRINTF2(DEBUG_TERMIO, "winsize.ws_col: %d; winsize.ws_row: %d", winsize.ws_col, winsize.ws_row);
+  if (winsize.ws_col == 0)
     myerror("My terminal reports width=0. I can't handle this, sorry!", program_name);
 
   /* init some variables: */
