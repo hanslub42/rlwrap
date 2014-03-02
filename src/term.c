@@ -30,6 +30,9 @@ char *term_cursor_hpos;
 char *term_clear_screen;
 char *term_cursor_up;
 char *term_cursor_down;
+char *term_rmcup;               /* rmcup - char sequence to return from alternate screen */
+char *term_rmkx;                /* rmkx - char sequence to return from keyboard application mode */
+
 
 int redisplay = 1;
 int newline_came_last = TRUE; /* used to determine whether rlwrap needs to ouptut a newline at the very end */
@@ -93,6 +96,8 @@ init_terminal(void)
     term_clear_line     = my_tgetstr("ce"); /* was: @@@ my_tgetstr("dl1") */
     term_clear_screen   = my_tgetstr("cl");
     term_cursor_hpos    = my_tgetstr("ch");
+    term_rmcup          = my_tgetstr("te"); /* rlwrap still uses ye olde termcappe names */
+    term_rmkx           = my_tgetstr("ke");
     if (term_cursor_hpos && !strstr(term_cursor_hpos, "%p")) {
       /* Some RedHat or Debian people with out-of sync devel packages will get problems when tgoto expects terminfo-style caps
          and their tgetstr returns termcap-style. This is a rather heavy-handed way of avoiding those problems: */    

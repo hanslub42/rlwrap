@@ -414,7 +414,7 @@ extern int terminal_settings_saved;
 extern struct winsize winsize;
 extern char *term_name;
 extern char *term_backspace, term_eof, term_stop, *term_cursor_hpos,
-  *term_cursor_up, *term_cursor_down;
+  *term_cursor_up, *term_cursor_down, *term_rmcup, *term_rmkx;
 extern int newline_came_last;
 
 /* in filter.c */
