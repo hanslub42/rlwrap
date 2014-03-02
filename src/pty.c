@@ -281,7 +281,7 @@ int dont_wrap_command_waits() {
   if (!commands_children_not_wrapped)
     return FALSE;
   if (!initialised) {   /* first time we're called after birth of child */
-    snprintf1(command_wchan, MAXPATHLEN , "/proc/%d/wchan", command_pid);
+    snprintf2(command_wchan, MAXPATHLEN , "%s/%d/wchan", PROC_MOUNTPOINT, command_pid);
     initialised =  TRUE;
   }
   if (command_is_dead)
@@ -289,9 +289,9 @@ int dont_wrap_command_waits() {
   wchan_fd =  open(command_wchan, O_RDONLY);
   if (wchan_fd < 0) { 
     if (been_warned++ == 0) {
-      errno = 0; mywarn("you probably specified the -N (-no-children) option"
-                        "- but spying\non %s's wait status does not work on"
-                        " your system", command_name);
+      mywarn("you probably specified the -N (-no-children) option"
+             " - but spying\non %s's wait status does not work on"
+             " your system, as we cannot read %s", command_name, command_wchan);
     }
     return FALSE;
   }     

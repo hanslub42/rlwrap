@@ -495,7 +495,7 @@ change_working_directory()
   snprintf0(slaves_working_directory, MAXPATHLEN, "?");
 
   if (!initialized && command_pid > 0) {        /* first time we're called after birth of child */
-    snprintf1(proc_pid_cwd, MAXPATHLEN , "/proc/%d/cwd", command_pid);
+    snprintf2(proc_pid_cwd, MAXPATHLEN , "%s/%d/cwd", PROC_MOUNTPOINT, command_pid);
     initialized = TRUE;
   }     
   if (chdir(proc_pid_cwd) == 0) {
@@ -507,7 +507,7 @@ change_working_directory()
       snprintf1(slaves_working_directory, MAXPATHLEN, "? (%s)", strerror(errno));
 #endif /* HAVE_READLINK */
   }                 
-#else
+#else /* HAVE_PROC_PID_CWD */
   /* do nothing at all */
 #endif
 }

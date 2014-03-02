@@ -44,6 +44,7 @@ AM_SANITY_CHECK
 opt_debug=no
 opt_homegrown_redisplay=no
 opt_spy_on_readline=yes
+opt_proc_mountpoint=/proc
 
 AC_ARG_ENABLE(debug,
     AC_HELP_STRING([--enable-debug], [enable debugging [[default=NO]]]),
@@ -57,6 +58,11 @@ AC_ARG_ENABLE(spy-on-readline,
     AC_HELP_STRING([--enable-spy-on-readline [[default=YES]]],
 	[use private readline variable to keep screen tidy when resizing terminal [[default=YES]]]),
     opt_spy_on_readline=$enableval)
+
+AC_ARG_ENABLE(proc-mountpoint,                                                                                                                    
+     AC_HELP_STRING([--enable-proc-mountpoint [[default=/proc]]],                                                                                  
+       [specify mountpoint for Linux-style procfs (used for determination of command's PWD) [[default=/proc]]]), # '                               
+     opt_proc_mountpoint=$enableval) 
 
 
 if test $opt_debug = yes; then
@@ -324,12 +330,18 @@ AC_MSG_RESULT(yes)
 
 
 
-# check for existence of myself under /proc/$$/cwd
-echo "Will rlwrap find command's working directory under /proc/<commands pid>/cwd? let's see..."
-AC_CHECK_FILES(/proc/$$/cwd/configure.ac,[
-                  AC_DEFINE(HAVE_PROC_PID_CWD,1 ,[Define to 1 if /proc/<pid>/cwd is a link to working directory of process <pid>])
-                  AC_SUBST(HAVE_PROC_PID_CWD,[yes])
-               ],[AC_SUBST(HAVE_PROC_PID_CWD,[no])])
+# check for existence of myself under /proc/$$/cwd If the user specified --disable-proc-mountpoint we'll still do these tests
+# but they wil fail unless ./no is a procfs mountpoint ;-)
+
+echo "Will rlwrap find command's working directory under ${opt_proc_mountpoint}/<commands pid>/cwd? let's see..."                                 
+AC_CHECK_FILES($opt_proc_mountpoint/$$/cwd/configure.ac,[                                                                                      
+                 AC_DEFINE(HAVE_PROC_PID_CWD, 1 ,[Define to 1 if <opt_proc_mountpoint>/<pid>/cwd is a link to working directory of process <pid>]) 
+                 AC_SUBST(HAVE_PROC_PID_CWD,[yes])
+              ],[AC_SUBST(HAVE_PROC_PID_CWD,[no])])
+
+
+
+AC_DEFINE_UNQUOTED(PROC_MOUNTPOINT, "[$opt_proc_mountpoint]", [Define to location of Linux-style procfs mountpoint if provided and valid])
 
 
 echo
