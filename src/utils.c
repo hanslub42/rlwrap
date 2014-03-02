@@ -628,6 +628,7 @@ usage(int status)
   print_option('P', "pre-given","input", FALSE, NULL);
   print_option('q', "quote-characters", "chars", FALSE, NULL);
   print_option('m', "multi-line", "newline substitute", TRUE, NULL);
+  print_option('M', "multi-line-ext", ".ext", FALSE, NULL);
   print_option('r', "remember", NULL, FALSE, NULL);
   print_option('R', "renice", NULL, FALSE, NULL);
   print_option('v', "version", NULL, FALSE, NULL);
