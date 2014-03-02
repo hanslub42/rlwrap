@@ -8,7 +8,7 @@ command. I couldn't find anything like it when I needed it, so I wrote
 this one back in 1999.  By now, there are (and, in hindsight, even
 then there were) a number of good readline wrappers around, like rlfe,
 distributed as part of the GNU readline library, and cle
-(http://kaolin.unice.fr/Cle/).  rlwrap should be especially useful
+(http://kaolin.essi.fr/Cle/).  rlwrap should be especially useful
 when you need user-defined completion (by way of completion word
 lists) and persistent history, or if you want to program 'special
 effects' using the filter mechanism. rlwrap compiles and runs on a 
