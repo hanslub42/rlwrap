@@ -22,6 +22,10 @@
        e-mail:  hlub@knoware.nl
 */
 
+#pragma GCC diagnostic ignored "-Wunused-but-set-variable"
+#pragma GCC diagnostic ignored "-Wunused-function"
+
+
 #include "rlwrap.h"
 
 #ifdef assert

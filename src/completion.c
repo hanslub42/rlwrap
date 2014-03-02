@@ -23,6 +23,10 @@
        e-mail:  hlub@knoware.nl
 */
 
+#pragma GCC diagnostic ignored "-Wunused-but-set-variable"
+#pragma GCC diagnostic ignored "-Wunused-function"
+
+
 #include "rlwrap.h"
 
 #ifdef assert
@@ -1402,7 +1406,7 @@ RB_ENTRY(dumptree)(struct RB_ENTRY(node) *x, int n)
  */
 
 /* rbgen generated code ends here */
-#line 72 "completion.rb"
+#line 76 "completion.rb"
 
 
 /* forward declarations */
