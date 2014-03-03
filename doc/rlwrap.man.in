@@ -143,6 +143,9 @@ $RLWRAP_EDITOR on the (expanded) current input with the
 \fIrlwrap_call_editor\fP key (CTRL\-^ by default)
 .OA \-m \-\-multi\-line ';;'
 .TP
+.OL \-M \-\-multi\-line\-ext \fI.ext\fP
+Call multi-line-editor on temporary files with filename extension \fI.ext\fP (useful for e.g. automatic syntax colouring)
+.TP
 .OL \-o \-\-one\-shot
 Send an EOF to \fIcommand\fP after accepting the first line of input
 .TP
