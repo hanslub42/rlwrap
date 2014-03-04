@@ -359,8 +359,9 @@ main_loop()
 
       /* -------------------------- read pty --------------------------------- */
       if (FD_ISSET(master_pty_fd, &readfds)) { /* there is something to read on master pty: */
-	if ((nread = read(master_pty_fd, buf, BUFFSIZE - 1)) <= 0) { /* read it */
-	 
+        nread = read(master_pty_fd, buf, BUFFSIZE - 1); /* read it */
+        DPRINTF1(DEBUG_AD_HOC, "nread: %d", nread);
+	if (nread <= 0) { 
 	  if (command_is_dead || nread == 0) { /*  child is dead or has closed its stdout */
 	    if (promptlen > 0)	/* commands dying words were not terminated by \n ... */
 	      my_putchar('\n');	/* provide the missing \n */
@@ -720,7 +721,8 @@ read_options_and_command_name(int argc, char **argv)
       else
         debug = DEBUG_DEFAULT;
 #else
-      myerror
+     errno = 0; 
+     myerror
         ("To use -d( for debugging), configure %s with --enable-debug and rebuild",
          program_name);
 #endif

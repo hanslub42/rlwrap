@@ -370,9 +370,9 @@ child_died(int unused)
   }     
 
   errno = saved_errno;  
-  return;                       /* allow remaining output from child to be processed in main loop */
-  /* (so that we will see childs good-bye talk)                     */
-  /* this will then clean up and terminate                          */
+  return;   /* allow remaining output from child to be processed in main loop */
+            /* (so that we will see childs good-bye talk)                     */
+            /* this will then clean up and terminate                          */
 
 }
 

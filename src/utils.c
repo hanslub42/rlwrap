@@ -645,7 +645,7 @@ usage(int status)
   fprintf(stderr,
           "             \n"
           "The -d or --debug option *must* come first\n"
-          "The debugging mask is a bit mask obtained by adding:\n");
+          "The debugging mask is a bitmask obtained by adding:\n");
 
   print_debug_flag (DEBUG_TERMIO, "to debug termio,");
   print_debug_flag (DEBUG_SIGNALS, "signal handling,");
