@@ -280,8 +280,8 @@ sub kleur {
 }
 
 sub long_and_difficult_string {
-  my $text = (red("hot") . " and ". blue("cold"). ", ") x 1000;
-  print "$text\n$text\n$text\n";
+  my $text = (red("hot") . " and ". blue("cold"). ", ") x 3000;
+  print "$text\n";
 }
 
 sub reset_prompt {
