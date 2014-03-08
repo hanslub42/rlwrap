@@ -712,10 +712,12 @@ int cook_prompt_if_necessary () {
 
   char ***tcptr;
   filtered = NULL;
-  if (!prompt_is_still_uncooked)
+
+  DPRINTF2(DEBUG_READLINE, "Prompt <%s>: %s", saved_rl_state.raw_prompt, prompt_is_still_uncooked ? "still raw" : "cooked already");
+
+  if (saved_rl_state.cooked_prompt)    /* if (!prompt_is_still_uncooked) @@@?? */
     return FALSE;  /* cooked already */
   
-  DPRINTF0(DEBUG_READLINE, "Firing up stove to cook the prompt");
   pre_cooked = mysavestring(saved_rl_state.raw_prompt);
 
   
