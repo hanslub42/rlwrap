@@ -806,12 +806,12 @@ tag byte, a 32-bit length and the message proper. This is not terribly
 useful when running a filter directly from the command line (outside
 rlwrap), even if we set the RLWRAP_*_FD ourselves.
 
-Therfore, when run directly from the command line, a filter expects
+Therefore, when run directly from the command line, a filter expects
 input messages on its standard input of the form
 
-TAG_PROMPT >
+TAG_PROMPT myprompt >
 
-(i.a. a tag name, one space and a message) and it will respond in the
+(i.a. a tag name, one space and a message followed by a newline) and it will respond in the
 same way on its standard output
 
 
