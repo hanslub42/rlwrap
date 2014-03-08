@@ -358,6 +358,24 @@ main_loop()
     } else if (nfds > 0) {	/* Hah! something to read or write */ 
 
       /* -------------------------- read pty --------------------------------- */
+      /* Always first read and process the slave command's output, even if there is input waiting on stdin 
+         (which may happen when pasting a lot of text). E.g. when pasting "a\nb\nc" into "rlwrap cat" we want
+         a 
+         a
+         b
+         b
+         c
+         c
+
+         and not
+  
+         a
+         b
+         c
+         a
+         b
+         c
+      */ 
       if (FD_ISSET(master_pty_fd, &readfds)) { /* there is something to read on master pty: */
         nread = read(master_pty_fd, buf, BUFFSIZE - 1); /* read it */
         DPRINTF1(DEBUG_AD_HOC, "nread: %d", nread);
