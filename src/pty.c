@@ -41,6 +41,7 @@ my_pty_fork(int *ptr_master_fd,
   const char *slave_name;
   struct termios pterm;
   int only_sigchld[] = { SIGCHLD, 0 };
+  
 
 
   ptytty_openpty(&fdm, &fds, &slave_name);
@@ -106,8 +107,14 @@ my_pty_fork(int *ptr_master_fd,
         myerror("dup2 of stderr to ttyfd failed");
       close (ttyfd);
     }
-    if (renice && !nice(1)) /* impossible */
-      myerror("could not increase my own niceness"); 
+
+    if (renice) {
+      int ret;
+      errno =  0;
+      ret = nice(1); /* return value unused */ 
+      if (errno) 
+        myerror("could not increase my own niceness"); 
+    }
 
     if (slave_winsize != NULL)
       if (ioctl(fdm, TIOCSWINSZ, slave_winsize) < 0) /* this assumes that master and slave have identical winsizes */
