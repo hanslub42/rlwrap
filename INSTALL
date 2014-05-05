@@ -10,7 +10,7 @@ INSTALLATION
 
 ./configure
 make
-make install 
+make install
 
 If ./configure is not found, you may have to create it by
 
@@ -24,7 +24,7 @@ automake --add-missing
 CONFIGURATION OPTIONS
 
 configure can be called with a number of options (e.g. if you want to
-install rlwrap in a non-standard place). Do 
+install rlwrap in a non-standard place). Do
 
 ./configure --help
 
@@ -53,19 +53,19 @@ To uninstall, do 'make uninstall'
 
 INSTALLING AS NON-ROOT
 
-If you want to install rlwrap as non-root, you should call configure with 
+If you want to install rlwrap as non-root, you should call configure with
 the --prefix option, like:
 
-./configure --prefix=$HOME 
+./configure --prefix=$HOME
 
 after which 'make install' will install rlwrap in $HOME/bin
 
-You may have to install GNU readline  (e.g using ./configure
+You may have to install GNU readline (e.g using ./configure
 --prefix=$HOME in the readline source directory)
 
 rlwrap's configure script will not find this installation automatically, but
 
-./configure --prefix=$HOME CFLAGS=-I$HOME/include CPPFLAGS=-I$HOME/include LDFLAGS=-L$HOME/lib 
+./configure --prefix=$HOME CFLAGS=-I$HOME/include CPPFLAGS=-I$HOME/include LDFLAGS=-L$HOME/lib
 
 should work. You can add '-static' to LDFLAGS if you want to build a statically linked rlwrap.
 

@@ -715,7 +715,8 @@ int cook_prompt_if_necessary () {
 
   DPRINTF2(DEBUG_READLINE, "Prompt <%s>: %s", saved_rl_state.raw_prompt, prompt_is_still_uncooked ? "still raw" : "cooked already");
 
-  if (saved_rl_state.cooked_prompt)    /* if (!prompt_is_still_uncooked) @@@?? */
+  if (saved_rl_state.cooked_prompt)    /* if (!prompt_is_still_uncooked) bombs with multi-line paste. Apparently
+                                        prompt_is_still_uncooked can be FALSE while saved_rl_state.cooked_prompt = NULL. Ouch!@@@! */
     return FALSE;  /* cooked already */
   
   pre_cooked = mysavestring(saved_rl_state.raw_prompt);

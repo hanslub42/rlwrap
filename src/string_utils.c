@@ -518,7 +518,7 @@ static void copy_next(int n, const char **original, char **copy);
 char *
 mark_invisible(const char *buf)
 {
-  int padsize = 3 * strlen(buf) + 1; /* worst case: every char in buf gets surrounded by RL_PROMPT_{START,END}_IGNORE */
+  int padsize =  (assert(buf != NULL), (3 * strlen(buf) + 1)); /* worst case: every char in buf gets surrounded by RL_PROMPT_{START,END}_IGNORE */
   char *scratchpad = mymalloc (padsize);
   char *result = scratchpad;
   const char **original = &buf;

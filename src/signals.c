@@ -365,7 +365,7 @@ child_died(int unused)
     filter_is_dead = TRUE;
     filter_pid = 0;
   } else  {
-    DPRINTF0(DEBUG_ALL, "Whoa, got a SIGCHLD without one of the children actually dying....!");
+    DPRINTF0(DEBUG_ALL, "Whoa, got a SIGCHLD, but not from slave command or filter! I must have children I don't know about (blush...)!");
     /* ignore */
   }     
 
