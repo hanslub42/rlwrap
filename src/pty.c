@@ -28,7 +28,7 @@
 static int always_echo = FALSE;
 
 /* global var */
-int slave_pty_fd;
+int slave_pty_sensing_fd = -1;
 
 pid_t
 my_pty_fork(int *ptr_master_fd,
@@ -46,7 +46,6 @@ my_pty_fork(int *ptr_master_fd,
 
   ptytty_openpty(&fdm, &fds, &slave_name);
 
-  slave_pty_fd = fds;
 
   block_signals(only_sigchld);  /* block SIGCHLD until we have had a chance to install a handler for it after the fork() */
 
@@ -82,20 +81,29 @@ my_pty_fork(int *ptr_master_fd,
     command_pid = pid;            /* the SIGCHLD signal handler needs this global variable */
  
     *ptr_master_fd = fdm;
-    if (!command_is_dead && tcgetattr(fdm, &pterm) < 0) {
-      sleep(1);                 /* we might be more succesful after the child command has
-                                   initialized its terminal. As there is no reliable way to sense this
-                                   from the parent, we just wait a little */
-      if (tcgetattr(slave_pty_fd, &pterm) < 0) {
-        fprintf(stderr,         /* don't use mywarn() because of the strerror() message *within* the text */
+
+
+
+    if (tcgetattr(fdm, &pterm) == 0) {        /* if we can do a tcgetattr on the master, assume that it reflects the slave's
+                                                 terminal settings (at least on Linux and FreeBSD, this works), and use it as
+                                                 slave_pty_sensing_fd, to keep tabs on slave terminal settings. In this case we can 
+                                                 close fds (the slave), avoiding problems with lost output on FreeBSD  when the slave dies */
+      slave_pty_sensing_fd = fdm; 
+      DPRINTF0(DEBUG_TERMIO, "Using master pty to sense slave settings, closing slave in parent");
+      close(fds);
+    } else if (tcgetattr(fds, &pterm) == 0) { /* we'll have to keep open the slave pty to get its terminal settings */
+      DPRINTF0(DEBUG_TERMIO, "Using slave pty to sense slave settings, keeping it open in parent");
+      slave_pty_sensing_fd = fds;
+    } else  {                                 /* Running out of options:                                             */
+        fprintf(stderr,                       /* don't use mywarn() because of the strerror() message *within* the text */
                 "Warning: %s cannot determine terminal mode of %s\n"
                 "(because: %s).\n"
                 "Readline mode will always be on (as if -a option was set);\n"
                 "passwords etc. *will* be echoed and saved in history list!\n\n",
                 program_name, command_name, strerror(errno));
-        always_echo = TRUE;
-      }
-    }
+        always_echo = TRUE;   
+  }
+
     if (!isatty(STDOUT_FILENO) || !isatty(STDERR_FILENO)) {     /* stdout or stderr redirected? */
       ttyfd = open("/dev/tty", O_WRONLY);                       /* open users terminal          */
       DPRINTF1(DEBUG_TERMIO, "stdout or stderr are not a terminal, onpening /dev/tty with fd=%d", ttyfd);       
@@ -135,7 +143,7 @@ slave_is_in_raw_mode()
 
   if (command_is_dead)
     return FALSE; /* filter last words  too (even if ncurses-ridden) */
-  if (!(pterm_slave = my_tcgetattr(slave_pty_fd, "slave pty"))) {
+  if (!(pterm_slave = my_tcgetattr(slave_pty_sensing_fd, "slave pty"))) {
     if (been_warned++ == 1)     /* only warn once, but not the first time (as this usually means that the rlwrapped command has just died)
                                    - this is still a race when signals get delivered very late*/
       mywarn("tcgetattr error on slave pty (from parent process)");
@@ -154,7 +162,7 @@ mirror_slaves_echo_mode()
   struct termios *pterm_slave = NULL;
   int should_echo_anyway = always_echo || (always_readline && !dont_wrap_command_waits());
 
-  if ( !(pterm_slave = my_tcgetattr(slave_pty_fd, "slave pty")) ||
+  if ( !(pterm_slave = my_tcgetattr(slave_pty_sensing_fd, "slave pty")) ||
        command_is_dead ||
        always_echo 
        )
@@ -204,7 +212,7 @@ mirror_slaves_echo_mode()
 void
 write_EOF_to_master_pty()
 {
-  struct termios *pterm_slave = my_tcgetattr(slave_pty_fd, "slave pty");
+  struct termios *pterm_slave = my_tcgetattr(slave_pty_sensing_fd, "slave pty");
   char *sent_EOF = mysavestring("?");
 
   *sent_EOF = (pterm_slave && pterm_slave->c_cc[VEOF]  ? pterm_slave->c_cc[VEOF] : 4) ; /*@@@ HL shouldn't we directly mysavestring(pterm_slave->c_cc[VEOF]) ??*/
@@ -219,7 +227,7 @@ write_EOF_to_master_pty()
 void
 write_EOL_to_master_pty(char *received_eol)
 {
-  struct termios *pterm_slave = my_tcgetattr(slave_pty_fd, "slave pty");
+  struct termios *pterm_slave = my_tcgetattr(slave_pty_sensing_fd, "slave pty");
   char *sent_eol = mysavestring("?");
 
   *sent_eol = *received_eol;
@@ -247,7 +255,7 @@ completely_mirror_slaves_terminal_settings()
   
   struct termios *pterm_slave;
   DEBUG_RANDOM_SLEEP;
-  pterm_slave = my_tcgetattr(slave_pty_fd, "slave pty");
+  pterm_slave = my_tcgetattr(slave_pty_sensing_fd, "slave pty");
   log_terminal_settings(pterm_slave);
   if (pterm_slave && tcsetattr(STDIN_FILENO, TCSANOW, pterm_slave) < 0 && errno != ENOTTY)
     ;   /* myerror ("cannot prepare terminal (tcsetattr error on stdin)"); */
@@ -261,7 +269,7 @@ completely_mirror_slaves_output_settings()
   struct termios *pterm_stdin, *pterm_slave;  
   DEBUG_RANDOM_SLEEP;
   pterm_stdin = my_tcgetattr(STDIN_FILENO, "stdin");
-  pterm_slave = my_tcgetattr(slave_pty_fd, "slave pty");
+  pterm_slave = my_tcgetattr(slave_pty_sensing_fd, "slave pty");
   if (pterm_slave && pterm_stdin) { /* no error message -  we can be called while slave is already dead */
     pterm_stdin -> c_oflag = pterm_slave -> c_oflag;
     tcsetattr(STDIN_FILENO, TCSANOW, pterm_stdin);

@@ -188,7 +188,7 @@ extern int _rl_horizontal_scroll_mode;
 
 /* in main.c: */
 extern int master_pty_fd;
-extern int slave_pty_fd;
+extern int slave_pty_sensing_fd;
 extern FILE *debug_fp;
 extern char *program_name, *command_name;
 extern int always_readline;

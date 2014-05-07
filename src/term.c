@@ -126,7 +126,7 @@ init_terminal(void)
 void
 set_echo(int yes)
 {
-  struct termios *pterm = my_tcgetattr(slave_pty_fd, "slave pty");      /* mimic terminal settings of client */
+  struct termios *pterm = my_tcgetattr(slave_pty_sensing_fd, "slave pty");      /* mimic terminal settings of client */
 
   if (!pterm)                   /* child has probably died */
     return;
