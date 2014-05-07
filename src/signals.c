@@ -418,10 +418,10 @@ void suicide_by(int signal, int status) {
   
   if (signals_program_error(signal)) { 
     errno = 0;  
-    mywarn("%s killed by %s%s.\n%s has not crashed, but for transparency,\n"
+    mywarn("%s crashed, killed by %s%s.\n%s itself has not crashed, but for transparency,\n"
            "it will now kill itself %swith the same signal\n",
            command_name, signal_name(signal), (coredump(status) ? " (core dumped)" : ""),
-           program_name, (coredump(status) ? "" : "(without dumping core)") );
+           program_name, (coredump(status) ? "" : "(without dumping core) ") );
   }
   uninstall_signal_handlers();
   unblock_all_signals();
