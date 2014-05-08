@@ -291,6 +291,7 @@ adapt_tty_winsize(int from_fd, int to_fd)
   ret = ioctl(from_fd, TIOCGWINSZ, &winsize);
   DPRINTF1(DEBUG_SIGNALS, "ioctl (..., TIOCGWINSZ) = %d", ret);
   if (winsize.ws_col != old_winsize.ws_col || winsize.ws_row != old_winsize.ws_row) { 
+    DPRINTF4(DEBUG_SIGNALS, "ws.col: %d -> %d, ws.row: %d -> %d", old_winsize.ws_col, winsize.ws_col, old_winsize.ws_row, winsize.ws_row);
     if (always_readline &&!dont_wrap_command_waits())  /* if --always_readline option is set, the client will probably spew a */
       deferred_adapt_commands_window_size = TRUE;      /* volley of control chars at us when its terminal is resized. Hence we don't do it now */
     else {  
