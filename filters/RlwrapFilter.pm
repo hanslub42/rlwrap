@@ -212,20 +212,6 @@ sub handle_output {
 }
 
 
-
-# split output in echo and the rest and call the appropriate handlers on them
-sub handle_output_old {
-  my ($self, $message) = @_;
-  my ($echo, $handled_echo, $sep);
-  if (defined $self -> {previous_tag} and $self -> {previous_tag} == TAG_INPUT) {
-      $self->{cumulative_output} = "";
-    ($echo, $sep, $message) = ($message =~ /^([^\n\r]*)(\r?\n)?(.*)?/s); #@@@ This doesn't work for multi-line input!
-    $handled_echo = when_defined $self -> echo_handler, "$echo";
-  }
-  $self->{cumulative_output} .= $message;
-  return $handled_echo . $sep .(when_defined $self -> output_handler, "$message");
-}
-
 sub read_until { # read chunks from pty pointed to by $fh until either inactive for $timeout or
                  # $stoptext is seen at end-of-chunk
   my ($fh, $stoptext, $timeout) = @_;
