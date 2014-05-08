@@ -125,8 +125,8 @@ my_pty_fork(int *ptr_master_fd,
     }
 
     if (slave_winsize != NULL)
-      if (ioctl(fdm, TIOCSWINSZ, slave_winsize) < 0) /* this assumes that master and slave have identical winsizes */
-        myerror("TIOCSWINSZ failed on master pty"); 
+      if (ioctl(slave_pty_sensing_fd, TIOCSWINSZ, slave_winsize) < 0) 
+        myerror("TIOCSWINSZ failed on master pty"); /* This is done in parent and not in child as that would fail on Solaris (why?) */ 
 
     return (pid); /* returns in parent and in child (and pid lets us determine who we are) */
   }
