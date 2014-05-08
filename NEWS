@@ -10,6 +10,33 @@
       multi-line edit would mangle upper ASCII and UTF-8 (and still does 
       that to UTF16 :( ) 
 
+      added --extra-char-after-completion and -multi-line-ext options
+
+      rlwrap now recognises the 'rmcup' and 'rmkx' character sequences used by 
+      programs that use an alternate screen (like editors and pagers) to return 
+      from it.
+      
+      configure will now correctly determine pty type on SCO OpenServer
+
+      rlwrap --no-children would leak file descriptors to /proc/<command_pid>/wchan
+      
+      non-ASCII characters in multi-line input are no longer replaced
+      by spaces after calling an external editor
+  
+      running rlwrap within emacs would crash (division by zero). 
+      rlwrap now bails out whenever terminal width == 0
+
+      added --enable-proc-mountpoint config option to use alternate linux-like 
+      proc filesystems (like in FreeBSD) for finding <command>s working dir (-c option)
+      and kernel function in which <command> is sleeping (-N option)
+
+      added prototype for copy_without_ignore_markers, fixing a segfault on NetBSD/amd64
+      
+      <command> final output before dying was lost on FreeBSD
+
+      Filters now get complete echo lines even if the echo comes back in chunks
+
+
 0.37  Commands that emit "status lines" using backspaces and carriage 
       returns could confuse rlwrap
 
