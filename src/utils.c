@@ -639,7 +639,8 @@ usage(int status)
   print_option('S', "substitute-prompt", "prompt", FALSE, NULL);
   print_option('t', "set-term-name", "name", FALSE, NULL);
   print_option('w', "wait-before-prompt", "N", FALSE, "(msec, <0  : patient mode)");
-  print_option('z', "filter", "filter command", FALSE, NULL);  
+  print_option('z', "filter", "filter command", FALSE, "(-z listing lists installed filters)");  
+  
  
 #ifdef DEBUG
   fprintf(stderr, "\n");
