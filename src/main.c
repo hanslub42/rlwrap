@@ -29,7 +29,7 @@ char *password_prompt_search_string = NULL;  /* (part of) password prompt (argum
 int ansi_colour_aware = FALSE;               /* -A option: make readline aware of ANSI colour codes in prompt */
 int complete_filenames = FALSE;	             /* -c option: whether to complete file names        */
 int debug = 0;			             /* -d option: debugging mask                        */
-char *extra_char_after_completion = NULL;    /* -e option: override readlines's default completion_append_char (space) */
+char *extra_char_after_completion = " ";     /* -e option: override readlines's default completion_append_char (space) */
 int history_duplicate_avoidance_policy =
   ELIMINATE_SUCCESIVE_DOUBLES;               /* -D option: whether and how to avoid duplicate history entries */
 char *history_format = NULL;                 /* -F option: format to append to history entries            */
