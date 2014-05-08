@@ -224,6 +224,7 @@ extern int we_just_got_a_signal_or_EOF;
 extern int remember_for_completion;
 extern int commands_children_not_wrapped; 
 extern int accepted_lines;
+extern char *filter_command;
 
 void cleanup_rlwrap_and_exit(int status);
 void put_in_output_queue(char *stuff);

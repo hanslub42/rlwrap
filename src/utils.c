@@ -542,7 +542,9 @@ void log_fd_info(int fd) {
 void
 last_minute_checks()
 {
-
+  /* flag unhealthy option combinations */
+  if (multiline_separator && filter_command)
+    mywarn("There are lots of issues with filters and multi-line rlwrap!");
 }
 
 

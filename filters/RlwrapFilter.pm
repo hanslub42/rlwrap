@@ -7,7 +7,9 @@ use vars qw($VERSION @ISA @EXPORT @EXPORT_OK $AUTOLOAD);
 
 sub when_defined($@);
 my $previous_tag = -1;
-my $last_cumulative_output = "";
+my $echo_has_been_handled = 0;
+my $saved_output = "";
+
 
 require Exporter;
 require AutoLoader;
@@ -102,8 +104,6 @@ sub new {
   return $self;
 }
 
-
-
 # event loop
 sub run {
     my ($self) = @_;
@@ -181,8 +181,40 @@ sub out_of_band {
   return $tag > 128;
 }
 
+
+
+
+
+
 # split output in echo and the rest and call the appropriate handlers on them
 sub handle_output {
+  my ($self, $message) = @_;
+  my ($echo, $handled_echo, $nl);
+  if (defined $self -> {previous_tag} and $self -> {previous_tag} == TAG_INPUT) {
+    $self->{cumulative_output} = "";
+    $echo_has_been_handled = 0;
+  }
+
+  if (not $echo_has_been_handled) {
+    if ($message !~ /\n/) {
+      $saved_output .= $message; # save all output until we have one *whole* echo line
+      return "";
+    } else {                    # ... then process it
+      $message = $saved_output . $message;
+      $echo_has_been_handled = 1;
+      $saved_output = "";
+      ($echo, $nl, $message) = ($message =~ /^([^\n\r]*)(\r?\n)?(.*)?/s); #@@@ This doesn't work for multi-line input!
+      $handled_echo = when_defined $self -> echo_handler, "$echo";
+    }
+  }
+  $self->{cumulative_output} .= $message;
+  return $handled_echo . $nl . (when_defined $self -> output_handler, "$message");
+}
+
+
+
+# split output in echo and the rest and call the appropriate handlers on them
+sub handle_output_old {
   my ($self, $message) = @_;
   my ($echo, $handled_echo, $sep);
   if (defined $self -> {previous_tag} and $self -> {previous_tag} == TAG_INPUT) {
