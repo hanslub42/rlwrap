@@ -117,9 +117,8 @@ my_pty_fork(int *ptr_master_fd,
     }
 
     if (renice) {
-      int ret;
       errno =  0;
-      ret = nice(1); /* return value unused */ 
+      nice(1); /* return value unused */ 
       if (errno) 
         myerror("could not increase my own niceness"); 
     }
