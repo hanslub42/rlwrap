@@ -404,6 +404,7 @@ void clear_line(void);
 void clear_the_screen(void);
 void curs_up(void);
 void curs_down(void);
+void curs_left(void);
 void test_terminal(void);
 int my_putchar(TPUTS_PUTC_ARGTYPE c);
 void my_putstr(const char *string);
@@ -413,7 +414,7 @@ extern int terminal_settings_saved;
 extern struct winsize winsize;
 extern char *term_name;
 extern char *term_backspace, term_eof, term_stop, *term_cursor_hpos,
-  *term_cursor_up, *term_cursor_down, *term_rmcup, *term_rmkx;
+  *term_cursor_up, *term_cursor_down, *term_cursor_left, *term_rmcup, *term_rmkx;
 extern int newline_came_last;
 
 /* in filter.c */
@@ -529,7 +530,7 @@ void filter_test(void);
 
 #  define ERRMSG(b)              (b && (errno != 0) ? add3strings("(", strerror(errno), ")") : "" )
 
-#  define SHOWCURSOR(c)          if (debug & DEBUG_READLINE) {my_putchar(c); mymicrosleep(800); backspace(1);} /* (may work incorrectly at last column!)*/
+#  define SHOWCURSOR(c)          if (debug & DEBUG_READLINE) {my_putchar(c); mymicrosleep(1200); curs_left();} /* (may work incorrectly at last column!)*/
 
 #  define DEBUG_RANDOM_SLEEP        if (debug & DEBUG_RACES) {int sleeptime=rand()&31; DPRINTF1(DEBUG_RACES,"sleeping for %d msecs", sleeptime); mymicrosleep(sleeptime);}
 

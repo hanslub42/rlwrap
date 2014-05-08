@@ -30,6 +30,7 @@ char *term_cursor_hpos;
 char *term_clear_screen;
 char *term_cursor_up;
 char *term_cursor_down;
+char *term_cursor_left;         /* only used for debugging (the SHOWCURSOR macro) */
 char *term_rmcup;               /* rmcup - char sequence to return from alternate screen */
 char *term_rmkx;                /* rmkx - char sequence to return from keyboard application mode */
 
@@ -100,6 +101,7 @@ init_terminal(void)
     term_clear_line     = my_tgetstr("ce"); /* was: @@@ my_tgetstr("dl1") */
     term_clear_screen   = my_tgetstr("cl");
     term_cursor_hpos    = my_tgetstr("ch");
+    term_cursor_left    = my_tgetstr("le");
     term_rmcup          = my_tgetstr("te"); /* rlwrap still uses ye olde termcappe names */
     term_rmkx           = my_tgetstr("ke");
     if (term_cursor_hpos && !strstr(term_cursor_hpos, "%p")) {
@@ -144,20 +146,6 @@ set_echo(int yes)
   free(pterm);
 }
 
-
-
-void
-backspace(int count)
-{
-  int i;
-
-  if (term_backspace)
-    for (i = 0; i < count; i++)
-      tputs(term_backspace, 1, my_putchar);
-  else
-    for (i = 0; i < count; i++)
-      my_putchar('\b');
-}
 
 int
 cursor_hpos(int col)
@@ -211,6 +199,30 @@ clear_line()
     free((void *)spaces);
   }
   cr();
+}
+
+
+
+void
+backspace(int count)
+{
+  int i;
+
+  if (term_backspace)
+    for (i = 0; i < count; i++)
+      tputs(term_backspace, 1, my_putchar);
+  else
+    for (i = 0; i < count; i++)
+      my_putchar('\b');
+}
+
+void 
+curs_left()
+{
+  if (term_cursor_left)
+    tputs(term_cursor_left, 1, my_putchar);
+  else
+    backspace(1);
 }
 
 
