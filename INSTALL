@@ -12,13 +12,18 @@ INSTALLATION
 make
 make install
 
-If ./configure is not found, you may have to create it by
+If the configure script is not found (like when you pulled rlwrap out of a its repository), 
+you can recreate it (and all of the other files it needs, like Makefile.in and the tools/
+directory) by:
 
 aclocal
 autoconf
 autoheader
 automake --add-missing
 
+or, even shorter:
+
+autoreconf --install
 
 
 CONFIGURATION OPTIONS
