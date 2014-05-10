@@ -333,8 +333,8 @@ AC_MSG_RESULT(yes)
 
 
 
-# check for existence of myself under /proc/$$/cwd If the user specified --disable-proc-mountpoint we'll still do these tests
-# but they wil fail unless ./no is a procfs mountpoint ;-)
+# check for existence of myself under $opt_proc_mountpoint/$$/cwd If the user specified --disable-proc-mountpoint we'll still do these tests
+# but they wil fail unless /no is a procfs mountpoint ;-)
 
 echo "Will rlwrap find command's working directory under ${opt_proc_mountpoint}/<commands pid>/cwd? let's see..."                                 
 AC_CHECK_FILES($opt_proc_mountpoint/$$/cwd/configure.ac,[                                                                                      
