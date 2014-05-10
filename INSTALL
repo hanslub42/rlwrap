@@ -12,9 +12,8 @@ INSTALLATION
 make
 make install
 
-If the configure script is not found (like when you pulled rlwrap out of a its repository), 
-you can recreate it (and all of the other files it needs, like Makefile.in and the tools/
-directory) by:
+If the configure script is not found, you can recreate it, and all of the other 
+files it needs, by:
 
 aclocal
 autoconf
