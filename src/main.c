@@ -233,6 +233,8 @@ main_loop()
   int promptlen = 0;
   int leave_prompt_alone;
   sigset_t no_signals_blocked;
+  int seen_EOF = FALSE;     
+
    
   struct timespec         select_timeout, *select_timeoutptr;
   struct timespec immediately = { 0, 0 }; /* zero timeout when child is dead */
@@ -240,7 +242,6 @@ main_loop()
   struct timespec  *forever = NULL;
   wait_a_little.tv_nsec = 1000 * 1000 * wait_before_prompt;
 
-  
   
   sigemptyset(&no_signals_blocked);
   
@@ -270,7 +271,7 @@ main_loop()
       select_timeout = immediately;
       select_timeoutptr = &select_timeout;
       timeoutstr = "immediately";
-    } else if (prompt_is_still_uncooked) {
+    } else if (prompt_is_still_uncooked || polling) {
       select_timeout = wait_a_little;
       select_timeoutptr = &select_timeout;
       timeoutstr = "wait_a_little";
@@ -354,6 +355,9 @@ main_loop()
 	  rlwrap_already_prompted = TRUE;
 	}
 	prompt_is_still_uncooked = FALSE;
+      } else if (polling) {
+        completely_mirror_slaves_special_characters();
+        continue;
       } else {
 	myerror("unexpected select() timeout");
       }
@@ -378,7 +382,7 @@ main_loop()
          b
          c
       */ 
-      if (FD_ISSET(master_pty_fd, &readfds)) { /* there is something to read on master pty: */
+      if (FD_ISSET(master_pty_fd, &readfds)) { /* there is something (or nothing, if EOF) to read on master pty: */
         nread = read(master_pty_fd, buf, BUFFSIZE - 1); /* read it */
         DPRINTF1(DEBUG_AD_HOC, "nread: %d", nread);
 	if (nread <= 0) { 
@@ -386,10 +390,15 @@ main_loop()
 	    if (promptlen > 0)	/* commands dying words were not terminated by \n ... */
 	      my_putchar('\n');	/* provide the missing \n */
 	    cleanup_rlwrap_and_exit(EXIT_SUCCESS);
-	  } else  if (errno == EINTR)	/* interrupted by signal ...*/	                     
+	  } else  if (errno == EINTR) {	/* interrupted by signal ...*/	                     
 	    continue;                   /* ... don't worry */
-	  else
-	    myerror("read error on master pty");
+	  } else  if (! seen_EOF) {     /* maybe command has just died (and SIGCHLD, whose handler sets command_is_dead is not  */     
+            mymicrosleep(50);           /* yet caught) Therefore we wait a bit,                                                 */
+            seen_EOF = TRUE;            /* set a flag                                                                           */   
+            continue;                   /* and try one more time (hopefully catching the signal this time round                 */
+          } else {
+            myerror("read error on master pty"); 
+          }
 	}
 	  
 	completely_mirror_slaves_output_settings(); /* some programs (e.g. joe) need this. Gasp!! */	

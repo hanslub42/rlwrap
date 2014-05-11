@@ -20,7 +20,7 @@
 
 #include "rlwrap.h"
 
-int command_is_dead = FALSE;
+volatile int command_is_dead = FALSE;
 int commands_exit_status = 0;
 int filter_is_dead = FALSE;
 int filters_exit_status = 0;

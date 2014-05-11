@@ -105,13 +105,14 @@ my_pselect(int n, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, const st
   } else
     pmy_select_timeout_tv = until_hell_freezes;
   signal_handled = FALSE;
-    
+      
   sigprocmask(SIG_SETMASK, sigmask, &oldmask);
   /* most signals will be catched HERE (and their handlers will set my_select_timeout_tv to {0,0}) */
   retval = select(n, readfds, writefds, exceptfds, pmy_select_timeout_tv);
   /* but even if they are slow off the mark and get catched HERE the code 3 lines below will notice */
   sigprocmask(SIG_SETMASK, &oldmask, NULL);
-
+  /*mymicrosleep(10);*/
+                  
   if (signal_handled && retval >= 0) { 
     errno = EINTR;
     return -1;
@@ -470,7 +471,7 @@ timestamp(char *buf, int size)
   diff_usec = 1000000 * (now.tv_sec -firsttime.tv_sec) + (now.tv_usec - firsttime.tv_usec);
   diff_sec = diff_usec / 1000000.0;
   
-  snprintf1(buf, size, "%4.3f ", diff_sec);
+  snprintf1(buf, size, "%f ", diff_sec);
 }
 
 

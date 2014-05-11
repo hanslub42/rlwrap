@@ -263,7 +263,7 @@ completely_mirror_slaves_terminal_settings()
 }
 
 void
-completely_mirror_slaves_output_settings()
+completely_mirror_slaves_output_settings() 
 {
   struct termios *pterm_stdin, *pterm_slave;  
   DEBUG_RANDOM_SLEEP;
@@ -277,6 +277,23 @@ completely_mirror_slaves_output_settings()
   myfree(pterm_stdin);
   DEBUG_RANDOM_SLEEP;
 }
+
+void
+completely_mirror_slaves_special_characters()
+{
+  struct termios *pterm_stdin, *pterm_slave;
+  DEBUG_RANDOM_SLEEP;
+  pterm_stdin = my_tcgetattr(STDIN_FILENO, "stdin");
+  pterm_slave = my_tcgetattr(slave_pty_sensing_fd, "slave pty");
+  if (pterm_slave && pterm_stdin) { /* no error message -  we can be called while slave is already dead */
+    pterm_stdin -> c_cc[VINTR] = pterm_slave -> c_cc[VINTR];
+    tcsetattr(STDIN_FILENO, TCSANOW, pterm_stdin);
+  }
+  myfree(pterm_slave);
+  myfree(pterm_stdin);
+  DEBUG_RANDOM_SLEEP;
+}
+
 
 /* returns TRUE if the -N option has been specified, we can read /proc/<command_pid>/wchan,
    (which happens only on linux, as far as I know) and what we read there contains the word "wait"

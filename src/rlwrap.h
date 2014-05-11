@@ -264,7 +264,7 @@ extern int leave_prompt_alone;
 
 
 /* in signals.c */
-extern int command_is_dead;
+extern volatile int command_is_dead;
 extern int commands_exit_status;
 extern int filter_is_dead;
 extern int filters_exit_status;
@@ -372,6 +372,7 @@ struct termios *get_pterm_slave(void);
 void mirror_slaves_echo_mode(void);
 void completely_mirror_slaves_terminal_settings(void);
 void completely_mirror_slaves_output_settings(void);
+void completely_mirror_slaves_special_characters(void);
 void write_EOF_to_master_pty(void);
 void write_EOL_to_master_pty(char *);
 int dont_wrap_command_waits(void);
