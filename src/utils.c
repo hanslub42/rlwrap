@@ -111,7 +111,7 @@ my_pselect(int n, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, const st
   retval = select(n, readfds, writefds, exceptfds, pmy_select_timeout_tv);
   /* but even if they are slow off the mark and get catched HERE the code 3 lines below will notice */
   sigprocmask(SIG_SETMASK, &oldmask, NULL);
-  /*mymicrosleep(10);*/
+  
                   
   if (signal_handled && retval >= 0) { 
     errno = EINTR;
@@ -521,8 +521,8 @@ change_working_directory()
 void log_terminal_settings(struct termios *terminal_settings) {
   if (!terminal_settings)
     return;
-  DPRINTF3(DEBUG_TERMIO, "clflag.ISIG: %s, cc_c[VINTR]=%d, cc_c[VEOF]=%d",
-           isset(terminal_settings->c_cflag | ISIG),
+  DPRINTF3(DEBUG_TERMIO, "terminal settings: clflag.ISIG: %s, cc_c[VINTR]=%d, cc_c[VEOF]=%d",
+           isset(terminal_settings->c_lflag | ISIG),
            terminal_settings->c_cc[VINTR],
            terminal_settings->c_cc[VEOF]);
 }
