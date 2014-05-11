@@ -386,7 +386,7 @@ main_loop()
         nread = read(master_pty_fd, buf, BUFFSIZE - 1); /* read it */
         DPRINTF1(DEBUG_AD_HOC, "nread: %d", nread);
 	if (nread <= 0) { 
-	  if (command_is_dead || nread == 0) { /*  child is dead or has closed its stdout */
+	  if (command_is_dead || nread == 0) { /*  we catched a SIGCHLD,  or slave command has closed its stdout */
 	    if (promptlen > 0)	/* commands dying words were not terminated by \n ... */
 	      my_putchar('\n');	/* provide the missing \n */
 	    cleanup_rlwrap_and_exit(EXIT_SUCCESS);
