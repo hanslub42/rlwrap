@@ -286,7 +286,16 @@ completely_mirror_slaves_special_characters()
   pterm_stdin = my_tcgetattr(STDIN_FILENO, "stdin");
   pterm_slave = my_tcgetattr(slave_pty_sensing_fd, "slave pty");
   if (pterm_slave && pterm_stdin) { /* no error message -  we can be called while slave is already dead */
-    pterm_stdin -> c_cc[VINTR] = pterm_slave -> c_cc[VINTR];
+    int isig_stdin = pterm_stdin -> c_lflag & ISIG;
+    cc_t ic_stdin  = pterm_stdin -> c_cc[VINTR];
+    int isig_slave = pterm_slave -> c_lflag & ISIG;
+    cc_t ic_slave  = pterm_slave -> c_cc[VINTR];
+    if ((isig_stdin == isig_slave) &&  (ic_stdin == ic_slave)) /* nothing to do */
+      return;
+    DPRINTF4(DEBUG_TERMIO,"stdin interrupt handling copied from slave: ISIG: %0x->%0x, VINTR: %0x->%0x", 
+             isig_stdin, isig_slave, ic_stdin, ic_slave); 
+    pterm_stdin -> c_cc[VINTR] = ic_slave;
+    pterm_stdin -> c_lflag ^= (isig_slave ^ ISIG); /* copy ISIG bit from slave */ 
     tcsetattr(STDIN_FILENO, TCSANOW, pterm_stdin);
   }
   myfree(pterm_slave);
