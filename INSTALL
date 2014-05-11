@@ -33,22 +33,26 @@ install rlwrap in a non-standard place). Do
 ./configure --help
 
 to see them all. Most of them are not specific to rlwrap, except the
-following three:
+following:
 
---enable-spy-on-readline : If we want to keep the display tidy when
-re-sizing the terminal window or printing multi-line prompts, we have
-to know whether or not readline is in horizontal-scroll-mode
-(i.e. wheter long lines are scrolled or wrapped). At present, this
-involves a look at a private readline variable - if you feel guilty
-about that, disable this option.
+--enable-spy-on-readline (default: YES) If we want to keep the display
+  tidy when re-sizing the terminal window or printing multi-line
+  prompts, we have to know whether or not readline is in
+  horizontal-scroll-mode (i.e. wheter long lines are scrolled or
+  wrapped). At present, this involves a look at a private readline
+  variable - if you feel guilty about that, disable this option.
 
---enable-homegrown-redisplay: some people report ddouble echoing of
-user input. Enabling this option will cure the problem - though the
-display will then flicker over slow connections (cf. BUGS)
+--enable-homegrown-redisplay (default: NO): some people report ddouble
+  echoing of user input. Enabling this option will cure the problem -
+  though the display will then flicker over slow connections
+  (cf. BUGS)
 
---enable-debug: Adds a --debug option to rlwrap's repertoire. This
-will make rlwrap write debug information to a file /tmp/rlwrap.debug
-(cf. the output of rlwrap --help for more info)
+--enable-debug: (default: NO) Adds a --debug option to rlwrap's
+  repertoire. This will make rlwrap write debug information to a file
+  /tmp/rlwrap.debug (cf. the output of rlwrap --help for more info)
+
+--enable-proc-mountpoint (default: /proc) mountpoint for Linux-style
+  procfs, used for determination of slave command's working directory.
 
 
 UNINSTALLATION
