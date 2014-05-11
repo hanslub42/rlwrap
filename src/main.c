@@ -43,6 +43,7 @@ char *prompt_regexp = NULL;		     /* -O option: only ever "cook" prompts matchin
 int colour_the_prompt = FALSE;	             /* -p option: whether we should paint the prompt */
 int renice = FALSE;                          /* -R option: whether to be nicer than command */
 int wait_before_prompt =  40;	             /* -w option: how long we wait before deciding we have a cookable prompt (in msec)) */
+int polling = FALSE;                         /* -W option: always give select() a small (=wait_before_prompt) timeout. */
 int impatient_prompt = TRUE;                 /* show raw prompt as soon as possible, even before we cook it. may result in "flashy" prompt */
 char *substitute_prompt = NULL;              /* -S option: substitute our own prompt for <command>s */
 char *filter_command = NULL;                 /* -z option: pipe prompts, input, output, history and completion requests through an external filter */
@@ -95,11 +96,11 @@ static void test_main(void);
 
 /* options */
 #ifdef GETOPT_GROKS_OPTIONAL_ARGS
-static char optstring[] = "+:a::Ab:cC:d::D:e:f:F:g:hH:iIl:nNM:m::oO:p::P:q:rRs:S:t:Tvw:z:";
+static char optstring[] = "+:a::Ab:cC:d::D:e:f:F:g:hH:iIl:nNM:m::oO:p::P:q:rRs:S:t:Tvw:Wz:";
 /* +: is not really documented. configure checks wheteher it works as expected
    if not, GETOPT_GROKS_OPTIONAL_ARGS is undefined. @@@ */
 #else
-static char optstring[] = "+:a:Ab:cC:d:D:e:f:F:g:hH:iIl:nNM:m:oO:p:P:q:rRs:S:t:Tvw:z:";	
+static char optstring[] = "+:a:Ab:cC:d:D:e:f:F:g:hH:iIl:nNM:m:oO:p:P:q:rRs:S:t:Tvw:Wz:";	
 #endif
 
 #ifdef HAVE_GETOPT_LONG
@@ -137,6 +138,7 @@ static struct option longopts[] = {
   {"test-terminal",  		no_argument, 		NULL, 'T'},
   {"version", 			no_argument, 		NULL, 'v'},
   {"wait-before-prompt",        required_argument,      NULL, 'w'},    
+  {"polling",                   no_argument,            NULL, 'W'},
   {"filter",                    required_argument,      NULL, 'z'}, 
   {0, 0, 0, 0}
 };
@@ -825,6 +827,8 @@ read_options_and_command_name(int argc, char **argv)
         impatient_prompt =  FALSE;
       }
       break;
+    case 'W': 
+      polling = TRUE; break;
     case 'z': filter_command = mysavestring(optarg);	break;
     case '?':
       assert(optind > 0);

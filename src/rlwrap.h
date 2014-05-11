@@ -225,6 +225,7 @@ extern int remember_for_completion;
 extern int commands_children_not_wrapped; 
 extern int accepted_lines;
 extern char *filter_command;
+extern int polling;
 
 void cleanup_rlwrap_and_exit(int status);
 void put_in_output_queue(char *stuff);
