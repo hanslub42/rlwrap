@@ -178,7 +178,7 @@ mirror_slaves_echo_mode()
   /* if the --always-readline option is set with argument "assword:", determine whether prompt ends with "assword:\s" */
   if (should_echo_anyway && password_prompt_search_string) {
     char *p, *q;
-
+    DPRINTF2(DEBUG_READLINE, "matching prompt <%s> and password search string <%s>..", saved_rl_state.raw_prompt, password_prompt_search_string); 
     assert(strlen(saved_rl_state.raw_prompt) < BUFFSIZE);
     p = saved_rl_state.raw_prompt + strlen(saved_rl_state.raw_prompt) - 1;
     q =
@@ -192,6 +192,7 @@ mirror_slaves_echo_mode()
 
     if (q < password_prompt_search_string)      /* found "assword:" */
       should_echo_anyway = FALSE;
+    DPRINTF1(DEBUG_READLINE,".. result: should_echo_anyway = %d", should_echo_anyway);
   }
 
 

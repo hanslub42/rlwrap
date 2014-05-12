@@ -611,12 +611,13 @@ usage(int status)
           "\n"
           "Options:\n", program_name);
 
-  print_option('a', "always-readline", "password:", TRUE, NULL);
+  print_option('a', "always-readline", "password prompt", TRUE, NULL);
   print_option('A', "ansi-colour-aware", NULL, FALSE, NULL);
   print_option('b', "break-chars", "chars", FALSE, NULL);
   print_option('c', "complete-filenames", NULL, FALSE, NULL);
   print_option('C', "command-name", "name|N", FALSE, NULL);
   print_option('D', "history-no-dupes", "0|1|2", FALSE, NULL);
+  print_option('e', "extra-char-after-completion", "char|''", FALSE, NULL);   
   print_option('f', "file", "completion list", FALSE,NULL);
   print_option('g', "forget-matching", "regexp", FALSE,NULL);
   print_option('h', "help", NULL, FALSE, NULL);
@@ -640,6 +641,7 @@ usage(int status)
   print_option('S', "substitute-prompt", "prompt", FALSE, NULL);
   print_option('t', "set-term-name", "name", FALSE, NULL);
   print_option('w', "wait-before-prompt", "N", FALSE, "(msec, <0  : patient mode)");
+  print_option('W', "polling", NULL, FALSE, NULL);
   print_option('z', "filter", "filter command", FALSE, "(-z listing lists installed filters)");  
   
  
