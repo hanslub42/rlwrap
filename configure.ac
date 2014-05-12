@@ -32,7 +32,7 @@ AC_PREREQ(2.61)
 AC_CONFIG_AUX_DIR(tools)
 AC_CANONICAL_HOST
 AC_CONFIG_SRCDIR(src/main.c)
-AM_INIT_AUTOMAKE(rlwrap,0.40)
+AM_INIT_AUTOMAKE(rlwrap,0.41)
 
 AC_PROG_INSTALL
 AM_CONFIG_HEADER([config.h])
@@ -350,10 +350,6 @@ AC_DEFINE_UNQUOTED(PROC_MOUNTPOINT, "[$opt_proc_mountpoint]", [Define to locatio
 echo
 echo
 
-#echo "please ignore any WARNINGs about ignoring --datarootdir below :-)"
-#echo
-#echo
-
 
 AC_OUTPUT
 
@@ -368,6 +364,6 @@ EOF
 
 
 # Local Variables:
-# mode: shell-script
+# mode: autoconf
 # End:
 
