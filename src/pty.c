@@ -29,6 +29,7 @@ static int always_echo = FALSE;
 
 /* global var */
 int slave_pty_sensing_fd = -1;
+static char *sensing_pty = "uninitialized"; 
 
 pid_t
 my_pty_fork(int *ptr_master_fd,
@@ -89,20 +90,23 @@ my_pty_fork(int *ptr_master_fd,
                                                  slave_pty_sensing_fd, to keep tabs on slave terminal settings. In this case we can 
                                                  close fds (the slave), avoiding problems with lost output on FreeBSD  when the slave dies */
       slave_pty_sensing_fd = fdm; 
-      DPRINTF0(DEBUG_TERMIO, "Using master pty to sense slave settings, closing slave in parent");
+      sensing_pty = "master";     
       close(fds);
     } else if (tcgetattr(fds, &pterm) == 0) { /* we'll have to keep open the slave pty to get its terminal settings */
-      DPRINTF0(DEBUG_TERMIO, "Using slave pty to sense slave settings, keeping it open in parent");
       slave_pty_sensing_fd = fds;
-    } else  {                                 /* Running out of options:                                             */
+      sensing_pty = "slave";
+    } else  {                                 /* Running out of options:                                                */
         fprintf(stderr,                       /* don't use mywarn() because of the strerror() message *within* the text */
                 "Warning: %s cannot determine terminal mode of %s\n"
                 "(because: %s).\n"
                 "Readline mode will always be on (as if -a option was set);\n"
                 "passwords etc. *will* be echoed and saved in history list!\n\n",
                 program_name, command_name, strerror(errno));
-        always_echo = TRUE;   
-  }
+        always_echo = TRUE;  
+        sensing_pty = "no"; 
+    }
+    DPRINTF1(DEBUG_TERMIO, "Using %s pty to sense slave settings in parent", sensing_pty);
+
 
     if (!isatty(STDOUT_FILENO) || !isatty(STDERR_FILENO)) {     /* stdout or stderr redirected? */
       ttyfd = open("/dev/tty", O_WRONLY);                       /* open users terminal          */
@@ -125,11 +129,12 @@ my_pty_fork(int *ptr_master_fd,
 
     if (slave_winsize != NULL)
       if (ioctl(slave_pty_sensing_fd, TIOCSWINSZ, slave_winsize) < 0) 
-        myerror("TIOCSWINSZ failed on master pty"); /* This is done in parent and not in child as that would fail on Solaris (why?) */ 
+        myerror("TIOCSWINSZ failed on %s pty", sensing_pty); /* This is done in parent and not in child as that would fail on Solaris (why?) */ 
 
-    return (pid); /* returns in parent and in child (and pid lets us determine who we are) */
+    return (pid); 
   }
 }
+
 
 int
 slave_is_in_raw_mode()
