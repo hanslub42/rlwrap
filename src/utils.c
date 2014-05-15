@@ -49,7 +49,7 @@ yield()
 }
 
 
-static int signal_handled = FALSE;
+static volatile int signal_handled = FALSE;
 
 #ifdef HAVE_REAL_PSELECT
 
@@ -63,7 +63,7 @@ void zero_select_timeout () {
 #define until_hell_freezes  NULL ;
 static struct timeval * volatile pmy_select_timeout_tv; /* The SIGCHLD handler sets this variable (see zero_select_timeout() below) to make
                                                           select() return immediately when a child has died. gcc (4.8 and higher) may optimize it 
-                                                          into a variable, which won't work: hence the "volatile" keyword */ 
+                                                          into a register, which won't work: hence the "volatile" keyword */ 
 static struct timeval my_select_timeout_tv;
 
 void zero_select_timeout () {
