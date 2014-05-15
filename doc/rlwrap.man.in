@@ -195,8 +195,10 @@ Print rlwrap version.
 In order to determine if  \fIcommand\fP's last output is a prompt, \fBrlwrap\fP waits \fItimeout\fP millisecs after receiving it.
 Only when no more output has arrived, it is cooked (coloured, filtered and/or replaced by a substitute prompt) and displayed as a prompt.
 Before this the prompt is displayed "uncooked". Most users won't notice, but heavy cookers can prepend the timeout with a minus sign,
-making rlwrap hold back the prompt until it has been cooked ("patient mode"). This will prevent flashing of the prompt, but it will also interfere with 
-long output lines and make switches from direct to readline mode less reliable. Default timeout: 40 ms  
+making rlwrap hold back the prompt until it has been cooked ("patient mode"). This will prevent flashing of the prompt, but it will also interfere with long output lines and make switches from direct to readline mode less reliable. Default timeout: 40 ms  
+.TP
+.OL \-W \-\-poll 
+EXPERIMENTAL: Wake up every \fItimeout\fP millisecs, where \fItimeout\fP is the same as for the \-w (\-\-wait\-before\-prompt) option, 40 ms by default. This is used to sense the slave's interrupt character and ISIG flag and to adjust stdin's terminal settings accordingly, even before you press a key. Try this option e.g. when CTRL-C acts differently on  \fIcommand\fP  with, and without, rlwrap. 
 .TP
 .OL \-z \-\-filter  \fIfilter\fP
 Use a filter to change \fBrlwrap\fP's behaviour. A filter can be used to keep certain input out of the history, 
@@ -231,7 +233,7 @@ Wrap \fBsqlite3\fP, use the \fBpipeto\fP filter to be able to pipe the output of
 .B rlwrap\ \-a\ \-z\ pipeto\ \-i\ \-f\ sql_words\ sqlite3\ contacts.db
 .TP
 In a shell script, use \fBrlwrap\fP in 'one\-shot' mode as a replacement for \fBread\fP
-.B order=`rlwrap \-S 'Your pizza? '\-H past_orders \-P Margherita \-o cat`
+.B order=$(rlwrap \-S 'Your pizza? '\-H past_orders \-P Margherita \-o cat)
 
 .SH DIRECT MODE AND READLINE MODE
 Most simple console commands put your terminal either in "cooked" or
@@ -261,7 +263,7 @@ msec by default, but this can be changed with the \fB\-w\fP option.
 Normally \fBrlwrap\fP writes the suspected prompt as soon as it is
 received, replacing it with a "cooked" version afer the wait
 time. This is called "impatient" mode. If you don't like the flashing
-effect (which will only occur when you "cook" the prompt heavily) you
+effect (which can become annoying when you "cook" the prompt heavily) you
 can put \fBrlwrap\fP in "patient mode" by  specifying a negative value with \fB\-w\fP (e.g. \-w \-40). Rlwrap 
 will then hold back the prompt and only print if after cooking.
 .SH COOKING PROMPTS
@@ -281,7 +283,7 @@ Use an external editor to edit the current input (this will only work if the \-m
 option is set). This action
 has a \fBreadline\fP command name  \fIrlwrap\-call\-editor\fP
 .PP
-These special keys were chosen because are not currently bound to any
+These special keys were chosen for no other reason than that they  are not currently bound to any
 readline action. If you don't like them, (or your window manager swallows them) they
 can be re\-bound more sensibly by including lines like the
 following in your \fB~/.inputrc\fP:
@@ -291,7 +293,7 @@ following in your \fB~/.inputrc\fP:
    "\eC\-xe":   rlwrap\-call\-editor            # CTRL\-x e 
 .fi
 .PP
-cf. the \fBreadline(3)\fP manpage for more about re\-binding keys
+cf. the \fBreadline(3)\fP manpage
 .SH ENVIRONMENT 
 .TP
 \fBRLWRAP_HOME\fP: 
@@ -327,7 +329,8 @@ interrupted by a CTRL\-C from the terminal (although \fBrlwrap\fP will not survi
 
 If \fIcommand\fP changes the keystrokes that send a particular signal
 from the keyboard (like emacs, which uses CTRL\-G instead of CTRL\-C)
-\fBrlwrap\fP will do the same.
+\fBrlwrap\fP will do the same (but only after the next keystroke - use the 
+\fB\-\-poll\fP option to make rlwrap more transparent in this respect)
 
 When \fIcommand\fP is killed by a signal, \fBrlwrap\fP will clean up,
 reset its signal handlers an then commit suicide by sending the same
@@ -351,7 +354,7 @@ status. \fBrlwrap\fP will always leave the terminal in a tidy state,
 even after a crash. 
 .SH FILES
 \fBrlwrap\fP expects its history and completion files in $RLWRAP_HOME, but uses .dotfiles in the user's
-home directory if this variable is not set. This will quickly become messy if you use \fBrlwrap\fP a lot. 
+home directory if this variable is not set. This will quickly become messy if you use \fBrlwrap\fP for many different commands. 
 .TP
 $RLWRAP_HOME/\fIcommand\fP_history, ~/.\fIcommand\fP_history
 History for \fIcommand\fP 
@@ -369,7 +372,7 @@ consulted if the per\-user completion word list is not found.
 $INPUTRC, ~/.inputrc
 Individual \fBreadline\fP initialisation file (See \fBreadline\fP (3) for
 its format). \fBrlwrap\fP sets its \fIapplication name\fP to
-\fIcommand\fP (unless you use the \fB\-C\fP option), enabling different behaviours for different commands.
+\fIcommand\fP (this can be overridden by the \fB\-C\fP option), enabling different behaviours for different commands.
 One could e.g. put the following lines in \fB~/.inputrc\fP:  
 .RS
 .nf
@@ -397,8 +400,6 @@ changed the state of its terminal before \fBrlwrap\fP has read
 will notice these races especially on a busy machine and with heavy
 "cooking" and filtering, when suddenly (and unpredictably) promtps or
 command output are garbled or incorrectly coloured.
-
-Filtering is a very recent addition, and should be considered alpha quality.
   
 \fBrlwrap\fP can try, but often fails to, handle prompts that contain
 control characters.  A flter may be used to clean up the prompt.
