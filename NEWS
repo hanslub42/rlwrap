@@ -1,4 +1,11 @@
-0.40  compiling with gcc -O2 made rlwrap hang after CTRL-D on empty line
+0.41  Sluggish SIGCHLD handler could cause an I/O error on master pty
+
+      Added -W (-poll) option to poll slave pty for changes in its 
+      interrupt character and ISIG flag.
+
+0.40  configure will now find tgetent() in libtinfo 
+
+      compiling with gcc -O2 made rlwrap hang after CTRL-D on empty line
       
       HP-UX 11 has weird tgetent() return values, confusing rlwrap 
 
@@ -32,7 +39,7 @@
 
       added prototype for copy_without_ignore_markers, fixing a segfault on NetBSD/amd64
       
-      <command> final output before dying was lost on FreeBSD
+      commands final output before dying was lost on FreeBSD
 
       Filters now get complete echo lines even if the echo comes back in chunks
 
