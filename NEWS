@@ -1,6 +1,6 @@
 0.41  Sluggish SIGCHLD handler could cause an I/O error on master pty
 
-      Added -W (-poll) option to poll slave pty for changes in its 
+      Added -W (-polling) option to poll slave pty for changes in its 
       interrupt character and ISIG flag.
 
 0.40  configure will now find tgetent() in libtinfo 

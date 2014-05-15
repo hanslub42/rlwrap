@@ -197,7 +197,7 @@ Only when no more output has arrived, it is cooked (coloured, filtered and/or re
 Before this the prompt is displayed "uncooked". Most users won't notice, but heavy cookers can prepend the timeout with a minus sign,
 making rlwrap hold back the prompt until it has been cooked ("patient mode"). This will prevent flashing of the prompt, but it will also interfere with long output lines and make switches from direct to readline mode less reliable. Default timeout: 40 ms  
 .TP
-.OL \-W \-\-poll 
+.OL \-W \-\-polling 
 EXPERIMENTAL: Wake up every \fItimeout\fP millisecs, where \fItimeout\fP is the same as for the \-w (\-\-wait\-before\-prompt) option, 40 ms by default. This is used to sense the slave's interrupt character and ISIG flag and to adjust stdin's terminal settings accordingly, even before you press a key. Try this option e.g. when CTRL-C acts differently on  \fIcommand\fP  with, and without, rlwrap. 
 .TP
 .OL \-z \-\-filter  \fIfilter\fP
@@ -330,7 +330,7 @@ interrupted by a CTRL\-C from the terminal (although \fBrlwrap\fP will not survi
 If \fIcommand\fP changes the keystrokes that send a particular signal
 from the keyboard (like emacs, which uses CTRL\-G instead of CTRL\-C)
 \fBrlwrap\fP will do the same (but only after the next keystroke - use the 
-\fB\-\-poll\fP option to make rlwrap more transparent in this respect)
+\fB\-\-polling\fP option to make rlwrap more transparent in this respect)
 
 When \fIcommand\fP is killed by a signal, \fBrlwrap\fP will clean up,
 reset its signal handlers an then commit suicide by sending the same
