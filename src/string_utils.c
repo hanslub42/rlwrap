@@ -581,26 +581,6 @@ copy_next(int n, const char **original, char **copy)
 
 
 
-char *
-copy_and_unbackspace(const char *original)
-{
-  char *copy = mysavestring(original);
-#if 0  
-  char *copy_start = copy;
-  for( ; *original; original++) {
-    if(*original == BACKSPACE)
-      copy = (copy > copy_start ? copy - 1 : copy_start);
-    else if (*original == CARRIAGE_RETURN)
-      copy = copy_start;
-    else
-      *copy++ = *original;
-  }     
-  *copy = '\0';
-  return copystart;
-#else
-  return copy;
-#endif
-}
   
 
 /* helper function: returns the number of displayed characters (the
@@ -691,7 +671,7 @@ get_last_screenline(char *long_line, int termwidth)
   int line_length, removed;
   char *line_copy, *last_screenline;
 
-  line_copy = copy_and_unbackspace(long_line);
+  line_copy = mysavestring(long_line);
   line_length = strlen(line_copy);
   
   if (termwidth == 0 ||              /* this may be the case on some weird systems */
