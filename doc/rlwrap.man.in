@@ -220,8 +220,8 @@ Run \fBnc\fP (netcat) with command\-line editing and history
 Wrap \fBsmbclient\fP (which uses readline itself), keep passwords out of the history and don't wrap commands launched from smbclient (like \fBmore\fP)
 .B rlwrap\ \-aPassword:\ \-N\ smbclient //PEANUT/C
 .TP 
-Wrap \fBgauche\fP (a Scheme interpreter) with a bold blue prompt, enable mult\-line editing and don't consider single quotes as quotes (so that the parentheses in (print 'q) match)   
-.B rlwrap\ \-pBlue \-m\ \-q'"' gosh
+Wrap \fBgauche\fP (a Scheme interpreter) with a bold blue prompt, enable multi\-line editing (using .scm as filename extension) and don't consider single quotes as quotes (so that the parentheses in e.g. (print 'q) match)   
+.B rlwrap\ \-pBlue \-m\ \-M\ .scm\ \-q'"' gosh
 .TP
 Get a list of all currently installed filters
 .B rlwrap\ \-z\ listing
@@ -233,7 +233,7 @@ Wrap \fBsqlite3\fP, use the \fBpipeto\fP filter to be able to pipe the output of
 .B rlwrap\ \-a\ \-z\ pipeto\ \-i\ \-f\ sql_words\ sqlite3\ contacts.db
 .TP
 In a shell script, use \fBrlwrap\fP in 'one\-shot' mode as a replacement for \fBread\fP
-.B order=$(rlwrap \-S 'Your pizza? '\-H past_orders \-P Margherita \-o cat)
+.B order=$(rlwrap\ -pYellow\ \-S\ 'Your pizza?\ '\ \-H past_orders\ \-P\ Margherita\ \-o\ cat)
 
 .SH DIRECT MODE AND READLINE MODE
 Most simple console commands put your terminal either in "cooked" or
@@ -407,7 +407,7 @@ control characters.  A flter may be used to clean up the prompt.
 .SH VERSION
 This manpage documents rlwrap version @VERSION@
 .SH AUTHORS
-The readline library (written by Chet Ramey) does all the hard work
+The readline library (written by Brian Fox and Chet Ramey) does all the hard work
 behind the scenes, the pty\-handling code has been taken practically
 unchanged from rxvt\-2.7.10 (currently maintained by Geoff C. Wing),
 and completion word lists are managed by Damian Ivereigh's libredblack
