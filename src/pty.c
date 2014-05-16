@@ -284,6 +284,31 @@ completely_mirror_slaves_output_settings()
   DEBUG_RANDOM_SLEEP;
 }
 
+
+
+/* rlwrap's transparency depends on knowledge of the slave commands terminal settings, which are kept in its
+   termios structure. In many cases it is enough to inspect those settings after the user has pressed a key
+   (e.g.: user presses a key - rlwrap inspects slaves ECHO flag - rlwrap echoes the keypress (or not)
+
+   But some keypresses are directly handled by the terminal driver, e.g.: user presses CTRL-C - driver
+   inspects rlwrap's ISIG flag and c_cc[VINTR] character - driver sends a sigINT to rlwrap.
+
+   Rlwrap doesn't get a chance to intervene - except by unsetting ISIG beforehand and handling the interrupt
+   key itself. We cannot, however, just bind the key to a readline action self-insert(key), as this wouldn't
+   interrupt an ongoing line edit.
+
+   Rlwrap solves this problem by copying the relevant flags and special characters from the slave pty to
+   stdin/stdout. Of course, ideally this should happen *before* the user presses her key. This can be done by
+   calling rlwrap with the -W (--polling) option.
+*/ 
+
+
+/* Many termios flags and characters are serial-specific and will never be used on a pty
+   Possible exceptions (cf: http://www.lafn.org/~dave/linux/termios.txt)
+   ISTRIP IGNCR (and related flags) and all the c_cc characters (although only VINTR seems to be changed
+   in practice, e.g. by emacs to CTRL-G)
+*/  
+
 void
 completely_mirror_slaves_special_characters()
 {
