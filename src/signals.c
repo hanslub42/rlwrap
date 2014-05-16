@@ -85,10 +85,10 @@ install_signal_handlers()
   int i;
   mysignal(SIGCHLD, &child_died);
   mysignal(SIGTSTP, &handle_sigTSTP);
-#ifndef DEBUG
+#ifndef DEBUG          /* we want core dumps when debugging, no polite excuses! */
   for (i = 1; i<MAX_SIG; i++)
     if (signals_program_error(i))
-      mysignal(i, &handle_program_error_signal);        /* we want core dumps when debugging, no polite excuses! */
+      mysignal(i, &handle_program_error_signal); /* make polite excuse */
 #endif
   mysignal(SIGALRM, &handle_sigALRM);
   for (i = 1;  signals_to_be_passed_on[i]; i++) {
