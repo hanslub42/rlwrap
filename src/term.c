@@ -109,6 +109,7 @@ init_terminal(void)
   }
   
   DPRINTF1(DEBUG_TERMIO, "using TERM = %s", term_name);  
+  mysetenv("TERM", term_name);
 
   if (we_have_stringcaps)  { 
     term_backspace      = my_tgetstr("le");
