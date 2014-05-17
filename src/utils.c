@@ -335,40 +335,6 @@ int open_unique_tempfile(const char *suffix, char **tmpfile_name) {
 }  
 
 
-
-/* private helper function for myerror() and mywarn() */
-static void
-utils_warn(const char *message, va_list ap)
-{
-
-  int saved_errno = errno;
-  char buffer[BUFFSIZE];
-  static int warnings_given = 0;  
-
-  snprintf(buffer, sizeof(buffer) - 1, "%s: ", program_name);
-  vsnprintf(buffer + strlen(buffer), sizeof(buffer) - strlen(buffer) - 1,
-            message, ap);
-  if (saved_errno)
-    snprintf(buffer + strlen(buffer), sizeof(buffer) - strlen(buffer) - 1,
-             ": %s", strerror(saved_errno));
-  mystrlcat(buffer, "\n", sizeof(buffer));
-
-  fflush(stdout);
-  if (nowarn) {
-    DPRINTF1(DEBUG_ALL, "Warning (suppressed by --nowarn): %s", buffer);
-  } else {
-    fputs(buffer, stderr); /* @@@ error reporting (still) uses bufered I/O */
-    if (! warnings_given++) 
-      fputs("        warnings can be silenced by the --no-warnings (-n) option\n", stderr);
-  }
-  fflush(stderr);
-  errno =  saved_errno;
-  /* we want this because sometimes error messages (esp. from client) are dropped) */
-
-}
-
-/* myerror("utter failure in %s", where) prints a NL-terminated error
-   message ("rlwrap: utter failure in xxxx\n") and exits rlwrap */
   
 
 static char*
@@ -380,6 +346,54 @@ markup(const char*str)
     return mysavestring(str);
 }       
 
+
+#define UW_ERRNO 1
+#define UW_WARNING 2
+
+
+/* private helper function for myerror() and mywarn() */
+static void
+utils_warn(int uw_flags, const char *message_format, va_list ap)
+{
+
+  int saved_errno = errno;
+  char contents[BUFFSIZE];
+  int is_warning = uw_flags & UW_WARNING;
+  char *warning_or_error = is_warning ? "warning: " : "error: ";
+  static int warnings_given = 0;  
+  char *message = add2strings(program_name, ": ");
+
+
+  vsnprintf(contents, sizeof(contents) - 1, message_format, ap);
+
+  message = append_and_free_old(message, markup(warning_or_error)); 
+  message = append_and_free_old(message, contents);
+                             
+  if ((uw_flags & UW_ERRNO) && saved_errno) {
+    message = append_and_free_old(message, ": ");
+    message = append_and_free_old(message, strerror(saved_errno));
+  }                                
+  message = append_and_free_old(message,"\n");                            
+    
+  fflush(stdout);
+  DPRINTF2(DEBUG_ALL, "%s %s", warning_or_error, message);
+ 
+
+  if (! (is_warning && nowarn))
+    fputs(message, stderr); /* @@@ error reporting (still) uses buffered I/O */
+  if (is_warning && !warnings_given++ && !nowarn) 
+    fputs("        warnings can be silenced by the --no-warnings (-n) option\n", stderr);
+  
+  fflush(stderr);
+  free(message);
+  errno =  saved_errno;
+  /* we want this because sometimes error messages (esp. from client) are dropped) */
+
+}
+
+/* myerror("utter failure in %s", where) prints a NL-terminated error
+   message ("rlwrap: utter failure in xxxx\n") and exits rlwrap */
+
 void
 myerror(const char *message, ...)
 {
@@ -387,7 +401,7 @@ myerror(const char *message, ...)
   const char *error_message = message;
 
   va_start(ap, message);
-  utils_warn(error_message, ap);
+  utils_warn(UW_ERRNO, error_message, ap);
   va_end(ap);
   if (!i_am_child)
     cleanup_rlwrap_and_exit(EXIT_FAILURE);
@@ -400,12 +414,11 @@ void
 mywarn(const char *message, ...)
 {
   va_list ap;
-  char *warning_message;
+  const char *warning_message = message;
 
   
-  warning_message = add2strings(markup("warning: "), message);
   va_start(ap, message);
-  utils_warn(warning_message, ap);
+  utils_warn(UW_ERRNO|UW_WARNING, warning_message, ap);
   va_end(ap);
 }
 
