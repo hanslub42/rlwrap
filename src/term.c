@@ -55,11 +55,13 @@ static char *my_tgetstr (char *id) {
   return retval;
 }
 
+#define FALLBACK_TERMINAL "vt100" /* terminal to use when we don't know which terminal we're on */
+
 void
 init_terminal(void)
 {                               /* save term settings and determine term type */
   char *term_buf;
-  int  tgetent_returnvalue;
+  int  we_have_stringcaps;
   int  we_are_on_hp_ux11;
 
   if (!isatty(STDIN_FILENO))
@@ -73,13 +75,13 @@ init_terminal(void)
   
   DPRINTF2(DEBUG_TERMIO, "winsize.ws_col: %d; winsize.ws_row: %d", winsize.ws_col, winsize.ws_row);
   if (winsize.ws_col == 0)
-    myerror("My terminal reports width=0. I can't handle this, sorry!");
+    myerror("My terminal reports width=0 (is it emacs?)  I can't handle this, sorry!");
 
   /* init some variables: */
   term_name = getenv("TERM");
   if (!term_name || strlen(term_name)==0) {
-    mywarn("environment variable TERM not set, assuming vt100\nSet it to your real terminal name if rlwrap misbehaves"); 
-    term_name = "vt100";
+    mywarn("environment variable TERM not set, assuming %s", FALLBACK_TERMINAL); 
+    term_name = FALLBACK_TERMINAL;
   }
  
   
@@ -91,11 +93,20 @@ init_terminal(void)
   term_clear_line = NULL;
   term_cursor_hpos = NULL;
    
+  /* On weird and scary HP-UX 11 succesful tgetent() returns 0: */  
+  we_are_on_hp_ux11 = tgetent(term_buf, "vt100") == 0 && tgetent(term_buf,"QzBgt57gr6xwxw") == -1; /* assuming there is no terminal called Qz... */
+  #define T_OK(retval) ((retval) > 0 || ((retval)== 0 && we_are_on_hp_ux11))
+
+  /* Test whether we can find stringcaps, use FALLBACK_TERMINAL name if not  */
+  if (! (we_have_stringcaps = T_OK(tgetent(term_buf, term_name))) && ! strcmp(term_name, FALLBACK_TERMINAL)) { 
+    mywarn("your $TERM is '%s' but %s couldn't find it in the terminfo database. We'll use '%s'", term_name, program_name, FALLBACK_TERMINAL);
+    term_name = FALLBACK_TERMINAL;
+  }       
+  if (! (we_have_stringcaps = T_OK(tgetent(term_buf, FALLBACK_TERMINAL))))
+    mywarn("Even %s is not found in the terminfo database. Expect some problems...", FALLBACK_TERMINAL);
   
-  we_are_on_hp_ux11 = tgetent(term_buf, "vt100") == 0 && tgetent(term_buf,"QzBgt57gr6xwxw") == -1; 
-  tgetent_returnvalue = tgetent(term_buf, term_name);
-  if (tgetent_returnvalue > 0 || 
-      (tgetent_returnvalue == 0 && we_are_on_hp_ux11))  { /* On weird and scary HP-UX 11 succesful tgetent() returns 0 */  
+
+  if (we_have_stringcaps)  { 
     term_backspace      = my_tgetstr("le");
     term_cr             = my_tgetstr("cr");
     term_clear_line     = my_tgetstr("ce"); /* was: @@@ my_tgetstr("dl1") */
@@ -112,11 +123,7 @@ init_terminal(void)
     }   
     term_cursor_up      = my_tgetstr("up");
     term_cursor_down    = my_tgetstr("do");                                        
-  } else {
-    DPRINTF1(DEBUG_TERMIO, "tgetent returned %d", tgetent_returnvalue);
-    errno=0; mywarn("your $TERM is '%s' but %s couldn't find it in the terminfo database. Expect some problems.", term_name, program_name);
-  }     
-
+  } 
   term_eof = saved_terminal_settings.c_cc[VEOF];
   term_stop = saved_terminal_settings.c_cc[VSTOP];
 
