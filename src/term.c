@@ -77,6 +77,8 @@ init_terminal(void)
   if (winsize.ws_col == 0)
     myerror("My terminal reports width=0 (is it emacs?)  I can't handle this, sorry!");
 
+  DPRINTF1(DEBUG_TERMIO, "found TERM = %s", term_name);  
+
   /* init some variables: */
   term_name = getenv("TERM");
   if (!term_name || strlen(term_name)==0) {
@@ -85,7 +87,6 @@ init_terminal(void)
   }
  
   
-  DPRINTF1(DEBUG_TERMIO, "TERM = %s", term_name);  
   term_buf = (char *)mymalloc(4096);
  
   term_backspace = NULL;
@@ -105,6 +106,7 @@ init_terminal(void)
   if (! (we_have_stringcaps = T_OK(tgetent(term_buf, FALLBACK_TERMINAL))))
     mywarn("Even %s is not found in the terminfo database. Expect some problems...", FALLBACK_TERMINAL);
   
+  DPRINTF1(DEBUG_TERMIO, "using TERM = %s", term_name);  
 
   if (we_have_stringcaps)  { 
     term_backspace      = my_tgetstr("le");
