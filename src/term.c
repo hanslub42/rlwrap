@@ -77,18 +77,17 @@ init_terminal(void)
   if (winsize.ws_col == 0)
     myerror("My terminal reports width=0 (is it emacs?)  I can't handle this, sorry!");
 
-  DPRINTF1(DEBUG_TERMIO, "found TERM = %s", term_name);  
-
   /* init some variables: */
   term_name = getenv("TERM");
+  DPRINTF1(DEBUG_TERMIO, "found TERM = %s", term_name);  
+
   if (!term_name || strlen(term_name)==0) {
     mywarn("environment variable TERM not set, assuming %s", FALLBACK_TERMINAL); 
     term_name = FALLBACK_TERMINAL;
   }
- 
-  
+   
   term_buf = (char *)mymalloc(4096);
- 
+
   term_backspace = NULL;
   term_cr = NULL;
   term_clear_line = NULL;
