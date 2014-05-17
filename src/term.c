@@ -99,11 +99,14 @@ init_terminal(void)
 
   /* Test whether we can find stringcaps, use FALLBACK_TERMINAL name if not  */
   if (! (we_have_stringcaps = T_OK(tgetent(term_buf, term_name))) && strcmp(term_name, FALLBACK_TERMINAL)) { 
+    errno = 0; 
     mywarn("your $TERM is '%s' but %s couldn't find it in the terminfo database. We'll use '%s'", term_name, program_name, FALLBACK_TERMINAL);
     term_name = FALLBACK_TERMINAL;
   }       
-  if (! (we_have_stringcaps = T_OK(tgetent(term_buf, FALLBACK_TERMINAL))))
+  if (! (we_have_stringcaps = T_OK(tgetent(term_buf, FALLBACK_TERMINAL)))) {
+    errno =  0; 
     mywarn("Even %s is not found in the terminfo database. Expect some problems...", FALLBACK_TERMINAL);
+  }
   
   DPRINTF1(DEBUG_TERMIO, "using TERM = %s", term_name);  
 
