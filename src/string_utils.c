@@ -113,6 +113,10 @@ add3strings(const char *str1, const char *str2, const char *str3)
 }
 
 
+/* append_and_free_old(str1, str2): return add2strings(str1, str2), freeing str1 
+   append_and_free_old(NULL, str) just returns a copy of  str
+*/ 
+
 char *
 append_and_free_old(char *str1, const char *str2)
 {
@@ -156,7 +160,9 @@ mydirname(char *filename)
 
 
 /* mystrtok: saner version of strtok that doesn't overwrite its first argument */
-char *mystrtok(const char *s, const char *delim) {
+
+char *
+mystrtok(const char *s, const char *delim) {
   static char *scratchpad = NULL;
   if (s) {
     if (scratchpad)
@@ -167,7 +173,9 @@ char *mystrtok(const char *s, const char *delim) {
 }       
 
 /* split_with("a bee    cee"," ") returns a pointer to an array {"a", "bee",  "cee", NULL} on the heap */
-char **split_with(const char *string, const char *delim) {
+
+char **
+split_with(const char *string, const char *delim) {
   const char *s;
   char *token, **pword;
   char **list = mymalloc(1 + strlen(string) * sizeof(char **)); /* list can never be longer than string + 1 */ 
@@ -176,6 +184,18 @@ char **split_with(const char *string, const char *delim) {
   *pword = NULL;
   return list;
 }       
+
+/* unsplit_with(3, ["a", "bee", "cee"], "; ") returns a pointer to "a; bee; cee" on the heap */
+char *
+unsplit_with(int n, char **strings, const char *delim) {
+  int i;
+  char *result = mysavestring(n> 0 ? strings[0]: "");
+  for (i = 1; i < n; i++) { 
+       result = append_and_free_old(result, delim);
+       result = append_and_free_old(result, strings[i]);
+  }
+  return result;
+}
 
 /* split_with("a\t\tbla","\t") returns {"a" "bla", NULL}, but we want {"a", "", "bla", NULL} for filter completion.
    We write a special version (can be freed with free_splitlist) */

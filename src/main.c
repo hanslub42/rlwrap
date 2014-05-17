@@ -86,7 +86,7 @@ static char *client_term_name = NULL; /* we'll set TERM to this before exec'ing 
 static int feed_history_into_completion_list = FALSE;
 
 /* private functions */
-static void init_rlwrap(void);
+static void init_rlwrap(char *command_line);
 static void fork_child(char *command_name, char **argv);
 static char *read_options_and_command_name(int argc, char **argv);
 static void main_loop(void);
@@ -155,7 +155,8 @@ int
 main(int argc, char **argv)
 { 
   char *command_name;
-  
+  char *command_line = unsplit_with(argc, argv, " ");  
+
   init_completer();
   command_name = read_options_and_command_name(argc, argv);
   
@@ -163,7 +164,7 @@ main(int argc, char **argv)
   if (!isatty(STDIN_FILENO) && execvp(argv[optind], &argv[optind]) < 0)
     /* if stdin is not a tty, just execute <command> */ 
     myerror("Cannot execute %s", argv[optind]);	
-  init_rlwrap();
+  init_rlwrap(command_line);
   install_signal_handlers();	
   block_all_signals();
   fork_child(command_name, argv);
@@ -562,8 +563,8 @@ main_loop()
 
 
 /* Read history and completion word lists */
-void
-init_rlwrap()
+static void
+init_rlwrap(char *command_line)
 {
 
   char *homedir, *histdir, *homedir_prefix, *hostname;
@@ -580,7 +581,9 @@ init_rlwrap()
   hostname = getenv("HOSTNAME") ? getenv("HOSTNAME") : "?";
   now = time(NULL);
   DPRINTF0(DEBUG_ALL, "-*- mode: grep -*-");
+  DPRINTF1(DEBUG_ALL, "command line: %s", command_line);
   DPRINTF3(DEBUG_ALL, "rlwrap version %s, host: %s, time: %s", VERSION, hostname, ctime(&now));
+  
   init_terminal();
 
   
