@@ -12,18 +12,6 @@ INSTALLATION
 make
 make install
 
-If the configure script is not found, you can recreate it, and all of the other 
-files it needs, by:
-
-aclocal
-autoconf
-autoheader
-automake --add-missing
-
-or, even shorter:
-
-autoreconf --install
-
 
 CONFIGURATION OPTIONS
 
@@ -77,4 +65,41 @@ rlwrap's configure script will not find this installation automatically, but
 
 should work. You can add '-static' to LDFLAGS if you want to build a statically linked rlwrap.
 
+
+BUILD PROBLEMS
+
+If configure complains about missing Xyz (where Xyz can be ncurses, or
+readline) and you are sure that Xyz is installed on your system,
+consider installing Xyz-devel
+
+completion.c is made from completion.rb by the program rbgen
+(http://libredblack.sourceforge.net/) Sometimes, after a 'git pull',
+make will try to recompile completion.rb and complain about not
+finding rbgen. A fresh clone, or simply 'touch completion.c' will
+solve this.
+
+If the configure script is not found, you can recreate it, and all of
+the other files it needs, by:
+
+aclocal
+autoconf
+autoheader
+automake --add-missing
+
+or, even shorter:
+
+autoreconf --install
+
+On recent OS X sytems, libreadline is not the real thing, but a
+non-GNU replacement. If the linker complains about missing
+symbols, install GNU readline and try again (or, better, use
+a tool like brew)
+
+Even though rlwrap now uses the excellent pseudo-terminal (pty)
+handling code from rxvt, portable programming with ptys is something
+of a black art. The configure script tries to guess how ptys have to
+be created and handled on your system, but it may guess wrong. To
+quote rxvt's configure script: "if we don't guess right then it's up
+to the user", which means that you have to manually edit config.h, and
+save a copy of it somewhere, as configure will re-create config.h
 

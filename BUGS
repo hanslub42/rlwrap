@@ -17,45 +17,6 @@ transparency.  Of course, more sophisticated programs generally have
 less need for rlwrap.
 
 
-* Installation problems:
-
----
-
-rlwrap needs the readline library (ftp://ftp.gnu.org/gnu/readline/),
-version 4.2 or newer. For .deb or .rpm users: install the readline
--devel- package!
-
----
-
-Even though rlwrap now uses the excellent pseudo-terminal (pty)
-handling code from rxvt, portable programming with ptys is something
-of a black art. The configure script tries to guess how ptys have to
-be handled on your system, but it may guess wrong. To quote rxvt's
-configure script: "if we don't guess right then it's up to the user",
-which means that you have to manually edit config.h, and save a copy
-of it somewhere, as configure will re-create config.h
-
----
-
-Andreas Leitgeb wrote:
-
-  "If (on Solaris) configure fails to detect your libreadline, 
-  then (temporarily) move the dynamic libs libreadline.so*
-  out of sight, and try again. (seems to be a problem in the
-  readline-package obtained from sunfreeware.com)"
-
--- 
-
-On recent OS X sytems, libreadline is not the real thing, but a
-non-GNU replacement. If the linker complains about missing
-symbols, install GNU readline and try again.
-
---
-After "configure", make wil re-run configure. This is a minor
-annoyance, and probably due to my poor understanding of automake. 
-
-* Run-time problems
-
 rlwrap cannot handle prompts that contain control characters (except
 ANSI colour), though you may not notice this until your cursor almost
 reaches end-of-line
@@ -121,7 +82,5 @@ which fixed the problem
 The code that determines whether a cooked prompt should be overwritten
 (when it turns out to not have been a prompt) is needlessly complex
 and not quite correct (e.g. substitute prompts may be left standing
-when they should be erased). This is a rather major rewrite, expected
-in rlwrap-0.38
-
+when they should be erased). 
 
