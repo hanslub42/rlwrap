@@ -307,8 +307,16 @@ void  mysetenv(const char *name, const char *value);
 void  set_ulimit(int resource, long value);
 void  usage(int status);
 int   open_unique_tempfile(const char *suffix, char **tmpfile_name);
-void  mywarn(const char *message, ...);
-void  myerror(const char *message, ...);
+
+
+/* flags to use for the error_flags argument to myerror */
+#define FATAL     2
+#define WARNING   0
+#define USE_ERRNO 1
+#define NOERRNO   0
+
+
+void  myerror(int error_flags, const char *message, ...);
 void  *mymalloc(size_t size);
 void  myfree(void *ptr);
 void  mysetsid(void);

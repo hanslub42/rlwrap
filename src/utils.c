@@ -161,7 +161,7 @@ write_patiently(int fd, const void *buffer, int count, const char *whither) {
       else if (errno == EPIPE || nwritten == 0) {
         return FALSE;
       } else 
-        myerror("write error %s", whither);
+        myerror(FATAL|USE_ERRNO, "write error %s", whither);
     }   
     
     total_written += nwritten;
@@ -198,19 +198,19 @@ read_patiently2 (int fd,
       assert(count > total_read);
       if((nread = read(fd, (char *) buffer + total_read, count - total_read)) <= 0) {
         if (nread < 0 && errno == EINTR) {
-          if (interruptible) {
-            errno = 0; myerror("(user) interrupt, filter_hangs?", whence);
-          }
+          if (interruptible) 
+            myerror(FATAL|NOERRNO, "(user) interrupt reading %s, filter_hangs?", whence);
+          
           if (received_sigALRM) {
             received_sigALRM = FALSE;
             interruptible = TRUE;
           }
           continue;
-        } else if (nread == 0)  {
-          errno = 0; myerror("EOF reading %s", whence);
-        } else { /* nread < 0 */        
-          myerror("error reading %s",  whence);
-        }
+        } else if (nread == 0)  
+           myerror(FATAL|NOERRNO, "EOF reading %s", whence);
+         else  /* nread < 0 */        
+           myerror(FATAL|USE_ERRNO, "error reading %s",  whence);
+        
       }
       total_read += nread;
       if (total_read == count)  /* done */
@@ -249,15 +249,15 @@ write_patiently2(int fd,
     if((nwritten = write(fd, (char *)buffer + total_written, count - total_written)) <= 0) {
       if (nwritten < 0 && errno == EINTR) {
         if (interruptible)
-          errno = 0; myerror("(user) interrupt - filter hangs?");
+           myerror(FATAL|NOERRNO, "(user) interrupt - filter hangs?");
         if (received_sigALRM) {
           received_sigALRM = FALSE;
           interruptible = TRUE;
         }
         continue;
-      } else { /* nwritten== 0 or < 0 with error other than EINTR */
-        myerror("error writing %s", whither);
-      }
+      } else  /* nwritten== 0 or < 0 with error other than EINTR */
+        myerror(FATAL|USE_ERRNO, "error writing %s", whither);
+      
     }
     total_written += nwritten;
     if (total_written == count) /* done */      
@@ -283,11 +283,11 @@ mysetenv(const char *name, const char *value)
   char *name_is_value = add3strings (name, "=", value);
   return_value = putenv (name_is_value);
 #else /* won't happen, but anyway: */      
-  mywarn("setting environment variable %s=%s failed, as this system has neither setenv() nor putenv()", name, value);
+  myerror(WARNING|NOERRNO, "setting environment variable %s=%s failed, as this system has neither setenv() nor putenv()", name, value);
 #endif
      
   if (return_value != 0)
-    mywarn("setting environment variable %s=%s failed%s", name, value,
+    myerror(WARNING|USE_ERRNO, "setting environment variable %s=%s failed%s", name, value,
            (errno ? "" : " (insufficient environment space?)"));     /* will setenv(...) = -1  set errno? */
 }       
           
@@ -329,7 +329,7 @@ int open_unique_tempfile(const char *suffix, char **tmpfile_name) {
   }
 #endif
   if (tmpfile_fd < 0)
-    myerror("could not create temporary file %s", tmpfile_name);
+    myerror(FATAL|USE_ERRNO, "could not create temporary file %s", tmpfile_name);
   free(tmpdirs);
   return tmpfile_fd;
 }  
@@ -347,79 +347,51 @@ markup(const char*str)
 }       
 
 
-#define UW_ERRNO 1
-#define UW_WARNING 2
-
-
 /* private helper function for myerror() and mywarn() */
-static void
-utils_warn(int uw_flags, const char *message_format, va_list ap)
+void
+myerror(int error_flags, const char *message_format, ...)
 {
-
   int saved_errno = errno;
   char contents[BUFFSIZE];
-  int is_warning = uw_flags & UW_WARNING;
+  int is_warning = !(error_flags & FATAL);
   char *warning_or_error = is_warning ? "warning: " : "error: ";
   static int warnings_given = 0;  
   char *message = add2strings(program_name, ": ");
 
-
+  va_list ap;
+  va_start(ap, message_format);
   vsnprintf(contents, sizeof(contents) - 1, message_format, ap);
+  va_end(ap);
 
   message = append_and_free_old(message, markup(warning_or_error)); 
   message = append_and_free_old(message, contents);
                              
-  if ((uw_flags & UW_ERRNO) && saved_errno) {
+  if ((error_flags & USE_ERRNO) && saved_errno) {
     message = append_and_free_old(message, ": ");
     message = append_and_free_old(message, strerror(saved_errno));
   }                                
   message = append_and_free_old(message,"\n");                            
     
   fflush(stdout);
-  DPRINTF2(DEBUG_ALL, "%s %s", warning_or_error, message);
+  DPRINTF2(DEBUG_ALL, "%s %s", warning_or_error, contents);
  
 
   if (! (is_warning && nowarn))
     fputs(message, stderr); /* @@@ error reporting (still) uses buffered I/O */
   if (is_warning && !warnings_given++ && !nowarn) 
-    fputs("        warnings can be silenced by the --no-warnings (-n) option\n", stderr);
+    fputs("\nwarnings can be silenced by the --no-warnings (-n) option\n", stderr);
   
   fflush(stderr);
   free(message);
   errno =  saved_errno;
-  /* we want this because sometimes error messages (esp. from client) are dropped) */
 
-}
-
-/* myerror("utter failure in %s", where) prints a NL-terminated error
-   message ("rlwrap: utter failure in xxxx\n") and exits rlwrap */
-
-void
-myerror(const char *message, ...)
-{
-  va_list ap;
-  const char *error_message = message;
-
-  va_start(ap, message);
-  utils_warn(UW_ERRNO, error_message, ap);
-  va_end(ap);
-  if (!i_am_child)
-    cleanup_rlwrap_and_exit(EXIT_FAILURE);
-  else /* child: die and let parent clean up */
-    exit(1);
-}
-
-
-void
-mywarn(const char *message, ...)
-{
-  va_list ap;
-  const char *warning_message = message;
-
+  if (error_flags & FATAL) { 
+    if (!i_am_child)
+      cleanup_rlwrap_and_exit(EXIT_FAILURE);
+    else /* child: die and let parent clean up */
+      exit(EXIT_FAILURE);
+  }
   
-  va_start(ap, message);
-  utils_warn(UW_ERRNO|UW_WARNING, warning_message, ap);
-  va_end(ap);
 }
 
 
@@ -430,7 +402,7 @@ open_logfile(const char *filename)
 
   log_fp = fopen(filename, "a");
   if (!log_fp)
-    myerror("Cannot write to logfile %s", filename);
+    myerror(FATAL|USE_ERRNO, "Cannot write to logfile %s", filename);
   now = time(NULL);
   fprintf(log_fp, "\n\n[rlwrap] %s\n", ctime(&now));
 }
@@ -449,7 +421,7 @@ filesize(const char *filename)
   struct stat buf;
 
   if (stat(filename, &buf))
-    myerror("couldn't stat file %s", filename);
+    myerror(FATAL|USE_ERRNO, "couldn't stat file %s", filename);
   return (size_t) buf.st_size;
 }
 
@@ -562,7 +534,7 @@ last_minute_checks()
 {
   /* flag unhealthy option combinations */
   if (multiline_separator && filter_command)
-    mywarn("There are lots of issues with filters and multi-line rlwrap!");
+    myerror(WARNING|NOERRNO, "Filters don't work very well with multi-line rlwrap!");
 }
 
 

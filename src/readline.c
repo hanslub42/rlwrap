@@ -492,7 +492,7 @@ munge_line_in_editor(int count, int key)
   write_patiently(tmpfile_fd, text_to_edit, strlen(text_to_edit), "to temporary file");
 
   if (close(tmpfile_fd) != 0) /* improbable */
-    myerror("couldn't close temporary file %s", tmpfilename); 
+    myerror(FATAL|USE_ERRNO, "couldn't close temporary file %s", tmpfilename); 
 
   /* find out which editor command we have to use */
   possible_editor_commands = list4(getenv("RLWRAP_EDITOR"), getenv("EDITOR"), getenv("VISUAL"), "vi +%L");
@@ -510,14 +510,14 @@ munge_line_in_editor(int count, int key)
 
   /* call editor, temporarily restoring terminal settings */    
   if (terminal_settings_saved && (tcsetattr(STDIN_FILENO, TCSAFLUSH, &saved_terminal_settings) < 0))    /* reset terminal */
-    myerror("tcsetattr error on stdin");
+    myerror(FATAL|USE_ERRNO, "tcsetattr error on stdin");
   DPRINTF1(DEBUG_READLINE, "calling %s", editor_command4);
   if ((ret = system(editor_command4))) {
     if (WIFSIGNALED(ret)) {
-      fprintf(stderr, "\n"); errno = 0;
-      myerror("editor killed by signal");
+      fprintf(stderr, "\n"); /* @@@ MUNGED! */
+      myerror(FATAL|NOERRNO, "editor killed by signal");
     } else {    
-      myerror("failed to invoke editor with '%s'", editor_command4);
+      myerror(FATAL|USE_ERRNO, "failed to invoke editor with '%s'", editor_command4);
     }
   }
   completely_mirror_slaves_terminal_settings();
@@ -526,17 +526,16 @@ munge_line_in_editor(int count, int key)
   /* read back edited input, replacing real newline with substitute */
   tmpfile_fd = open(tmpfilename, O_RDONLY);
   if (tmpfile_fd < 0)
-    myerror("could not read temp file %s", tmpfilename);
+    myerror(FATAL|USE_ERRNO, "could not read temp file %s", tmpfilename);
   tmpfilesize = filesize(tmpfilename);
   input = mymalloc(tmpfilesize + 1);
   bytes_read = read(tmpfile_fd, input, tmpfilesize);
   if (bytes_read < 0)
-    myerror("unreadable temp file %s", tmpfilename);
+    myerror(FATAL|USE_ERRNO, "unreadable temp file %s", tmpfilename);
   input[bytes_read] = '\0';
   rewritten_input = search_and_replace("\t", "    ", input, 0, NULL, NULL);     /* rlwrap cannot handle tabs in input lines */
   rewritten_input2 =
-    search_and_replace("\n", multiline_separator, rewritten_input, 0, NULL,
-                       NULL);
+    search_and_replace("\n", multiline_separator, rewritten_input, 0, NULL, NULL);
   for(p = rewritten_input2; *p ;p++)
     if(*p >= 0 && *p < ' ') /* @@@FIXME: works for UTF8, but not UTF16 or UTF32 (Mention this in manpage?)*/ 
       *p = ' ';        /* replace all control characters (like \r) by spaces */
@@ -556,7 +555,7 @@ munge_line_in_editor(int count, int key)
 
   /* wash those dishes */
   if (unlink(tmpfilename))
-    myerror("could not delete temporary file %s", tmpfilename);
+    myerror(FATAL|USE_ERRNO, "could not delete temporary file %s", tmpfilename);
   free(editor_command2);
   free(editor_command3);
   free(editor_command4);
@@ -585,7 +584,7 @@ initialise_colour_codes(char *colour)
   
 #define OUTSIDE(lo,hi,val) (val < lo || val > hi) 
   if (OUTSIDE(0,8,attributes) || OUTSIDE(30,37,foreground) || OUTSIDE(40,47,background))
-    myerror("\n"
+    myerror(FATAL|NOERRNO, "\n"
             "  prompt colour spec should be <attr>;<fg>[;<bg>]\n"
             "  where <attr> ranges over [0...8], <fg> over [30...37] and <bg> over [40...47]\n"
             "  example: 0;33 for yellow on current background, 1;31;40 for bold red on black ");
@@ -780,7 +779,7 @@ int cook_prompt_if_necessary () {
 /* Utility functions for binding keys. */
 
 static int please_update(const char *varname) {
-  myerror("since version 0.35, the readline function '%s' is called '%s'\n"
+  myerror(FATAL|NOERRNO, "since version 0.35, the readline function '%s' is called '%s'\n"
           "(hyphens instead of underscores). Please update your .inputrc",
           varname, search_and_replace("_","-", varname, 0, NULL, NULL));
   return 0;
@@ -806,7 +805,7 @@ static int please_update_ce(int count, int key) {
 static Keymap getmap(const char *name) {
   Keymap km = rl_get_keymap_by_name(name);
   if (!km) 
-    myerror("Could not get keymap '%s'", name);
+    myerror(FATAL|NOERRNO, "Could not get keymap '%s'", name);
   return km;
 }
 
@@ -818,7 +817,7 @@ static void bindkey(int key, rl_command_func_t *function, const char *maplist) {
       Keymap kmap = getmap(*mapname);
       DPRINTF4(DEBUG_READLINE,"Binding key %d (%s) in keymap '%s' to <0x%lx>", key, mangle_char_for_debug_log(key,TRUE), *mapname, (long) function);
       if (rl_bind_key_in_map(key, function, kmap))
-        myerror("Could not bind key %d (%s) in keymap '%s'", key, mangle_char_for_debug_log(key,TRUE), *mapname);
+        myerror(FATAL|NOERRNO, "Could not bind key %d (%s) in keymap '%s'", key, mangle_char_for_debug_log(key,TRUE), *mapname);
     }
 }       
 

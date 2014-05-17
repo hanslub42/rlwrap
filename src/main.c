@@ -163,7 +163,7 @@ main(int argc, char **argv)
   /* by now, optind points to <command>, and &argv[optind] is <command>'s argv */
   if (!isatty(STDIN_FILENO) && execvp(argv[optind], &argv[optind]) < 0)
     /* if stdin is not a tty, just execute <command> */ 
-    myerror("Cannot execute %s", argv[optind]);	
+    myerror(FATAL|USE_ERRNO, "Cannot execute %s", argv[optind]);	
   init_rlwrap(command_line);
   install_signal_handlers();	
   block_all_signals();
@@ -212,7 +212,7 @@ fork_child(char *command_name, char **argv)
 	fprintf(stderr, "Did you mean '%s' to be an option argument?\nThen you should write -%c%s, without the space(s)\n",
                 argv[optind], last_opt, arg); 
       }
-      myerror("Cannot execute %s", argv[optind]);   	/* stillborn child, parent will live on and display child's last gasps */
+      myerror(FATAL|USE_ERRNO, "Cannot execute %s", argv[optind]);   	/* stillborn child, parent will live on and display child's last gasps */
     }
   }
 }
@@ -309,7 +309,7 @@ main_loop()
       if (errno == EINTR || errno == 0) {	/* interrupted by signal, or by a cygwin bug (errno == 0) :-( */
 	continue;
       }	else
-	myerror("select received exception");
+	myerror(FATAL|USE_ERRNO, "select received exception");
     } else if (nfds == 0) {
       
       /* timeout, which can only happen when .. */
@@ -360,7 +360,7 @@ main_loop()
         completely_mirror_slaves_special_characters();
         continue;
       } else {
-	myerror("unexpected select() timeout");
+	myerror(FATAL|NOERRNO, "unexpected select() timeout");
       }
     } else if (nfds > 0) {	/* Hah! something to read or write */ 
 
@@ -398,7 +398,7 @@ main_loop()
             seen_EOF = TRUE;            /* set a flag                                                                           */   
             continue;                   /* and try one more time (hopefully catching the signal this time round                 */
           } else {
-            myerror("read error on master pty"); 
+            myerror(FATAL|USE_ERRNO, "read error on master pty"); 
           }
 	}
 	  
@@ -509,7 +509,7 @@ main_loop()
 	  if (errno == EINTR)
 	    continue;
 	  else
-	    myerror("Unexpected error");
+	    myerror(FATAL|USE_ERRNO, "Unexpected error");
 	else if (nread == 0)	/* EOF on stdin */
 	  cleanup_rlwrap_and_exit(EXIT_SUCCESS);
         else if (ignore_queued_input)
@@ -575,7 +575,7 @@ init_rlwrap(char *command_line)
   if (debug) {    
     debug_fp = fopen(DEBUG_FILENAME, "w");
     if (!debug_fp)
-      myerror("Couldn't open debug file %s", DEBUG_FILENAME);
+      myerror(FATAL|USE_ERRNO, "Couldn't open debug file %s", DEBUG_FILENAME);
     setbuf(debug_fp, NULL); /* always write debug messages to disk at once */
   }
   hostname = getenv("HOSTNAME") ? getenv("HOSTNAME") : "?";
@@ -606,23 +606,23 @@ init_rlwrap(char *command_line)
   if (write_histfile) {
     if (access(history_filename, F_OK) == 0) {	/* already exists, can we read/write it? */
       if (access(history_filename, R_OK | W_OK) != 0) {
-	myerror("cannot read and write %s", history_filename);
+	myerror(FATAL|USE_ERRNO, "cannot read and write %s", history_filename);
       }
     } else {			        /* doesn't exist, can we create it? */
       if(access(histdir, W_OK) != 0) {
         if (errno == ENOENT) {
           mode_t oldmask = umask(0);
           if (mkdir(histdir, 0700))       /* rwx------ */
-            myerror("cannot create directory %s", histdir);
+            myerror(FATAL|USE_ERRNO, "cannot create directory %s", histdir);
           umask(oldmask);
         } else {
-          myerror("cannot create history file in %s", histdir);
+          myerror(FATAL|USE_ERRNO, "cannot create history file in %s", histdir);
         }
       }
     }
   } else {			/* ! write_histfile */
     if (access(history_filename, R_OK) != 0) {
-      myerror("cannot read %s", history_filename);
+      myerror(FATAL|USE_ERRNO, "cannot read %s", history_filename);
     }
   }
 
@@ -747,13 +747,13 @@ read_options_and_command_name(int argc, char **argv)
     case 'd':
 #ifdef DEBUG
       if (option_count > 1)
-        myerror("-d or --debug option has to be the *first* rlwrap option");
+        myerror(FATAL|NOERRNO, "-d or --debug option has to be the *first* rlwrap option");
       if (check_optarg('d', remaining))
         debug = atoi(optarg);
       else
         debug = DEBUG_DEFAULT;
 #else
-     errno = 0; 
+     /* @@@ MUNGED! */ 
      myerror
         ("To use -d( for debugging), configure %s with --enable-debug and rebuild",
          program_name);
@@ -763,13 +763,13 @@ read_options_and_command_name(int argc, char **argv)
     case 'D': 
       history_duplicate_avoidance_policy=atoi(optarg);
       if (history_duplicate_avoidance_policy < 0 || history_duplicate_avoidance_policy > 2)
-        myerror("%s option with illegal value %d, should be 0, 1 or 2",
+        myerror(FATAL|NOERRNO, "%s option with illegal value %d, should be 0, 1 or 2",
                 current_option('D', longindex), history_duplicate_avoidance_policy);
       break;
     case 'e':
       extra_char_after_completion = mysavestring(optarg); 
       if (strlen(extra_char_after_completion) > 1) 
-        myerror("-e (--extra-char-after-completion) argument should be at most one character");
+        myerror(FATAL|NOERRNO, "-e (--extra-char-after-completion) argument should be at most one character");
       break;
     case 'f':
       if (strncmp(optarg, ".", 10) == 0)
@@ -778,13 +778,13 @@ read_options_and_command_name(int argc, char **argv)
         feed_file_into_completion_list(optarg);
       opt_f = TRUE;
       break;
-    case 'F': myerror("The -F (--history-format) option is obsolete. Use -z \"history_format '%s'\" instead", optarg);
+    case 'F': myerror(FATAL|NOERRNO, "The -F (--history-format) option is obsolete. Use -z \"history_format '%s'\" instead", optarg);
     case 'g': forget_regexp = mysavestring(optarg); match_regexp("just testing", forget_regexp, 1); break;
-    case 'h':	usage(EXIT_SUCCESS);		/* will call exit() */
-    case 'H':	history_filename = mysavestring(optarg); break;
+    case 'h': usage(EXIT_SUCCESS);		/* will call exit() */
+    case 'H': history_filename = mysavestring(optarg); break;
     case 'i': 
       if (opt_f)
-        myerror("-i option has to precede -f options");
+        myerror(FATAL|NOERRNO, "-i option has to precede -f options");
       completion_is_case_sensitive = FALSE;
       break;
     case 'I':	pass_on_sigINT_as_sigTERM = TRUE; break;
@@ -792,7 +792,7 @@ read_options_and_command_name(int argc, char **argv)
     case 'n':	nowarn = TRUE; break;
     case 'm':
 #ifndef HAVE_SYSTEM
-      mywarn("the -m option doesn't work on this system");
+      myerror(WARNING|NOERRNO, "the -m option doesn't work on this system");
 #endif
       multiline_separator =
         (check_optarg('m', remaining) ? mysavestring(optarg) : " \\ ");
@@ -844,12 +844,10 @@ read_options_and_command_name(int argc, char **argv)
     case 'z': filter_command = mysavestring(optarg);	break;
     case '?':
       assert(optind > 0);
-      myerror("unrecognised option %s\ntry '%s --help' for more information",
-              argv[optind-1], full_program_name);
+      myerror(FATAL|NOERRNO, "unrecognised option %s\ntry '%s --help' for more information", argv[optind-1], full_program_name);
     case ':':
       assert(optind > 0);
-      myerror
-        ("option %s requires an argument \ntry '%s --help' for more information",
+      myerror(FATAL|NOERRNO, "option %s requires an argument \ntry '%s --help' for more information",
          argv[optind-1], full_program_name);
 
     default:
@@ -878,10 +876,10 @@ read_options_and_command_name(int argc, char **argv)
 
     if (countback > 0) {	/* e.g -C 1 or -C 12 */
       if (argc - countback < optind)	/* -C 666 */
-	myerror("when using -C %d you need at least %d non-option arguments",
+	myerror(FATAL|NOERRNO, "when using -C %d you need at least %d non-option arguments",
 		countback, countback);
       else if (argv[argc - countback][0] == '-')	/* -C 2 perl -d blah.pl */
-	myerror("the last argument minus %d appears to be an option!",
+	myerror(FATAL|NOERRNO, "the last argument minus %d appears to be an option!",
 		countback);
       else {			/* -C 1 perl test.cgi */
 	command_name = mysavestring(mybasename(argv[argc - countback]));
@@ -889,16 +887,15 @@ read_options_and_command_name(int argc, char **argv)
       }
     } else if (countback == 0) {	/* -C name1 name2 or -C 0 */
       if (opt_C[0] == '0' && opt_C[1] == '\0')	/* -C 0 */
-	myerror("-C 0 makes no sense");
+	myerror(FATAL|NOERRNO, "-C 0 makes no sense");
       else if (strlen(mybasename(opt_C)) != strlen(opt_C))	/* -C dir/name */
-	myerror("-C option argument should not contain directory components");
+	myerror(FATAL|NOERRNO, "-C option argument should not contain directory components");
       else if (opt_C[0] == '-')	/* -C -d  (?) */
-	myerror("-C option needs argument");
+	myerror(FATAL|NOERRNO, "-C option needs argument");
       else			/* -C name */
 	command_name = opt_C;
     } else {			/* -C -2 */
-      myerror
-	("-C option needs string or positive number as argument, perhaps you meant -C %d?",
+      myerror (FATAL|NOERRNO, "-C option needs string or positive number as argument, perhaps you meant -C %d?",
 	 -countback);
     }
   } else {			/* no -C option given, use command name */
@@ -970,7 +967,7 @@ flush_output_queue()
     case EAGAIN:
       return;
     default:
-      myerror("write to master pty failed");
+      myerror(FATAL|USE_ERRNO, "write to master pty failed");
     }
   }
 
@@ -1003,8 +1000,8 @@ cleanup_rlwrap_and_exit(int status)
     kill_filter();
   else if (filter_is_dead) {
     int filters_killer = killed_by(filters_exit_status);
-    errno = 0;
-    mywarn((filters_killer ? "filter was killed by signal %d (%s)": WEXITSTATUS(filters_exit_status) ? "filter died" : "filter exited"), filters_killer, signal_name(filters_killer));
+    myerror(WARNING|NOERRNO, (filters_killer ? "filter was killed by signal %d (%s)" : 
+                              WEXITSTATUS(filters_exit_status) ? "filter died" : "filter exited"), filters_killer, signal_name(filters_killer));
   }     
   if (debug) 
     debug_postmortem();

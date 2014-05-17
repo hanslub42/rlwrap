@@ -51,7 +51,7 @@ my_pty_fork(int *ptr_master_fd,
   block_signals(only_sigchld);  /* block SIGCHLD until we have had a chance to install a handler for it after the fork() */
 
   if ((pid = fork()) < 0) {
-    myerror("Cannot fork");
+    myerror(FATAL|USE_ERRNO, "Cannot fork");
     return(42); /* the compiler may not know that myerror() won't return */
   } else if (pid == 0) {                /* child */
     DEBUG_RANDOM_SLEEP;
@@ -61,19 +61,19 @@ my_pty_fork(int *ptr_master_fd,
     close(fdm);                 /* fdm not used in child */
     ptytty_control_tty(fds, slave_name);
 
-    if (dup2(fds, STDIN_FILENO) != STDIN_FILENO)
-      myerror("dup2 to stdin failed");
+    if (dup2(fds, STDIN_FILENO) != STDIN_FILENO) /* extremely unlikely */
+      myerror(FATAL|USE_ERRNO, "dup2 to stdin failed");
     if (isatty(STDOUT_FILENO) && dup2(fds, STDOUT_FILENO) != STDOUT_FILENO)
-      myerror("dup2 to stdout failed");
+      myerror(FATAL|USE_ERRNO, "dup2 to stdout failed");
     if (isatty(STDERR_FILENO) && dup2(fds, STDERR_FILENO) != STDERR_FILENO)
-      myerror("dup2 to stderr failed");
+      myerror(FATAL|USE_ERRNO, "dup2 to stderr failed");
     if (fds > STDERR_FILENO)
       close(fds);
 
 
     if (slave_termios != NULL)
       if (tcsetattr(STDIN_FILENO, TCSANOW, slave_termios) < 0)
-        myerror("tcsetattr failed on slave pty");
+        myerror(FATAL|USE_ERRNO, "tcsetattr failed on slave pty");
 
 
     return (0);
@@ -92,7 +92,7 @@ my_pty_fork(int *ptr_master_fd,
       slave_pty_sensing_fd = fdm; 
       sensing_pty = "master";     
       close(fds);
-    } else if (tcgetattr(fds, &pterm) == 0) { /* we'll have to keep open the slave pty to get its terminal settings */
+    } else if (tcgetattr(fds, &pterm) == 0) { /* we'll have to keep the slave pty open to get its terminal settings */
       slave_pty_sensing_fd = fds;
       sensing_pty = "slave";
     } else  {                                 /* Running out of options:                                                */
@@ -112,24 +112,24 @@ my_pty_fork(int *ptr_master_fd,
       ttyfd = open("/dev/tty", O_WRONLY);                       /* open users terminal          */
       DPRINTF1(DEBUG_TERMIO, "stdout or stderr are not a terminal, onpening /dev/tty with fd=%d", ttyfd);       
       if (ttyfd <0)     
-        myerror("Could not open /dev/tty");
+        myerror(FATAL|USE_ERRNO, "Could not open /dev/tty");
       if (dup2(ttyfd, STDOUT_FILENO) != STDOUT_FILENO) 
-        myerror("dup2 of stdout to ttyfd failed");  
+        myerror(FATAL|USE_ERRNO, "dup2 of stdout to ttyfd failed");  
       if (dup2(ttyfd, STDERR_FILENO) != STDERR_FILENO)
-        myerror("dup2 of stderr to ttyfd failed");
+        myerror(FATAL|USE_ERRNO, "dup2 of stderr to ttyfd failed");
       close (ttyfd);
     }
 
+    errno = 0;
     if (renice) {
-      errno =  0;
-      nice(1); /* return value unused */ 
-      if (errno) 
-        myerror("could not increase my own niceness"); 
+      int retval = nice(1);
+      if (retval < 0 && errno)  
+        myerror(FATAL|USE_ERRNO, "could not increase my own niceness"); 
     }
 
     if (slave_winsize != NULL)
       if (ioctl(slave_pty_sensing_fd, TIOCSWINSZ, slave_winsize) < 0) 
-        myerror("TIOCSWINSZ failed on %s pty", sensing_pty); /* This is done in parent and not in child as that would fail on Solaris (why?) */ 
+        myerror(FATAL|USE_ERRNO, "TIOCSWINSZ failed on %s pty", sensing_pty); /* This is done in parent and not in child as that would fail on Solaris (why?) */ 
 
     return (pid); 
   }
@@ -150,7 +150,7 @@ slave_is_in_raw_mode()
   if (!(pterm_slave = my_tcgetattr(slave_pty_sensing_fd, "slave pty"))) {
     if (been_warned++ == 1)     /* only warn once, but not the first time (as this usually means that the rlwrapped command has just died)
                                    - this is still a race when signals get delivered very late*/
-      mywarn("tcgetattr error on slave pty (from parent process)");
+      myerror(WARNING|USE_ERRNO, "tcgetattr error on slave pty (from parent process)");
     return TRUE;
   }     
  
@@ -176,7 +176,7 @@ mirror_slaves_echo_mode()
   assert (pterm_slave != NULL);
   
   if (tcsetattr(STDIN_FILENO, TCSANOW, pterm_slave) < 0 && errno != ENOTTY) /* @@@ */
-    myerror ("cannot prepare terminal (tcsetattr error on stdin)");
+    myerror(FATAL|USE_ERRNO, "cannot prepare terminal (tcsetattr error on stdin)");
 
   term_eof = pterm_slave -> c_cc[VEOF];
   
@@ -263,7 +263,7 @@ completely_mirror_slaves_terminal_settings()
   pterm_slave = my_tcgetattr(slave_pty_sensing_fd, "slave pty");
   log_terminal_settings(pterm_slave);
   if (pterm_slave && tcsetattr(STDIN_FILENO, TCSANOW, pterm_slave) < 0 && errno != ENOTTY)
-    ;   /* myerror ("cannot prepare terminal (tcsetattr error on stdin)"); */
+    ;   /* myerror(FATAL|USE_ERRNO, "cannot prepare terminal (tcsetattr error on stdin)"); */
   myfree(pterm_slave);
   DEBUG_RANDOM_SLEEP;
 }
@@ -360,9 +360,9 @@ int dont_wrap_command_waits() {
   wchan_fd =  open(command_wchan, O_RDONLY);
   if (wchan_fd < 0) { 
     if (been_warned++ == 0) {
-      mywarn("you probably specified the -N (-no-children) option"
-             " - but spying\non %s's wait status does not work on"
-             " your system, as we cannot read %s", command_name, command_wchan);
+      myerror(WARNING|USE_ERRNO, "you probably specified the -N (-no-children) option"
+                                 " - but spying\non %s's wait status does not work on"
+                                 " your system, as we cannot read %s", command_name, command_wchan);
     }
     return FALSE;
   }     

@@ -250,7 +250,7 @@ ptytty_control_tty(int fd_tty, const char *ttydev)
              fd < 0 ? "no (good)" : "yes (bad)");
     if (fd >= 0)
       close(fd);                  /* ouch: still have controlling tty */
-    errno = 0;
+    /* @@@ MUNGED! */
     /* ---------------------------------------- */
 #if defined(PTYS_ARE_PTMX) && defined(I_PUSH)
     /*
@@ -299,7 +299,7 @@ ptytty_control_tty(int fd_tty, const char *ttydev)
     DPRINTF2(DEBUG_TERMIO, "do we have controlling tty now: %s %s",
              (fd < 0 ? "no (fatal)" : "yes (good)"), ERRMSG(fd < 0));
     if (fd < 0)
-      mywarn("Could not get controlling terminal for %s", program_name);  /* mywarn called from child */
+      myerror(WARNING|USE_ERRNO, "Could not get controlling terminal for %s", program_name);  /* mywarn called from child */
     else
       close(fd);
 
@@ -321,11 +321,11 @@ ptytty_openpty(int *amaster, int *aslave, const char **name)
   *aslave = -1;
   *amaster = ptytty_get_pty(aslave, &scrap);
   if (*amaster < 0)
-    myerror("Could not open master pty");
+    myerror(FATAL|USE_ERRNO, "Could not open master pty");
   if (*aslave < 0)
     *aslave = ptytty_get_tty(scrap);
   if (*aslave < 0)
-    myerror("Could not open slave pty %s", scrap);
+    myerror(FATAL|USE_ERRNO, "Could not open slave pty %s", scrap);
   else 
     if (name != NULL)
       *name = scrap;

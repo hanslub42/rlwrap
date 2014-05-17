@@ -75,7 +75,7 @@ mysignal(int sig, sighandler_type handler) {
   if (signal(sig, handler) == SIG_ERR)
 # endif
     if(handler != SIG_DFL) /* allow e.g. KILL to be set to its default */ 
-      myerror("Error setting handler for signal %d (%s)", sig, signal_name(sig));   
+      myerror(FATAL|USE_ERRNO, "Failed setting handler for signal %d (%s)", sig, signal_name(sig));   
 }
 
 
@@ -186,7 +186,7 @@ handle_sigTSTP(int signo)
   zero_select_timeout();
   /* Hand the SIGTSTP down to command and its process group */
   if (command_pid && (error = kill(-command_pid, SIGTSTP))) {
-    myerror("Failed to deliver SIGTSTP");
+    myerror(FATAL|USE_ERRNO, "Failed to deliver SIGTSTP");
   }
 
   if (within_line_edit)
@@ -210,7 +210,7 @@ handle_sigTSTP(int signo)
 
   #ifdef __QNX__
   if (command_pid && (error = kill(-command_pid, SIGCONT))) {
-    myerror("Failed to deliver SIGCONT");
+    myerror(FATAL|USE_ERRNO, "Failed to deliver SIGCONT");
   }
   #endif
   
@@ -418,8 +418,8 @@ void suicide_by(int signal, int status) {
      it didn't. @@@ We could also try argv[0] = command_name just before dying ? */
   
   if (signals_program_error(signal)) { 
-    errno = 0;  
-    mywarn("%s crashed, killed by %s%s.\n%s itself has not crashed, but for transparency,\n"
+    /* @@@ MUNGED! */  
+    myerror(WARNING|NOERRNO, "%s crashed, killed by %s%s.\n%s itself has not crashed, but for transparency,\n"
            "it will now kill itself %swith the same signal\n",
            command_name, signal_name(signal), (coredump(status) ? " (core dumped)" : ""),
            program_name, (coredump(status) ? "" : "(without dumping core) ") );

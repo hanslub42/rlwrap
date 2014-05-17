@@ -500,7 +500,7 @@ void test_unbackspace (const char *input, const char *expected_result) {
   char *scrap = mysavestring(input);
   unbackspace(scrap);
   if (strcmp(scrap, expected_result) != 0)
-      myerror("unbackspace %s yielded %s, expected %s",
+    myerror(FATAL|NOERRNO, "unbackspace %s yielded %s, expected %s",
               mangle_string_for_debug_log(input,0),
               mangle_string_for_debug_log(scrap,0),
               expected_result);
@@ -745,7 +745,7 @@ colour_name_to_ansi_code(const char *colour_name) {
     if (colour_code)
       return add3strings(bold_code,";",colour_code);
     else
-      myerror("unrecognised colour name '%s'. Use e.g. 'yellow' or 'Blue'.", colour_name);
+      myerror(FATAL|NOERRNO, "unrecognised colour name '%s'. Use e.g. 'yellow' or 'Blue'.", colour_name);
   }
   return mysavestring(colour_name);
 }       
@@ -794,7 +794,7 @@ int match_regexp (const char *string, const char *regexp, int case_insensitive) 
       int size = regerror(compile_error, compiled_regexp, NULL, 0);
       char *error_message =  mymalloc(size);
       regerror(compile_error, compiled_regexp, error_message, size);
-      errno=0; myerror("in regexp \"%s\": %s", regexp, error_message);  
+      myerror(FATAL|NOERRNO, "in regexp \"%s\": %s", regexp, error_message);  
     } else {
       result = !regexec(compiled_regexp, string, 0, NULL, 0);
       free(compiled_regexp);

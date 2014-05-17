@@ -80,7 +80,7 @@ static void mypipe(int filedes[2]) {
   int retval;
   retval = pipe(filedes);
   if (retval < 0)
-    myerror("Couldn't create pipe");
+    myerror(FATAL|USE_ERRNO, "Couldn't create pipe");
 }       
 
 
@@ -97,7 +97,7 @@ void spawn_filter(const char *filter_command) {
   assert(!command_pid || signal_handlers_were_installed);  /* if there is a command, then signal handlers are installed */
   
   if ((filter_pid = fork()) < 0)
-    myerror("Cannot spawn filter '%s'", filter_command); 
+    myerror(FATAL|USE_ERRNO, "Cannot spawn filter '%s'", filter_command); 
   else if (filter_pid == 0) {           /* child */
     int signals_to_allow[] = {SIGPIPE, SIGCHLD, SIGALRM, SIGUSR1, SIGUSR2};
     char **argv;
@@ -157,7 +157,7 @@ void kill_filter()  {
   if(!filter_is_dead &&                     /* filter's SIGCHLD hasn't been caught  */
      waitpid(filter_pid, &status, WNOHANG) < 0 && /* interrupted  .. */
      WTERMSIG(status) == SIGALRM) {         /*  .. by alarm (and not e.g. by SIGCHLD) */
-    errno = 0; mywarn("filter didn't die - killing it now");
+    /* @@@ MUNGED! */ myerror(WARNING|NOERRNO, "filter didn't die - killing it now");
   }
   if (filter_pid)
     kill(filter_pid, SIGKILL); /* do this as a last resort */
@@ -196,7 +196,7 @@ static char *read_from_filter(int tag) {
     handle_out_of_band(tag8, read_tagless());
          
   if (tag8 != tag)
-    myerror("Tag mismatch, expected %s from filter, but got %s", tag2description(tag), tag2description(tag8));
+    myerror(FATAL|USE_ERRNO, "Tag mismatch, expected %s from filter, but got %s", tag2description(tag), tag2description(tag8));
   
   return read_tagless();
 }
@@ -211,7 +211,7 @@ static char *read_tagless() {
   read_patiently2(filter_output_fd, buffer, length32, 1000,"from filter");
   
   if (buffer[length32 -1 ] != '\n')
-    myerror("filter output without closing newline");
+    myerror(FATAL|USE_ERRNO, "filter output without closing newline");
   buffer[length32 -1 ] = '\0';
         
   return buffer;
@@ -224,7 +224,7 @@ void handle_out_of_band(int tag, char *message) {
   case TAG_ERROR:
     if (expected_tag == TAG_COMPLETION) /* start new line when completing (looks better) */
       fprintf(stderr, "\n"); /* @@@ error reporting (still) uses bufered I/O */
-    errno = 0; myerror(message);
+    /* @@@ MUNGED! */ myerror(FATAL|NOERRNO, message);
   case TAG_OUTPUT_OUT_OF_BAND:
     my_putstr(message);
     break;
@@ -235,7 +235,7 @@ void handle_out_of_band(int tag, char *message) {
   case TAG_IGNORE:
     break;
   default:
-    myerror("out-of-band message with unknown tag %d: <%20s>", tag, message);
+    myerror(FATAL|USE_ERRNO, "out-of-band message with unknown tag %d: <%20s>", tag, message);
   }     
   if (split_em_up) {
     char **words = split_with(message, " \n\t");

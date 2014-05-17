@@ -30,10 +30,10 @@ char *term_cursor_hpos;
 char *term_clear_screen;
 char *term_cursor_up;
 char *term_cursor_down;
-char *term_cursor_left;         /* only used for debugging (the SHOWCURSOR macro) */
-char *term_rmcup;               /* rmcup - char sequence to return from alternate screen */
+char *term_cursor_left;         /* only used for debugging (the SHOWCURSOR macro)                */
+char *term_rmcup;               /* rmcup - char sequence to return from alternate screen         */
 char *term_rmkx;                /* rmkx - char sequence to return from keyboard application mode */
-
+/* int term_colors = -1;        number of colors ('colors' capability, only in terminfo)         */
 
 int redisplay = 1;
 int newline_came_last = TRUE; /* used to determine whether rlwrap needs to ouptut a newline at the very end */
@@ -45,6 +45,9 @@ struct winsize winsize; /* current window size */
 static char *term_cr;           /* carriage return (or 0, if none defined in terminfo) */
 static char *term_clear_line;
 char *term_name;
+
+/* TODO: replace termcap functions by terminfo ones, keeping termcap as a fallback for ancient systems
+   we might have to give both terminfo-style and termcap names, like in my_tigetstr("cub1", "le") */
 
 static char *my_tgetstr (char *id) {
   char *term_string_buf = (char *)mymalloc(2048), *tb = term_string_buf;
@@ -65,24 +68,24 @@ init_terminal(void)
   int  we_are_on_hp_ux11;
 
   if (!isatty(STDIN_FILENO))
-    myerror("stdin is not a tty");
+    myerror(FATAL|NOERRNO, "stdin is not a tty");
   if (tcgetattr(STDIN_FILENO, &saved_terminal_settings) < 0)
-    myerror("tcgetattr error on stdin");
+    myerror(FATAL|USE_ERRNO, "tcgetattr error on stdin");
   else
     terminal_settings_saved = TRUE;
   if (ioctl(STDIN_FILENO, TIOCGWINSZ, &winsize) < 0)
-    myerror("Could not get terminal size");
+    myerror(FATAL|USE_ERRNO, "Could not get terminal size");
   
   DPRINTF2(DEBUG_TERMIO, "winsize.ws_col: %d; winsize.ws_row: %d", winsize.ws_col, winsize.ws_row);
   if (winsize.ws_col == 0)
-    myerror("My terminal reports width=0 (is it emacs?)  I can't handle this, sorry!");
+    myerror(FATAL|NOERRNO, "My terminal reports width=0 (is it emacs?)  I can't handle this, sorry!");
 
   /* init some variables: */
   term_name = getenv("TERM");
   DPRINTF1(DEBUG_TERMIO, "found TERM = %s", term_name);  
 
   if (!term_name || strlen(term_name)==0) {
-    mywarn("environment variable TERM not set, assuming %s", FALLBACK_TERMINAL); 
+    myerror(WARNING|USE_ERRNO, "environment variable TERM not set, assuming %s", FALLBACK_TERMINAL); 
     term_name = FALLBACK_TERMINAL;
   }
    
@@ -99,14 +102,13 @@ init_terminal(void)
 
   /* Test whether we can find stringcaps, use FALLBACK_TERMINAL name if not  */
   if (! (we_have_stringcaps = T_OK(tgetent(term_buf, term_name))) && strcmp(term_name, FALLBACK_TERMINAL)) { 
-    errno = 0; 
-    mywarn("your $TERM is '%s' but %s couldn't find it in the terminfo database. We'll use '%s'", term_name, program_name, FALLBACK_TERMINAL);
+    myerror(WARNING|NOERRNO, "your $TERM is '%s' but %s couldn't find it in the terminfo database. We'll use '%s'", 
+                            term_name, program_name, FALLBACK_TERMINAL);
     term_name = FALLBACK_TERMINAL;
   }       
-  if (! (we_have_stringcaps = T_OK(tgetent(term_buf, FALLBACK_TERMINAL)))) {
-    errno =  0; 
-    mywarn("Even %s is not found in the terminfo database. Expect some problems...", FALLBACK_TERMINAL);
-  }
+  if (! (we_have_stringcaps = T_OK(tgetent(term_buf, FALLBACK_TERMINAL)))) 
+    myerror(WARNING|NOERRNO, "Even %s is not found in the terminfo database. Expect some problems...", FALLBACK_TERMINAL);
+  
   
   DPRINTF1(DEBUG_TERMIO, "using TERM = %s", term_name);  
   mysetenv("TERM", term_name);
@@ -127,7 +129,14 @@ init_terminal(void)
       term_cursor_hpos = NULL;
     }   
     term_cursor_up      = my_tgetstr("up");
-    term_cursor_down    = my_tgetstr("do");                                        
+    term_cursor_down    = my_tgetstr("do");
+
+    /* 
+    setupterm(term_name, 1, (int *)0);
+    term_colors         = tigetnum("colors");
+    DPRINTF1(DEBUG_TERMIO, "terminal colors: %d", term_colors); 
+    */
+                                        
   } 
   term_eof = saved_terminal_settings.c_cc[VEOF];
   term_stop = saved_terminal_settings.c_cc[VSTOP];
@@ -154,7 +163,7 @@ set_echo(int yes)
  
   log_terminal_settings(pterm);
   if (tcsetattr(STDIN_FILENO, TCSANOW, pterm) < 0 && errno != ENOTTY)
-    ;   /* myerror ("cannot prepare terminal (tcsetattr error on stdin)"); */
+    ;   /* myerror(FATAL|USE_ERRNO, "cannot prepare terminal (tcsetattr error on stdin)"); */
   free(pterm);
 }
 

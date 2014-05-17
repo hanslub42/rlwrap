@@ -1482,14 +1482,14 @@ feed_file_into_completion_list(const char *completions_file)
   char buffer[BUFFSIZE];
 
   if ((compl_fp = fopen(completions_file, "r")) == NULL)
-    myerror("Could not open %s", completions_file);
-  errno=0;
+    myerror(FATAL|USE_ERRNO, "Could not open %s", completions_file);
+  /* @@@ MUNGED! */
   while (fgets(buffer, BUFFSIZE - 1, compl_fp) != NULL) {
     buffer[BUFFSIZE - 1] = '\0';	/* make sure buffer is properly terminated (it should be anyway, according to ANSI) */
     feed_line_into_completion_list(buffer);
   }
   if (errno)
-    myerror("Couldn't read completions from %s", completions_file);
+    myerror(FATAL|USE_ERRNO, "Couldn't read completions from %s", completions_file);
   fclose(compl_fp);
   /* print_list(); */
 }
@@ -1601,7 +1601,7 @@ my_completion_function(char *prefix, int state)
       fragments = split_on_single_char(filtered,  '\t');
       if (!fragments[0] || ! fragments[1] || !fragments[2]  ||  
           strncmp(fragments[0], rl_line_buffer, length) ||  strncmp(fragments[1], prefix,length)) {
-	errno=0; myerror("filter has illegally messed with completion message\n"); /* it should ONLY have changed the completion word list  */
+	  myerror(FATAL|NOERRNO, "filter has illegally messed with completion message\n"); /* it should ONLY have changed the completion word list  */
       }
 
       my_rbdestroy(scratch_tree); /* burn the old scratch tree (but leave the completion tree alone)  */
