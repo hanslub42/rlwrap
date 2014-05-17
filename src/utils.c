@@ -335,6 +335,7 @@ int open_unique_tempfile(const char *suffix, char **tmpfile_name) {
 }  
 
 
+
 /* private helper function for myerror() and mywarn() */
 static void
 utils_warn(const char *message, va_list ap)
@@ -342,7 +343,7 @@ utils_warn(const char *message, va_list ap)
 
   int saved_errno = errno;
   char buffer[BUFFSIZE];
-  
+  static int warnings_given = 0;  
 
   snprintf(buffer, sizeof(buffer) - 1, "%s: ", program_name);
   vsnprintf(buffer + strlen(buffer), sizeof(buffer) - strlen(buffer) - 1,
@@ -354,10 +355,12 @@ utils_warn(const char *message, va_list ap)
 
   fflush(stdout);
   if (nowarn) {
-    DPRINTF1(DEBUG_ALL, "%s", buffer);
-  } else
+    DPRINTF1(DEBUG_ALL, "Warning (suppressed by --nowarn): %s", buffer);
+  } else {
     fputs(buffer, stderr); /* @@@ error reporting (still) uses bufered I/O */
-  
+    if (! warnings_given++) 
+      fputs("        warnings can be silenced by the --no-warnings (-n) option\n", stderr);
+  }
   fflush(stderr);
   errno =  saved_errno;
   /* we want this because sometimes error messages (esp. from client) are dropped) */
