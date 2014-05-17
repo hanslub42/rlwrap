@@ -98,7 +98,7 @@ init_terminal(void)
   #define T_OK(retval) ((retval) > 0 || ((retval)== 0 && we_are_on_hp_ux11))
 
   /* Test whether we can find stringcaps, use FALLBACK_TERMINAL name if not  */
-  if (! (we_have_stringcaps = T_OK(tgetent(term_buf, term_name))) && ! strcmp(term_name, FALLBACK_TERMINAL)) { 
+  if (! (we_have_stringcaps = T_OK(tgetent(term_buf, term_name))) && strcmp(term_name, FALLBACK_TERMINAL)) { 
     mywarn("your $TERM is '%s' but %s couldn't find it in the terminfo database. We'll use '%s'", term_name, program_name, FALLBACK_TERMINAL);
     term_name = FALLBACK_TERMINAL;
   }       
