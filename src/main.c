@@ -616,7 +616,7 @@ init_rlwrap(char *command_line)
             myerror(FATAL|USE_ERRNO, "cannot create directory %s", histdir);
           umask(oldmask);
         } else {
-          myerror(FATAL|USE_ERRNO, "cannot create history file in %s", histdir);
+          myerror(FATAL|USE_ERRNO, "cannot create history file %s", history_filename);
         }
       }
     }
