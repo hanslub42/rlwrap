@@ -157,7 +157,7 @@ void kill_filter()  {
   if(!filter_is_dead &&                     /* filter's SIGCHLD hasn't been caught  */
      waitpid(filter_pid, &status, WNOHANG) < 0 && /* interrupted  .. */
      WTERMSIG(status) == SIGALRM) {         /*  .. by alarm (and not e.g. by SIGCHLD) */
-    /* @@@ MUNGED! */ myerror(WARNING|NOERRNO, "filter didn't die - killing it now");
+     myerror(WARNING|NOERRNO, "filter didn't die - killing it now");
   }
   if (filter_pid)
     kill(filter_pid, SIGKILL); /* do this as a last resort */
@@ -224,7 +224,7 @@ void handle_out_of_band(int tag, char *message) {
   case TAG_ERROR:
     if (expected_tag == TAG_COMPLETION) /* start new line when completing (looks better) */
       fprintf(stderr, "\n"); /* @@@ error reporting (still) uses bufered I/O */
-    /* @@@ MUNGED! */ myerror(FATAL|NOERRNO, message);
+      myerror(FATAL|NOERRNO, message);
   case TAG_OUTPUT_OUT_OF_BAND:
     my_putstr(message);
     break;

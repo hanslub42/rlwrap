@@ -514,7 +514,7 @@ munge_line_in_editor(int count, int key)
   DPRINTF1(DEBUG_READLINE, "calling %s", editor_command4);
   if ((ret = system(editor_command4))) {
     if (WIFSIGNALED(ret)) {
-      fprintf(stderr, "\n"); /* @@@ MUNGED! */
+      fprintf(stderr, "\n"); 
       myerror(FATAL|NOERRNO, "editor killed by signal");
     } else {    
       myerror(FATAL|USE_ERRNO, "failed to invoke editor with '%s'", editor_command4);

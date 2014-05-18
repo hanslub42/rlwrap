@@ -250,7 +250,7 @@ ptytty_control_tty(int fd_tty, const char *ttydev)
              fd < 0 ? "no (good)" : "yes (bad)");
     if (fd >= 0)
       close(fd);                  /* ouch: still have controlling tty */
-    /* @@@ MUNGED! */
+
     /* ---------------------------------------- */
 #if defined(PTYS_ARE_PTMX) && defined(I_PUSH)
     /*

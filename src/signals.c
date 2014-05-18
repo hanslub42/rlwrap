@@ -417,8 +417,7 @@ void suicide_by(int signal, int status) {
      the shell may tell the user that rlwrap itself has failed. Make clear that
      it didn't. @@@ We could also try argv[0] = command_name just before dying ? */
   
-  if (signals_program_error(signal)) { 
-    /* @@@ MUNGED! */  
+  if (signals_program_error(signal)) {  
     myerror(WARNING|NOERRNO, "%s crashed, killed by %s%s.\n%s itself has not crashed, but for transparency,\n"
            "it will now kill itself %swith the same signal\n",
            command_name, signal_name(signal), (coredump(status) ? " (core dumped)" : ""),

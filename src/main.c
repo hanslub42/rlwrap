@@ -752,9 +752,7 @@ read_options_and_command_name(int argc, char **argv)
       else
         debug = DEBUG_DEFAULT;
 #else
-     /* @@@ MUNGED! */ 
-     myerror
-        ("To use -d( for debugging), configure %s with --enable-debug and rebuild",
+     myerror(FATAL|NOERRNO, "To use -d( for debugging), configure %s with --enable-debug and rebuild",
          program_name);
 #endif
       break;

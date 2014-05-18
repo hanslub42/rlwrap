@@ -1483,7 +1483,6 @@ feed_file_into_completion_list(const char *completions_file)
 
   if ((compl_fp = fopen(completions_file, "r")) == NULL)
     myerror(FATAL|USE_ERRNO, "Could not open %s", completions_file);
-  /* @@@ MUNGED! */
   while (fgets(buffer, BUFFSIZE - 1, compl_fp) != NULL) {
     buffer[BUFFSIZE - 1] = '\0';	/* make sure buffer is properly terminated (it should be anyway, according to ANSI) */
     feed_line_into_completion_list(buffer);
