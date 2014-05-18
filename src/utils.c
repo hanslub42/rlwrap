@@ -347,7 +347,14 @@ markup(const char*str)
 }       
 
 
-/* private helper function for myerror() and mywarn() */
+/* print error or warning message. There are two error flags,
+   defined in rlwrap.h
+  
+   FATAL:     exit(EXIT_FAILURE) after printing the message)
+   USE_ERRNO: print perror(errno) after the message
+*/
+
+
 void
 myerror(int error_flags, const char *message_format, ...)
 {

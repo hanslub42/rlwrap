@@ -778,7 +778,7 @@ int match_regexp (const char *string, const char *regexp, int case_insensitive) 
     char *lc_regexp = (case_insensitive  ? lowercase(regexp) : mysavestring(regexp));
 
     if (scan_metacharacters(regexp, metachars) && !been_warned++) /* warn only once if the user specifies a metacharacter */
-      mywarn("one of the regexp metacharacters \"%s\" occurs in regexp(?) \"%s\"\n"
+      myerror(WARNING|NOERRNO, "one of the regexp metacharacters \"%s\" occurs in regexp(?) \"%s\"\n"
              "  ...but on your platform, regexp matching is not supported!", metachars, regexp);        
     
     result = mystrstr(lc_string, lc_regexp);

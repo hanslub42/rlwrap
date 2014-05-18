@@ -672,8 +672,7 @@ check_optarg(char opt, int remaining)
       ((optarg[0] == '-' && isalpha(optarg[1])) || /* looks like next option */
        remaining == 0)) /* or is last item on command line */
 
-    mywarn
-      ("on this system, the getopt() library function doesn't\n"
+    myerror(WARNING|NOERRNO, "on this system, the getopt() library function doesn't\n"
        "grok optional arguments, so '%s' is taken as an argument to the -%c option\n"
        "Is this what you meant? If not, please provide an argument", optarg, opt);
 #endif
