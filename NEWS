@@ -1,7 +1,9 @@
-0.41  Sluggish SIGCHLD handler could cause an I/O error on master pty
+0.41  Slightly late SIGCHLD could cause an I/O error on master pty
 
       Added -W (-polling) option to poll slave pty for changes in its 
       interrupt character and ISIG flag.
+
+      if $TERM is not found in termcap/terminfo database, use vt100
 
 0.40  configure will now find tgetent() in libtinfo 
 

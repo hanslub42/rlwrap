@@ -96,7 +96,7 @@ my_pty_fork(int *ptr_master_fd,
       slave_pty_sensing_fd = fds;
       sensing_pty = "slave";
     } else  {                                 /* Running out of options:                                                */
-        fprintf(stderr,                       /* don't use mywarn() because of the strerror() message *within* the text */
+        fprintf(stderr,                       /* don't use myerror(WARNING|...) because of the strerror() message *within* the text */
                 "Warning: %s cannot determine terminal mode of %s\n"
                 "(because: %s).\n"
                 "Readline mode will always be on (as if -a option was set);\n"
