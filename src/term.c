@@ -51,7 +51,7 @@ char *term_name;
 
 static char *my_tgetstr (char *id) {
   char *term_string_buf = (char *)mymalloc(2048), *tb = term_string_buf;
-  char *stringcap = tgetstr(id, &tb); /*  rl_get_termcap(id) should also get string capability but doesn't. Why? */
+  char *stringcap = tgetstr(id, &tb); /*  rl_get_termcap(id) only gets capabilities used by readline */
   char *retval = stringcap ? mysavestring(stringcap) : NULL; 
   DPRINTF2(DEBUG_TERMIO, "tgetstr(\"%s\") = %s", id, (stringcap ? mangle_string_for_debug_log(stringcap,20) : "NULL"));
   free(term_string_buf);
@@ -116,7 +116,7 @@ init_terminal(void)
   if (we_have_stringcaps)  { 
     term_backspace      = my_tgetstr("le");
     term_cr             = my_tgetstr("cr");
-    term_clear_line     = my_tgetstr("ce"); /* was: @@@ my_tgetstr("dl1") */
+    term_clear_line     = my_tgetstr("ce");
     term_clear_screen   = my_tgetstr("cl");
     term_cursor_hpos    = my_tgetstr("ch");
     term_cursor_left    = my_tgetstr("le");
