@@ -8,8 +8,8 @@ rlwrap \- readline wrapper
 .de CW
 .ie '@HAVE_PROC_PID_CWD@'yes'  When doing this, rlwrap keeps track \
 of \fIcommand\fPs working directory.
-.el This is not always useful, as rlwrap doesn't keep track of \
-\fIcommand\fP's working directory is.
+.el This is not always useful, as rlwrap cannot keep track of \
+\fIcommand\fP's working directory.
 ..
 .de OA
 .ie '@HAVE_OPTIONAL_ARGS@'yes' The argument is optional; if given, it has to \
