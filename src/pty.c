@@ -92,12 +92,14 @@ my_pty_fork(int *ptr_master_fd,
       slave_pty_sensing_fd = fdm; 
       sensing_pty = "master";     
       close(fds);
-    } else if (mymicrosleep(500), tcgetattr(fds, &pterm) == 0) { /* we'll have to keep the slave pty open to get its terminal settings 
-                                                                     (sleeping 0.5 sec to give the slave time to set it up                  */
-      slave_pty_sensing_fd = fds;
-      sensing_pty = "slave";
-    } else  {                                 /* Running out of options:                                                            */
-        fprintf(stderr,                       /* don't use myerror(WARNING|...) because of the strerror() message *within* the text */
+    } else { 
+      mymicrosleep(500);
+      if (tcgetattr(fds, &pterm) == 0) { /* we'll have to keep the slave pty open to get its terminal settings 
+                                            (sleeping 0.5 sec to give the slave time to set it up                  */
+        slave_pty_sensing_fd = fds;
+        sensing_pty = "slave";
+      } else  {                                 /* Running out of options:                                                            */
+        fprintf(stderr,                         /* don't use myerror(WARNING|...) because of the strerror() message *within* the text */
                 "Warning: %s cannot determine terminal mode of %s\n"
                 "(because: %s).\n"
                 "Readline mode will always be on (as if -a option was set);\n"
@@ -105,6 +107,7 @@ my_pty_fork(int *ptr_master_fd,
                 program_name, command_name, strerror(errno));
         always_echo = TRUE;  
         sensing_pty = "no"; 
+      }
     }
     DPRINTF1(DEBUG_TERMIO, "Using %s pty to sense slave settings in parent", sensing_pty);
 
