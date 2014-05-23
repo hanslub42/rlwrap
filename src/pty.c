@@ -92,10 +92,11 @@ my_pty_fork(int *ptr_master_fd,
       slave_pty_sensing_fd = fdm; 
       sensing_pty = "master";     
       close(fds);
-    } else if (tcgetattr(fds, &pterm) == 0) { /* we'll have to keep the slave pty open to get its terminal settings */
+    } else if (mymicrosleep(500), tcgetattr(fds, &pterm) == 0) { /* we'll have to keep the slave pty open to get its terminal settings 
+                                                                     (sleeping 0.5 sec to give the slave time to set it up                  */
       slave_pty_sensing_fd = fds;
       sensing_pty = "slave";
-    } else  {                                 /* Running out of options:                                                */
+    } else  {                                 /* Running out of options:                                                            */
         fprintf(stderr,                       /* don't use myerror(WARNING|...) because of the strerror() message *within* the text */
                 "Warning: %s cannot determine terminal mode of %s\n"
                 "(because: %s).\n"
@@ -110,7 +111,7 @@ my_pty_fork(int *ptr_master_fd,
 
     if (!isatty(STDOUT_FILENO) || !isatty(STDERR_FILENO)) {     /* stdout or stderr redirected? */
       ttyfd = open("/dev/tty", O_WRONLY);                       /* open users terminal          */
-      DPRINTF1(DEBUG_TERMIO, "stdout or stderr are not a terminal, onpening /dev/tty with fd=%d", ttyfd);       
+      DPRINTF1(DEBUG_TERMIO, "stdout or stderr are not a terminal, opening /dev/tty with fd=%d", ttyfd);       
       if (ttyfd <0)     
         myerror(FATAL|USE_ERRNO, "Could not open /dev/tty");
       if (dup2(ttyfd, STDOUT_FILENO) != STDOUT_FILENO) 
