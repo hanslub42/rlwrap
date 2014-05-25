@@ -37,7 +37,7 @@ my_pty_fork(int *ptr_master_fd,
             const struct winsize *slave_winsize)
 {
   int fdm, fds = -1;
-  int ttyfd;
+  int ttyfd, timeout;
   pid_t pid;
   const char *slave_name;
   struct termios pterm;
@@ -83,32 +83,37 @@ my_pty_fork(int *ptr_master_fd,
  
     *ptr_master_fd = fdm;
 
+    
+    /* Try to find a suitable file descriptor to sense the state of the slave pty                                              */
+    /* At least on Solaris, we have to use the slave pty itself, but this works only after it has been set up in the child     */
+    /* This may take some time, hence the (increasing) timeout below                                                           */
 
-
-    if (tcgetattr(fdm, &pterm) == 0) {        /* if we can do a tcgetattr on the master, assume that it reflects the slave's
+    for(timeout = 10; timeout < 2000 && slave_pty_sensing_fd < 0; timeout *= 2) {
+      if (tcgetattr(fdm, &pterm) == 0) {        /* if we can do a tcgetattr on the master, assume that it reflects the slave's
                                                  terminal settings (at least on Linux and FreeBSD, this works), and use it as
                                                  slave_pty_sensing_fd, to keep tabs on slave terminal settings. In this case we can 
                                                  close fds (the slave), avoiding problems with lost output on FreeBSD  when the slave dies */
-      slave_pty_sensing_fd = fdm; 
-      sensing_pty = "master";     
-      close(fds);
-    } else { 
-      mymicrosleep(500);
-      if (tcgetattr(fds, &pterm) == 0) { /* we'll have to keep the slave pty open to get its terminal settings 
-                                            (sleeping 0.5 sec to give the slave time to set it up                  */
+        slave_pty_sensing_fd = fdm; 
+        sensing_pty = "master";     
+        close(fds);
+      } else if (mymicrosleep(timeout),         /* wait a little                                                      */
+                 tcgetattr(fds, &pterm) == 0) { /* ... then try slave pty                                             */ 
         slave_pty_sensing_fd = fds;
-        sensing_pty = "slave";
-      } else  {                                 /* Running out of options:                                                            */
-        fprintf(stderr,                         /* don't use myerror(WARNING|...) because of the strerror() message *within* the text */
-                "Warning: %s cannot determine terminal mode of %s\n"
-                "(because: %s).\n"
-                "Readline mode will always be on (as if -a option was set);\n"
-                "passwords etc. *will* be echoed and saved in history list!\n\n",
-                program_name, command_name, strerror(errno));
-        always_echo = TRUE;  
-        sensing_pty = "no"; 
-      }
+        sensing_pty = "slave";                  /* keep the slave pty open to get its terminal settings               */
+      } 
+    }  
+
+    if (slave_pty_sensing_fd < 0) {             /* both master and slave unusable                                                     */ 
+      fprintf(stderr,                           /* don't use myerror(WARNING|...) because of the strerror() message *within* the text */
+              "Warning: %s cannot determine terminal mode of %s\n"
+              "(because: %s).\n"
+              "Readline mode will always be on (as if -a option was set);\n"
+              "passwords etc. *will* be echoed and saved in history list!\n\n",
+              program_name, command_name, strerror(errno));
+      always_echo = TRUE;  
+      sensing_pty = "no"; 
     }
+  
     DPRINTF1(DEBUG_TERMIO, "Using %s pty to sense slave settings in parent", sensing_pty);
 
 
