@@ -706,3 +706,73 @@ void mysetsid() {
            ERRMSG(ret < 0));
 # endif
 }
+
+
+
+/* mirror_args(): look up command's command line and copy it to our own
+   important for commands that re-write their command lines e.g. to hide
+   passwords.
+*/
+
+
+
+static int stored_argc; 
+static char ** rlwrap_argv, **argv_copy, *argv_buffer;
+static char *stored_cmdline_filename;
+static long arg_max;
+
+
+void mirror_args_init(int argc, char**argv) {
+  int i;
+
+  stored_argc = argc;
+  rlwrap_argv = argv;
+  stored_cmdline_filename = mymalloc(MAXPATHLEN);
+  *stored_cmdline_filename = '\0';
+
+  /* Try and determine max total size of arguments */  
+  arg_max = 1024; /* safe minimal value */
+#ifdef ARG_MAX
+  arg_max = ARG_MAX;
+#endif
+#if HAVE_SYSCONF && defined(_SC_ARG_MAX)
+  arg_max =  sysconf(_SC_ARG_MAX);
+#endif 
+
+  argv_buffer = mymalloc(arg_max);  
+  argv_copy   = mymalloc((arg_max / 4) * sizeof(char *));
+  for (i = 0; i < argc; i++)  
+    argv_copy[i] = mysavestring(argv[i]);
+}      
+
+void mirror_args(command_pid) {
+  int cmdline_fd, argno;
+  char *arg;
+  long cmdline_length;
+  static int been_warned = 0;
+
+  if (!stored_cmdline_filename)
+    return;
+  if (!*stored_cmdline_filename) 
+     snprintf2(stored_cmdline_filename, MAXPATHLEN , "%s/%d/cmdline", PROC_MOUNTPOINT, command_pid);
+  if((cmdline_fd = open(stored_cmdline_filename, O_RDONLY)) < 1) {
+    stored_cmdline_filename = NULL;
+    if (been_warned++ == 0)
+      myerror(WARNING|USE_ERRNO, "cannot mirror command's command line, as %s is unreadable", stored_cmdline_filename); 
+    return;
+  }     
+  cmdline_length = read(cmdline_fd, argv_buffer, arg_max);
+  for (arg = argv_buffer, argno = 0; 
+       *arg && argno < stored_argc && arg <  argv_buffer + arg_max; 
+       argno++) {
+    char *next_arg = arg += strnlen(arg, arg_max) + 1; /* on linux, at least, stored_cmdline_file is laid out thusly: arg1\0arg2\0arg3\0 */
+    if (next_arg - argv_buffer > cmdline_length)       /* last arg incomplete, like in arg1\0arg2\0ar                                    */
+      break;
+    if(strncmp(argv_copy[argno], arg, arg_max)) {
+      free(argv_copy[argno]);      
+      rlwrap_argv[argno] = argv_copy[argno] = mysavestring(arg);
+    }
+    arg = next_arg;
+  }      
+}
+
