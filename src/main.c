@@ -42,6 +42,7 @@ int one_shot_rlwrap = FALSE;                 /* -o option: whether to close the 
 char *prompt_regexp = NULL;		     /* -O option: only ever "cook" prompts matching this regexp */
 int colour_the_prompt = FALSE;	             /* -p option: whether we should paint the prompt */
 int renice = FALSE;                          /* -R option: whether to be nicer than command */
+int mirror_arguments = FALSE;                /* -U option: whether to mirror command's arguments */
 int wait_before_prompt =  40;	             /* -w option: how long we wait before deciding we have a cookable prompt (in msec)) */
 int polling = FALSE;                         /* -W option: always give select() a small (=wait_before_prompt) timeout. */
 int impatient_prompt = TRUE;                 /* show raw prompt as soon as possible, even before we cook it. may result in "flashy" prompt */
@@ -96,11 +97,11 @@ static void test_main(void);
 
 /* options */
 #ifdef GETOPT_GROKS_OPTIONAL_ARGS
-static char optstring[] = "+:a::Ab:cC:d::D:e:f:F:g:hH:iIl:nNM:m::oO:p::P:q:rRs:S:t:Tvw:Wz:";
+static char optstring[] = "+:a::Ab:cC:d::D:e:f:F:g:hH:iIl:nNM:m::oO:p::P:q:rRs:S:t:TUvw:Wz:";
 /* +: is not really documented. configure checks wheteher it works as expected
    if not, GETOPT_GROKS_OPTIONAL_ARGS is undefined. @@@ */
 #else
-static char optstring[] = "+:a:Ab:cC:d:D:e:f:F:g:hH:iIl:nNM:m:oO:p:P:q:rRs:S:t:Tvw:Wz:";	
+static char optstring[] = "+:a:Ab:cC:d:D:e:f:F:g:hH:iIl:nNM:m:oO:p:P:q:rRs:S:t:TUvw:Wz:";	
 #endif
 
 #ifdef HAVE_GETOPT_LONG
@@ -136,6 +137,7 @@ static struct option longopts[] = {
   {"substitute-prompt",    	required_argument, 	NULL, 'S'},           
   {"set-terminal-name",         required_argument,      NULL, 't'},        
   {"test-terminal",  		no_argument, 		NULL, 'T'},
+  {"mirror-arguments",          no_argument, 		NULL, 'U'},
   {"version", 			no_argument, 		NULL, 'v'},
   {"wait-before-prompt",        required_argument,      NULL, 'w'},    
   {"polling",                   no_argument,            NULL, 'W'},
@@ -814,7 +816,7 @@ read_options_and_command_name(int argc, char **argv)
 	
       break;
     case 'q': rl_basic_quote_characters = mysavestring(optarg); break;
-    case 'r':	remember_for_completion = TRUE;	break;
+    case 'r': remember_for_completion = TRUE;	break;
     case 'R': renice = TRUE;	break;
     case 's':
       histsize = atoi(optarg);
@@ -824,11 +826,12 @@ read_options_and_command_name(int argc, char **argv)
       }
       break;
     case 'S': substitute_prompt =  mysavestring(optarg);break;
-    case 't':	client_term_name=mysavestring(optarg);break;
+    case 't': client_term_name=mysavestring(optarg);break;
 #ifdef DEBUG
-    case 'T':	test_terminal(); exit(EXIT_SUCCESS);
+    case 'T': test_terminal(); exit(EXIT_SUCCESS);
 #endif
-    case 'v':	printf("rlwrap %s\n",  VERSION); exit(EXIT_SUCCESS);
+    case 'U': mirror_arguments = TRUE; break;
+    case 'v': printf("rlwrap %s\n",  VERSION); exit(EXIT_SUCCESS);
     case 'w':
       wait_before_prompt = atoi(optarg);
       if (wait_before_prompt < 0) {

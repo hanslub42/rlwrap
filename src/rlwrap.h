@@ -219,6 +219,7 @@ extern int ansi_colour_aware;
 extern int colour_the_prompt;
 extern int received_WINCH;
 extern int prompt_is_still_uncooked;
+extern int mirror_arguments;
 extern int impatient_prompt;
 extern int we_just_got_a_signal_or_EOF;
 extern int remember_for_completion;
@@ -308,7 +309,7 @@ void  set_ulimit(int resource, long value);
 void  usage(int status);
 int   open_unique_tempfile(const char *suffix, char **tmpfile_name);
 void  mirror_args_init(int argc, char**argv);
-void  mirror_args(command_pid);
+void  mirror_args(pid_t command_pid);
 
 /* flags to use for the error_flags argument to myerror */
 #define FATAL     2
