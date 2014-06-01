@@ -410,7 +410,7 @@ main_loop()
 	}
 	  
 	completely_mirror_slaves_output_settings(); /* some programs (e.g. joe) need this. Gasp!! */	
-        
+        mirror_args(command_pid);        
 	
         if (skip_rlwrap()) { /* Race condition here! The client may just have finished an emacs session and
 			        returned to cooked mode, while its ncurses-riddled output is stil waiting for us to be processed. */
