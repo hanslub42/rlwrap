@@ -388,7 +388,8 @@ char *mangle_buffer_for_debug_log(const char *buffer, int length) {
 
 /* mem2str(mem, size) returns a fresh string representation of mem where al 0 bytes have been replaced by "\\0" */
 char *mem2str(const char *mem, int size) {
-  char *p_mem, *p_str;
+  const char *p_mem;
+  char  *p_str;
   char *str = mymalloc(2*size + 1); /* worst case: "\0\0\0\0.." */
   for(p_mem = mem, p_str = str; p_mem < mem + size; p_mem++) { 
     if (*p_mem) 

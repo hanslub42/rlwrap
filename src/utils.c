@@ -727,6 +727,7 @@ static char *stored_cmdline_filename;
 
 void mirror_args_init(char**argv) {
   int i;
+#ifdef ENABLE_MIRROR_ARGS
 
   rlwrap_command_argv = argv;
   stored_cmdline_filename = mymalloc(MAXPATHLEN);
@@ -736,6 +737,10 @@ void mirror_args_init(char**argv) {
     argv_len += strlen(argv[i]) + 1;
   }        
   argv_buffer = mymalloc(argv_len * sizeof(char) + 1);
+#else
+  stored_cmdline_filename = NULL;
+  myerror(WARNING|NOERRNO, "On this system, the -U (--mirror-arguments) option doesn't work")
+#endif
 }      
 
 /* C standard: "The parameters argc and argv and the strings pointed to by the argv
