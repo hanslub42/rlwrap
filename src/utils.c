@@ -722,20 +722,6 @@ static int argv_len;
 static char *stored_cmdline_filename;
 
 
-char *mem2str(char *mem, int size) {
-  char *p_mem, *p_str;
-  char *str = mymalloc(2*size + 1); /* worst case: "\0\0\0\0.." */
-  for(p_mem = mem, p_str = str; p_mem < mem + size; p_mem++) { 
-    if (*p_mem) 
-      *p_str++ = *p_mem;
-    else {
-      *p_str++ = '\\';
-      *p_str++ = '0';
-    }
-  }
-  *p_str = '\0';
-  return str;
-}
 
 
 void mirror_args_init(char**argv) {
