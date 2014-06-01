@@ -739,7 +739,7 @@ void mirror_args_init(char**argv) {
   argv_buffer = mymalloc(argv_len * sizeof(char) + 1);
 #else
   stored_cmdline_filename = NULL;
-  myerror(WARNING|NOERRNO, "On this system, the -U (--mirror-arguments) option doesn't work")
+  myerror(WARNING|NOERRNO, "On this system, the -U (--mirror-arguments) option doesn't work");
 #endif
 }      
 
