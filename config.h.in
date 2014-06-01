@@ -60,7 +60,7 @@
 #undef HAVE_PROC_PID_CWD
 
 /* Define to 1 if overwriting argv changes the args visible in ps (1) */
-#undef OVERWRITE_ARGS
+#undef ENABLE_MIRROR_ARGS
 
 /* Define to 1 if you have the `pselect' function. */
 #undef HAVE_PSELECT

@@ -356,12 +356,15 @@ AC_CHECK_FILES($opt_proc_mountpoint/$$/cwd/configure.ac,[
 AC_DEFINE_UNQUOTED(PROC_MOUNTPOINT, "[$opt_proc_mountpoint]", [Define to location of Linux-style procfs mountpoint if provided and valid])
 
 
-AC_MSG_CHECKING([whether we can hide arguments by overwriting *argv])
+AC_MSG_CHECKING([whether we can find command line under <opt_proc_mountpoint>/<pid>/cmdline and mirror it by overwriting our own *argv])
+# We won't exactly do that, but instead write a test program that writes a random string to *argv (making sure it is longer than argv[0])
+# and then verify that we can see the same string under <opt_proc_mountpoint>/<pid>/cmdline
+# If so, we enable the --mirror-args option
 
-random_nonsense1="owMs82j1w"
-random_nonsense2="a29Isu3j2"
+random_nonsense1="fymaytskjqhjeeimtmjqvqbnrnfutgnkehkmqqealklsoswyepxugcckimqdwbwfqdhdsdxfxiagqbnm"
+random_nonsense2="iraliuuklajcorjfunavdsytdiydjaoaeauiapidtoxogfplrxfmfcmajikwenafwcownmoodxjljhsv"
 
-AC_DEFINE(RANDOM_NONSENSE2,"a29Isu3j2",[nonsense arg to overwrite conftest argv with])
+AC_DEFINE_UNQUOTED(RANDOM_NONSENSE2, "\"$random_nonsense2\"", nonsense arg to overwrite conftest argv with)
 
 AC_LANG_CONFTEST(
         [AC_LANG_SOURCE([[#include <unistd.h>
@@ -377,7 +380,7 @@ gcc -o conftest conftest.c
 ./conftest $random_nonsense1 &
 CONFTEST_PID=$!
 if grep $random_nonsense2 $opt_proc_mountpoint/$CONFTEST_PID/cmdline >/dev/null 2>&1; then
-    AC_DEFINE(OVERWRITE_ARGS, 1, [Define if overwriting argv changes args visible in ps (1)])
+    AC_DEFINE(ENABLE_MIRROR_ARGS, 1, [Define if overwriting argv changes args visible in ps (1)])
     result="yes"
 fi
 kill $!
