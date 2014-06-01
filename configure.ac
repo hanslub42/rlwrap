@@ -361,7 +361,7 @@ AC_MSG_CHECKING([whether we can hide arguments by overwriting *argv])
 random_nonsense1="owMs82j1w"
 random_nonsense2="a29Isu3j2"
 
-AC_DEFINE([RANDOM_NONSENSE2],"a29Isu3j2")
+AC_DEFINE(RANDOM_NONSENSE2,"a29Isu3j2",[])
 
 AC_LANG_CONFTEST(
         [AC_LANG_SOURCE([[#include <unistd.h>
