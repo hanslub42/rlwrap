@@ -308,7 +308,7 @@ void  mysetenv(const char *name, const char *value);
 void  set_ulimit(int resource, long value);
 void  usage(int status);
 int   open_unique_tempfile(const char *suffix, char **tmpfile_name);
-void  mirror_args_init(int argc, char**argv);
+void  mirror_args_init(char **argv);
 void  mirror_args(pid_t command_pid);
 
 /* flags to use for the error_flags argument to myerror */

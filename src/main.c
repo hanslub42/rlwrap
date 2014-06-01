@@ -189,12 +189,15 @@ fork_child(char *command_name, char **argv)
   char *arg = argv[optind], *p, **argp;
   int pid;
 
+  if (mirror_arguments)
+    mirror_args_init(&argv[optind]);
+
   command_line = mysavestring(arg);
   for (argp = argv + optind + 1; *argp; argp++) {
     command_line = append_and_free_old (command_line, " ");
     command_line = append_and_free_old (command_line, *argp);
   }
-
+  
   pid = my_pty_fork(&master_pty_fd, &saved_terminal_settings, &winsize);
   if (pid > 0)			/* parent: */
     return;
@@ -360,6 +363,8 @@ main_loop()
 	prompt_is_still_uncooked = FALSE;
       } else if (polling) {
         completely_mirror_slaves_special_characters();
+        if (mirror_arguments)
+          mirror_args(command_pid);
         continue;
       } else {
 	myerror(FATAL|NOERRNO, "unexpected select() timeout");

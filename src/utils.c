@@ -716,38 +716,53 @@ void mysetsid() {
 
 
 
-static int stored_argc; 
-static char ** rlwrap_argv, **argv_copy, *argv_buffer;
+static char ** rlwrap_command_argv; /* The slice of rlwrap's argv after all rlwrap options */
+static char *argv_buffer;
+static int argv_len;
 static char *stored_cmdline_filename;
-static long arg_max;
 
 
-void mirror_args_init(int argc, char**argv) {
+char *mem2str(char *mem, int size) {
+  char *p_mem, *p_str;
+  char *str = mymalloc(2*size + 1); /* worst case: "\0\0\0\0.." */
+  for(p_mem = mem, p_str = str; p_mem < mem + size; p_mem++) { 
+    if (*p_mem) 
+      *p_str++ = *p_mem;
+    else {
+      *p_str++ = '\\';
+      *p_str++ = '0';
+    }
+  }
+  *p_str = '\0';
+  return str;
+}
+
+
+void mirror_args_init(char**argv) {
   int i;
 
-  stored_argc = argc;
-  rlwrap_argv = argv;
+  rlwrap_command_argv = argv;
   stored_cmdline_filename = mymalloc(MAXPATHLEN);
-  *stored_cmdline_filename = '\0';
+  *stored_cmdline_filename = '\0';  
 
-  /* Try and determine max total size of arguments */  
-  arg_max = 1024; /* safe minimal value */
-#ifdef ARG_MAX
-  arg_max = ARG_MAX;
-#endif
-#if HAVE_SYSCONF && defined(_SC_ARG_MAX)
-  arg_max =  sysconf(_SC_ARG_MAX);
-#endif 
-
-  argv_buffer = mymalloc(arg_max);  
-  argv_copy   = mymalloc((arg_max / 4) * sizeof(char *));
-  for (i = 0; i < argc; i++)  
-    argv_copy[i] = mysavestring(argv[i]);
+  for (i = 0; argv[i]; i++) {  
+    argv_len += strlen(argv[i]) + 1;
+  }        
+  argv_buffer = mymalloc(argv_len * sizeof(char) + 1);
 }      
 
+/* C standard: "The parameters argc and argv and the strings pointed to by the argv
+                array shall be modifiable by the program, and retain their last-stored
+                values between program startup and program termination.
+
+   This doesn't guarantee that those changed values will be visible to e.g. the ps (1) command
+*/
+
+
+      
+
 void mirror_args(command_pid) {
-  int cmdline_fd, argno;
-  char *arg;
+  int cmdline_fd;
   long cmdline_length;
   static int been_warned = 0;
 
@@ -761,18 +776,18 @@ void mirror_args(command_pid) {
       myerror(WARNING|USE_ERRNO, "cannot mirror command's command line, as %s is unreadable", stored_cmdline_filename); 
     return;
   }     
-  cmdline_length = read(cmdline_fd, argv_buffer, arg_max);
-  for (arg = argv_buffer, argno = 0; 
-       *arg && argno < stored_argc && arg <  argv_buffer + arg_max; 
-       argno++) {
-    char *next_arg = arg += strnlen(arg, arg_max) + 1; /* on linux, at least, stored_cmdline_file is laid out thusly: arg1\0arg2\0arg3\0 */
-    if (next_arg - argv_buffer > cmdline_length)       /* last arg incomplete, like in arg1\0arg2\0ar                                    */
-      break;
-    if(strncmp(argv_copy[argno], arg, arg_max)) {
-      free(argv_copy[argno]);      
-      rlwrap_argv[argno] = argv_copy[argno] = mysavestring(arg);
-    }
-    arg = next_arg;
-  }      
+  cmdline_length = read(cmdline_fd, argv_buffer,argv_len);
+  /*  argv_buffer[cmdline_length] = '\0'; */
+  DPRINTF2(DEBUG_TERMIO,"read %d bytes from %s", cmdline_length, stored_cmdline_filename);
+  
+  if (memcmp(*rlwrap_command_argv, argv_buffer, cmdline_length)) {
+    char *rlwrap_argstr = mem2str(*rlwrap_command_argv, cmdline_length);
+    char *command_argstr = mem2str(argv_buffer, cmdline_length);
+    DPRINTF2(DEBUG_TERMIO, "discrepancy: rlwarp_args: %s, command_args %s", rlwrap_argstr, command_argstr);
+    free(rlwrap_argstr); 
+    free(command_argstr);
+  
+    memcpy(*rlwrap_command_argv, argv_buffer, cmdline_length);
+  }   
 }
 
