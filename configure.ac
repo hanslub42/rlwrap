@@ -156,6 +156,11 @@ AC_RUN_IFELSE(
      ac_double_colons="no"])
 AC_MSG_RESULT($ac_double_colons)
 
+
+
+
+
+
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
 AC_TYPE_PID_T
@@ -348,8 +353,36 @@ AC_CHECK_FILES($opt_proc_mountpoint/$$/cwd/configure.ac,[
               ],[AC_SUBST(HAVE_PROC_PID_CWD,[no])])
 
 
-
 AC_DEFINE_UNQUOTED(PROC_MOUNTPOINT, "[$opt_proc_mountpoint]", [Define to location of Linux-style procfs mountpoint if provided and valid])
+
+
+AC_MSG_CHECKING([whether we can hide arguments by overwriting *argv])
+
+random_nonsense1="owMs82j1w"
+random_nonsense2="a29Isu3j2"
+
+AC_DEFINE([RANDOM_NONSENSE2],"a29Isu3j2")
+
+AC_LANG_CONFTEST(
+        [AC_LANG_SOURCE([[#include <unistd.h>
+                          #include <string.h>
+                          int main(int argc, char **argv) {
+                                       memcpy(*argv, "a\0" RANDOM_NONSENSE2, strlen(RANDOM_NONSENSE2) + 3);
+                                       return(sleep(10));
+                                   }
+                         ]])])
+
+result="no"
+gcc -o conftest conftest.c 
+./conftest $random_nonsense1 &
+CONFTEST_PID=$!
+if grep $random_nonsense2 $opt_proc_mountpoint/$CONFTEST_PID/cmdline >/dev/null 2>&1; then
+    AC_DEFINE(OVERWRITE_ARGS, 1, [Define if overwriting argv changes args visible in ps (1)])
+    result="yes"
+fi
+kill $!
+AC_MSG_RESULT($result)
+
 
 
 echo
