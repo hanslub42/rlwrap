@@ -157,7 +157,7 @@ int
 main(int argc, char **argv)
 { 
   char *command_name;
-  char *command_line = unsplit_with(argc, argv, " ");  
+  command_line = unsplit_with(argc, argv, " ");  
 
   init_completer();
   command_name = read_options_and_command_name(argc, argv);
@@ -186,17 +186,11 @@ main(int argc, char **argv)
 static void
 fork_child(char *command_name, char **argv)
 {
-  char *arg = argv[optind], *p, **argp;
+  char *arg = argv[optind], *p;
   int pid;
 
   if (mirror_arguments)
     mirror_args_init(&argv[optind]);
-
-  command_line = mysavestring(arg);
-  for (argp = argv + optind + 1; *argp; argp++) {
-    command_line = append_and_free_old (command_line, " ");
-    command_line = append_and_free_old (command_line, *argp);
-  }
   
   pid = my_pty_fork(&master_pty_fd, &saved_terminal_settings, &winsize);
   if (pid > 0)			/* parent: */
