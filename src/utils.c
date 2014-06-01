@@ -620,6 +620,8 @@ usage(int status)
   print_option('i', "case-insensitive", NULL, FALSE, NULL);
   print_option('I', "pass-sigint-as-sigterm", NULL, FALSE, NULL);
   print_option('l', "logfile", "file", FALSE, NULL);
+  print_option('m', "multi-line", "newline substitute", TRUE, NULL);
+  print_option('M', "multi-line-ext", ".ext", FALSE, NULL);
   print_option('n', "no-warnings", NULL, FALSE, NULL);
   print_option('N', "no-children", NULL, FALSE, NULL);
   print_option('o', "one-shot", NULL, FALSE, NULL);
@@ -627,14 +629,13 @@ usage(int status)
   print_option('p', "prompt-colour", "colour", TRUE, NULL);
   print_option('P', "pre-given","input", FALSE, NULL);
   print_option('q', "quote-characters", "chars", FALSE, NULL);
-  print_option('m', "multi-line", "newline substitute", TRUE, NULL);
-  print_option('M', "multi-line-ext", ".ext", FALSE, NULL);
   print_option('r', "remember", NULL, FALSE, NULL);
   print_option('R', "renice", NULL, FALSE, NULL);
-  print_option('v', "version", NULL, FALSE, NULL);
   print_option('s', "histsize", "N", FALSE,"(negative: readonly)");
   print_option('S', "substitute-prompt", "prompt", FALSE, NULL);
   print_option('t', "set-term-name", "name", FALSE, NULL);
+  print_option('U', "mirror-arguments", NULL, FALSE, NULL);
+  print_option('v', "version", NULL, FALSE, NULL);
   print_option('w', "wait-before-prompt", "N", FALSE, "(msec, <0  : patient mode)");
   print_option('W', "polling", NULL, FALSE, NULL);
   print_option('z', "filter", "filter command", FALSE, "(-z listing lists installed filters)");  
@@ -764,7 +765,7 @@ void mirror_args(command_pid) {
   }     
   cmdline_length = read(cmdline_fd, argv_buffer,argv_len);
   /*  argv_buffer[cmdline_length] = '\0'; */
-  DPRINTF2(DEBUG_TERMIO,"read %d bytes from %s", cmdline_length, stored_cmdline_filename);
+  DPRINTF2(DEBUG_TERMIO,"read %d bytes from %s", (int) cmdline_length, stored_cmdline_filename);
   
   if (memcmp(*rlwrap_command_argv, argv_buffer, cmdline_length)) {
     char *rlwrap_argstr = mem2str(*rlwrap_command_argv, cmdline_length);
