@@ -1555,7 +1555,7 @@ my_completion_function(char *prefix, int state)
     completion_type = get_completion_type();
     DPRINTF2(DEBUG_ALL, "completion_type: %d, filter_pid: %d", completion_type, filter_pid);
     if (completion_type & COMPLETE_FROM_LIST) {
-      for (word = rblookup(RB_LUGREAT, prefix, completion_tree);	/* start with first word > prefix */
+      for (word = rblookup(RB_LUGTEQ, prefix, completion_tree);	/* start with first word >= prefix */
 	   word && is_prefix(prefix, word);	/* as long as prefix is really prefix of word */
 	   word = rblookup(RB_LUGREAT, word, completion_tree)) {	/* find next word in list */
 	rbsearch(mysavestring(word), scratch_tree);	/* insert fresh copy of the word */
