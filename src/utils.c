@@ -653,13 +653,15 @@ usage(int status)
   print_debug_flag (DEBUG_TERMIO, "to debug termio,");
   print_debug_flag (DEBUG_SIGNALS, "signal handling,");
   print_debug_flag (DEBUG_READLINE, "readline,");
+  
   print_debug_flag (DEBUG_MEMORY_MANAGEMENT, "memory management,");
-  print_debug_flag (DEBUG_FILTERING, "and filtering.");
+  print_debug_flag (DEBUG_FILTERING, "filtering,");
+  print_debug_flag (DEBUG_COMPLETION, "and completion.");
   /*  print_debug_flag (DEBUG_AD_HOC, "to see your own DEBUG_AD_HOC results"); */
-  print_debug_flag (DEBUG_WITH_TIMESTAMPS, "to add (relative) timestamps");
-  print_debug_flag (FORCE_HOMEGROWN_REDISPLAY, "to force the use of my_homegrown_redisplay()");
+  print_debug_flag (DEBUG_WITH_TIMESTAMPS, "to add (relative) timestamps,");
+  print_debug_flag (FORCE_HOMEGROWN_REDISPLAY, "to force the use of my_homegrown_redisplay(),");
   print_debug_flag (DEBUG_LONG_STRINGS, "to not limit the length of strings in debug log (sloooow!)");
-  print_debug_flag (DEBUG_RACES, "add random delays to expose race conditions");
+  print_debug_flag (DEBUG_RACES, "add random delays to expose race conditions.");
   fprintf(stderr,  "    default debug mask = %d (debug termio, signals and readline handling)\n"
                    "    use the shell construct $[ ] to calculate the mask, e.g. -d$[%d+%d+%d]\n",
           DEBUG_DEFAULT, DEBUG_DEFAULT, DEBUG_WITH_TIMESTAMPS, DEBUG_RACES);

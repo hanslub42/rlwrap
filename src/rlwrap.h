@@ -497,6 +497,7 @@ void filter_test(void);
 #  define DEBUG_READLINE                         4
 #  define DEBUG_MEMORY_MANAGEMENT                8   /* used with malloc_debug.c */
 #  define DEBUG_FILTERING                        16
+#  define DEBUG_COMPLETION                       32
 #  define DEBUG_AD_HOC                           64  /* only used during rlwrap development */
 #  define DEBUG_WITH_TIMESTAMPS                  128 /* add timestamps to every line in debug log    */
 #  define FORCE_HOMEGROWN_REDISPLAY              256 /* force use of my_homegrown_redisplay()        */
