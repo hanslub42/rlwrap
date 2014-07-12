@@ -620,6 +620,8 @@ usage(int status)
   print_option('i', "case-insensitive", NULL, FALSE, NULL);
   print_option('I', "pass-sigint-as-sigterm", NULL, FALSE, NULL);
   print_option('l', "logfile", "file", FALSE, NULL);
+  print_option('m', "multi-line", "newline substitute", TRUE, NULL);
+  print_option('M', "multi-line-ext", ".ext", FALSE, NULL);
   print_option('n', "no-warnings", NULL, FALSE, NULL);
   print_option('N', "no-children", NULL, FALSE, NULL);
   print_option('o', "one-shot", NULL, FALSE, NULL);
@@ -627,14 +629,13 @@ usage(int status)
   print_option('p', "prompt-colour", "colour", TRUE, NULL);
   print_option('P', "pre-given","input", FALSE, NULL);
   print_option('q', "quote-characters", "chars", FALSE, NULL);
-  print_option('m', "multi-line", "newline substitute", TRUE, NULL);
-  print_option('M', "multi-line-ext", ".ext", FALSE, NULL);
   print_option('r', "remember", NULL, FALSE, NULL);
   print_option('R', "renice", NULL, FALSE, NULL);
-  print_option('v', "version", NULL, FALSE, NULL);
   print_option('s', "histsize", "N", FALSE,"(negative: readonly)");
   print_option('S', "substitute-prompt", "prompt", FALSE, NULL);
   print_option('t', "set-term-name", "name", FALSE, NULL);
+  print_option('U', "mirror-arguments", NULL, FALSE, NULL);
+  print_option('v', "version", NULL, FALSE, NULL);
   print_option('w', "wait-before-prompt", "N", FALSE, "(msec, <0  : patient mode)");
   print_option('W', "polling", NULL, FALSE, NULL);
   print_option('z', "filter", "filter command", FALSE, "(-z listing lists installed filters)");  
@@ -706,3 +707,79 @@ void mysetsid() {
            ERRMSG(ret < 0));
 # endif
 }
+
+
+
+/* mirror_args(): look up command's command line and copy it to our own
+   important for commands that re-write their command lines e.g. to hide
+   passwords.
+*/
+
+
+
+static char ** rlwrap_command_argv; /* The slice of rlwrap's argv after all rlwrap options */
+static char *argv_buffer;
+static int argv_len;
+static char *stored_cmdline_filename;
+
+
+
+
+void mirror_args_init(char**argv) {
+  int i;
+#ifdef ENABLE_MIRROR_ARGS
+
+  rlwrap_command_argv = argv;
+  stored_cmdline_filename = mymalloc(MAXPATHLEN);
+  *stored_cmdline_filename = '\0';  
+
+  for (i = 0; argv[i]; i++) {  
+    argv_len += strlen(argv[i]) + 1;
+  }        
+  argv_buffer = mymalloc(argv_len * sizeof(char) + 1);
+#else
+  stored_cmdline_filename = NULL;
+  myerror(WARNING|NOERRNO, "On this system, the -U (--mirror-arguments) option doesn't work");
+#endif
+}      
+
+/* C standard: "The parameters argc and argv and the strings pointed to by the argv
+                array shall be modifiable by the program, and retain their last-stored
+                values between program startup and program termination.
+
+   This doesn't guarantee that those changed values will be visible to e.g. the ps (1) command
+*/
+
+
+      
+
+void mirror_args(command_pid) {
+  int cmdline_fd;
+  long cmdline_length;
+  static int been_warned = 0;
+
+  if (!stored_cmdline_filename)
+    return;
+  if (!*stored_cmdline_filename) 
+     snprintf2(stored_cmdline_filename, MAXPATHLEN , "%s/%d/cmdline", PROC_MOUNTPOINT, command_pid);
+  if((cmdline_fd = open(stored_cmdline_filename, O_RDONLY)) < 1) {
+    stored_cmdline_filename = NULL;
+    if (been_warned++ == 0)
+      myerror(WARNING|USE_ERRNO, "cannot mirror command's command line, as %s is unreadable", stored_cmdline_filename); 
+    return;
+  }     
+  cmdline_length = read(cmdline_fd, argv_buffer,argv_len);
+  /*  argv_buffer[cmdline_length] = '\0'; */
+  DPRINTF2(DEBUG_TERMIO,"read %d bytes from %s", (int) cmdline_length, stored_cmdline_filename);
+  
+  if (memcmp(*rlwrap_command_argv, argv_buffer, cmdline_length)) {
+    char *rlwrap_argstr = mem2str(*rlwrap_command_argv, cmdline_length);
+    char *command_argstr = mem2str(argv_buffer, cmdline_length);
+    DPRINTF2(DEBUG_TERMIO, "discrepancy: rlwarp_args: %s, command_args %s", rlwrap_argstr, command_argstr);
+    free(rlwrap_argstr); 
+    free(command_argstr);
+  
+    memcpy(*rlwrap_command_argv, argv_buffer, cmdline_length);
+  }   
+}
+

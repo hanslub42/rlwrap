@@ -376,6 +376,8 @@ mangle_string_for_debug_log(const char *string, int maxlen)
 }
 
 
+
+
 char *mangle_buffer_for_debug_log(const char *buffer, int length) {
   char *string = mymalloc(length+1);
   int debug_saved = debug; /* needed by macro MANGLE_LENGTH */
@@ -384,7 +386,22 @@ char *mangle_buffer_for_debug_log(const char *buffer, int length) {
   return mangle_string_for_debug_log(string, MANGLE_LENGTH);
 }
 
-
+/* mem2str(mem, size) returns a fresh string representation of mem where al 0 bytes have been replaced by "\\0" */
+char *mem2str(const char *mem, int size) {
+  const char *p_mem;
+  char  *p_str;
+  char *str = mymalloc(2*size + 1); /* worst case: "\0\0\0\0.." */
+  for(p_mem = mem, p_str = str; p_mem < mem + size; p_mem++) { 
+    if (*p_mem) 
+      *p_str++ = *p_mem;
+    else {
+      *p_str++ = '\\';
+      *p_str++ = '0';
+    }
+  }
+  *p_str = '\0';
+  return str;
+}
 
 
 char *

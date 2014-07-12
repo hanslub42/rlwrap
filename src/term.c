@@ -278,7 +278,7 @@ my_putstr(const char *string)
   if (string_length == 0)
     return;
   write_patiently(STDOUT_FILENO, string, string_length, "to stdout");
-  newline_came_last = (string[string_length - 1] == '\n'); /* remember whethere newline came last */
+  newline_came_last = (string[string_length - 1] == '\n'); /* remember whether newline came last */
 
 }
   

@@ -188,6 +188,10 @@ Substitute the specified prompt for  \fIcommand\fP's own prompt. Mainly useful w
 .OL \-t \-\-set\-term\-name \fIname\fP
 Set \fIcommand\fP's TERM to \fIname\fP. Programs that confuse \fBrlwrap\fP with fancy screen control codes can sometimes be tamed by specifying \fB\-t dumb\fP 
 .TP
+.OL \-U \-\-mirror-arguments
+(linux only) Keep track of \fIcommand\fP's arguments as seen by the \fBps (1)\fP command, and mirror them in \fBrlwrap\fP's own arguments
+This is mainly useful for commands that overwrite command-line password arguments that would be exposed by rlwrap without this option.
+.TP
 .OL \-v \-\-version
 Print rlwrap version.
 .TP

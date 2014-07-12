@@ -219,6 +219,7 @@ extern int ansi_colour_aware;
 extern int colour_the_prompt;
 extern int received_WINCH;
 extern int prompt_is_still_uncooked;
+extern int mirror_arguments;
 extern int impatient_prompt;
 extern int we_just_got_a_signal_or_EOF;
 extern int remember_for_completion;
@@ -307,7 +308,8 @@ void  mysetenv(const char *name, const char *value);
 void  set_ulimit(int resource, long value);
 void  usage(int status);
 int   open_unique_tempfile(const char *suffix, char **tmpfile_name);
-
+void  mirror_args_init(char **argv);
+void  mirror_args(pid_t command_pid);
 
 /* flags to use for the error_flags argument to myerror */
 #define FATAL     2
@@ -356,6 +358,7 @@ char *append_and_free_old(char *str1, const char *str2);
 char *mangle_char_for_debug_log(char c, int quote_me);
 char *mangle_string_for_debug_log(const char *string, int maxlen);
 char *mangle_buffer_for_debug_log(const char *buffer, int length);
+char *mem2str(const char *mem, int size);
 char *search_and_replace(char *patt, char *repl, const char *string,
                          int cursorpos, int *line, int *col);
 char *first_of(char **strings);
