@@ -1447,7 +1447,8 @@ print_list()
 }
 
 static char *rbtree_to_string(const struct rbtree *rb, int max_items) {
-   char *word, *result = NULL;
+   const char *word;
+   char  *result = NULL;
    int i;
    RBLIST *list = rbopenlist(rb);
    for (i = 0; (word = rbreadlist(list)) && (i < max_items); i++) {
