@@ -113,7 +113,7 @@ print_list()
   rbcloselist(completion_list);
 }
 
-static char *rbtree_to_string(struct rbtree *rb, int max_items) {
+static char *rbtree_to_string(const struct rbtree *rb, int max_items) {
    char *word, *result = NULL;
    int i;
    RBLIST *list = rbopenlist(rb);
@@ -173,8 +173,9 @@ feed_file_into_completion_list(const char *completions_file)
     buffer[BUFFSIZE - 1] = '\0';	/* make sure buffer is properly terminated (it should be anyway, according to ANSI) */
     feed_line_into_completion_list(buffer);
   }
-  if (errno)
+  if (! feof(compl_fp) && ferror(compl_fp))   /* at least in GNU libc, errno will be set in this case. If not, no harm is done */
     myerror(FATAL|USE_ERRNO, "Couldn't read completions from %s", completions_file);
+   
   fclose(compl_fp);
   /* print_list(); */
 }
@@ -314,8 +315,13 @@ my_completion_function(char *prefix, int state)
   assert(scratch_tree != NULL);
   assert(scratch_list != NULL);
   if ((completion = rbreadlist(scratch_list))) {	/* read next possible completion */
+    struct stat buf; 
     char *copy_for_readline = malloc_foreign(strlen(completion)+1);
     strcpy(copy_for_readline, completion);
+    
+/* This doesn    
+    rl_filename_completion_desired = rl_filename_quoting_desired = (stat(completion, &buf) ? FALSE : TRUE); 
+
     DPRINTF1(DEBUG_COMPLETION, "Returning completion to readline: <%s>", copy_for_readline);
     return copy_for_readline;	/* we cannot just return it as  readline will free it (and make rlwrap explode) */
   } else {

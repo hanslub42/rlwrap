@@ -1446,7 +1446,7 @@ print_list()
   rbcloselist(completion_list);
 }
 
-static char *rbtree_to_string(struct rbtree *rb, int max_items) {
+static char *rbtree_to_string(const struct rbtree *rb, int max_items) {
    char *word, *result = NULL;
    int i;
    RBLIST *list = rbopenlist(rb);
@@ -1506,8 +1506,9 @@ feed_file_into_completion_list(const char *completions_file)
     buffer[BUFFSIZE - 1] = '\0';	/* make sure buffer is properly terminated (it should be anyway, according to ANSI) */
     feed_line_into_completion_list(buffer);
   }
-  if (errno)
+  if (! feof(compl_fp) && ferror(compl_fp))   /* at least in GNU libc, errno will be set in this case. If not, no harm is done */
     myerror(FATAL|USE_ERRNO, "Couldn't read completions from %s", completions_file);
+   
   fclose(compl_fp);
   /* print_list(); */
 }
@@ -1578,17 +1579,17 @@ my_completion_function(char *prefix, int state)
 	   word && is_prefix(prefix, word);	/* as long as prefix is really prefix of word */
 	   word = rblookup(RB_LUGREAT, word, completion_tree)) {	/* find next word in list */
 	rbsearch(mysavestring(word), scratch_tree);	/* insert fresh copy of the word */
-	/* DPRINTF1(DEBUG_READLINE, "Adding %s to completion list ", word); */
+	/* DPRINTF1(DEBUG_COMPLETION, "Adding %s to completion list ", word); */
       }
     }
     if (completion_type & COMPLETE_FILENAMES) {
       change_working_directory();
-      DPRINTF1(DEBUG_READLINE, "Starting milking of rl_filename_completion_function, prefix = <%s> ", prefix);
+      DPRINTF1(DEBUG_COMPLETION, "Starting milking of rl_filename_completion_function, prefix = <%s> ", prefix);
       for (count = 0;
 	   (word = copy_and_free_string_for_malloc_debug(rl_filename_completion_function(prefix, count)));
 	   count++) {	/* using rl_filename_completion_function means
 			   that completing filenames will always be case-sensitive */
-        DPRINTF1(DEBUG_READLINE, "Adding <%s> to completion list ", word);
+        DPRINTF1(DEBUG_COMPLETION, "Adding <%s> to completion list ", word);
 	rbsearch(word, scratch_tree);
       }
     }
@@ -1631,7 +1632,7 @@ my_completion_function(char *prefix, int state)
 	if (!*word)
 	  continue; /* empty space at beginning or end of the word list results in an empty word. skip it now */	
 	rbsearch(mysavestring(word), scratch_tree); /* add the filtered completions to the new scratch tree */
-	DPRINTF1(DEBUG_READLINE, "Adding %s to completion list ", word); 
+	DPRINTF1(DEBUG_COMPLETION, "Adding %s to completion list ", word); 
       }
       free_splitlist(words);
       free_splitlist(fragments);
@@ -1640,16 +1641,21 @@ my_completion_function(char *prefix, int state)
     }
 
   
-    DPRINTF1(DEBUG_READLINE, "scratch list: %s", rbtree_to_string(scratch_tree, 6));  
+    DPRINTF1(DEBUG_COMPLETION, "scratch list: %s", rbtree_to_string(scratch_tree, 6));  
   } /* if state ==  0 */
 
   /* we get here each time the user presses TAB to cycle through the list */
   assert(scratch_tree != NULL);
   assert(scratch_list != NULL);
   if ((completion = rbreadlist(scratch_list))) {	/* read next possible completion */
+    struct stat buf; 
     char *copy_for_readline = malloc_foreign(strlen(completion)+1);
     strcpy(copy_for_readline, completion);
-    DPRINTF1(DEBUG_READLINE, "Returning completion to readline: <%s>", copy_for_readline);
+    
+/* This doesn    
+    rl_filename_completion_desired = rl_filename_quoting_desired = (stat(completion, &buf) ? FALSE : TRUE); 
+
+    DPRINTF1(DEBUG_COMPLETION, "Returning completion to readline: <%s>", copy_for_readline);
     return copy_for_readline;	/* we cannot just return it as  readline will free it (and make rlwrap explode) */
   } else {
     return NULL;
