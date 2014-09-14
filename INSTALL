@@ -6,7 +6,16 @@ unices and unix-like environments like linux, the BSDs, OS/X, solaris,
 HP/UX, QNX, AIX and cygwin (special thanks to PolarHome for their
 "dinosaur zoo" of ageing Unix systems!)
 
+
 INSTALLATION
+
+First, unzip the tarball or clone the git repository (git clone
+https://github.com/hanslub42/rlwrap.git). Then go to the rlwrap
+directory. After a 'git clone' you will not yet have a configure file; 
+build one using autotools (e.g. autoreconf --install, cf. the section 
+BUILD PROBEMS below))
+
+Then:
 
 ./configure
 make
