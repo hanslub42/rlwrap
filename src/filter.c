@@ -38,12 +38,13 @@
    hanging rlwrap)
             
             
-   Communication is synchronous: after sending a message rlwrap waits
-   for an answer, which must have the same tag. If the filter is slow
-   or hangs, rlwrap does the same. A filter can (and should) signal an
-   error by using TAG_ERROR (which will terminate rlwrap). Filter
-   output on stderr is displayed normally, but will mess up the
-   display.
+   Communication is synchronous: after sending a message (and only
+   then) rlwrap waits for an answer, which must have the same tag, but
+   may be preceded by one or more "out of band" messages.  If the
+   filter is slow or hangs, rlwrap does the same. A filter can (and
+   should) signal an error by using TAG_ERROR (which will terminate
+   rlwrap). Filter output on stderr is displayed normally, but will
+   mess up the display.
  
    Length may be 0. (Example: If we have a prompt-less command, rlwrap
    will send an empty TAG_PROMPT message, and the filter can send a
