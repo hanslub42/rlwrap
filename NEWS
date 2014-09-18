@@ -1,3 +1,13 @@
+0.42  Added --mirror-arguments option 
+
+      On SunOS tcgetattr(slave pty) failed on with "Invalid argument" 
+
+      If the completion list contained two words, one of which a
+      prefix of the other (e.g. "sea" and "seagull") the shorter one would
+      be skipped when displaying a list of completions
+
+      
+
 0.41  Slightly late SIGCHLD could cause an I/O error on master pty
 
       Added -W (-polling) option to poll slave pty for changes in its 
