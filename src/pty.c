@@ -103,16 +103,8 @@ my_pty_fork(int *ptr_master_fd,
       } 
     }  
 
-    if (slave_pty_sensing_fd < 0) {             /* both master and slave unusable                                                     */ 
-      fprintf(stderr,                           /* don't use myerror(WARNING|...) because of the strerror() message *within* the text */
-              "Warning: %s cannot determine terminal mode of %s\n"
-              "(because: %s).\n"
-              "Readline mode will always be on (as if -a option was set);\n"
-              "passwords etc. *will* be echoed and saved in history list!\n\n",
-              program_name, command_name, strerror(errno));
-      always_echo = TRUE;  
-      sensing_pty = "no"; 
-    }
+    if (slave_pty_sensing_fd < 0)             /* both master and slave unusable: give up                              */ 
+      myerror(FATAL|USE_ERRNO, "cannot determine terminal mode of slave command");
   
     DPRINTF1(DEBUG_TERMIO, "Using %s pty to sense slave settings in parent", sensing_pty);
 
