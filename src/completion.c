@@ -1653,7 +1653,7 @@ my_completion_function(char *prefix, int state)
     char *copy_for_readline = malloc_foreign(strlen(completion)+1);
     strcpy(copy_for_readline, completion);
     
-/* This doesn    
+  /* This doesn ... (comment disappeared) */   
     rl_filename_completion_desired = rl_filename_quoting_desired = (stat(completion, &buf) ? FALSE : TRUE); 
 
     DPRINTF1(DEBUG_COMPLETION, "Returning completion to readline: <%s>", copy_for_readline);

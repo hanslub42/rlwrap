@@ -57,7 +57,8 @@ int slave_pty_sensing_fd;		     /* slave pty (client uses this to communicate wi
 				      * client's terminal settings */
 FILE *debug_fp = NULL;  	     /* filehandle of debugging log */
 char *program_name, *command_name;   /* "rlwrap" (or whatever has been symlinked to rlwrap)  and (base-)name of command */
-char *command_line = "";             /* command plus arguments */
+char *rlwrap_command_line = "";      /* rlwrap command line (rlwrap -options command <command_args> */
+char *command_line = "";             /* command <command_args> */
 int within_line_edit = FALSE;	     /* TRUE while user is editing input */
 pid_t command_pid = 0;		     /* pid of child (client), or 0 before child is born */
 int i_am_child = FALSE;		     /* Am I child or parent? after forking, child will set this to TRUE */
@@ -157,16 +158,16 @@ int
 main(int argc, char **argv)
 { 
   char *command_name;
-  command_line = unsplit_with(argc, argv, " ");  
-
+  rlwrap_command_line = unsplit_with(argc, argv, " ");     
   init_completer();
   command_name = read_options_and_command_name(argc, argv);
+  command_line = unsplit_with(argc - optind, argv, " ");
   
   /* by now, optind points to <command>, and &argv[optind] is <command>'s argv */
   if (!isatty(STDIN_FILENO) && execvp(argv[optind], &argv[optind]) < 0)
     /* if stdin is not a tty, just execute <command> */ 
     myerror(FATAL|USE_ERRNO, "Cannot execute %s", argv[optind]);	
-  init_rlwrap(command_line);
+  init_rlwrap(rlwrap_command_line);
   install_signal_handlers();	
   block_all_signals();
   fork_child(command_name, argv);
