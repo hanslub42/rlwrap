@@ -388,6 +388,59 @@ int dont_wrap_command_waits() {
 }       
 
 
+int dont_wrap_command_waits2() { /* intended successor to dont_wrap_command_waits, as wchan is not found on all linux
+                                   systems.  This version uses /proc/$PID/status instead of the obsolete
+                                   /proc/$PID/wchan. PROBLEM: we don't need /proc/$PID/status, we need /proc/$PID/syscall
+                                   (and System.map) */ 
+  static char command_status[MAXPATHLEN+1];
+  static int initialised = FALSE;
+  static int been_warned = 0;
+  char buffer[BUFFSIZE], *status = NULL, **status_lines, *status_line, **status_words;
+  int  status_fd, lineno, nread, result = FALSE;
+
+  DEBUG_RANDOM_SLEEP;
+  if (!commands_children_not_wrapped)
+    return FALSE;
+  DPRINTF0(DEBUG_READLINE,"Hallo");
+  if (!initialised) {   /* first time we're called after birth of child */
+    snprintf2(command_status, MAXPATHLEN , "%s/%d/status", PROC_MOUNTPOINT, command_pid);
+    initialised =  TRUE;
+  }
+  if (command_is_dead)
+    return TRUE;  /* This is lazy!! signal may not have been delivered @@@ */
+ 
+  if ((status_fd = open(command_status, O_RDONLY)) < 0) {
+    if (been_warned++ == 0) {
+      myerror(WARNING|USE_ERRNO, "you probably specified the -N (--no-children) option"
+                                 " - but spying\non %s's wait status does not work on"
+                                 " your system, as we cannot read %s", command_name, command_status);
+    }
+    return FALSE;
+  }
+  while((nread = read(status_fd, buffer, BUFFSIZE - 1)) > 0) {
+    buffer[nread] = '\0';
+    status = append_and_free_old(status, buffer);
+  }     
+
+  status_lines = split_with(status, "\n");
+  for(lineno = 0; (status_line = status_lines[lineno]); lineno++) {
+    assert(status_line);
+    DPRINTF1(DEBUG_READLINE,"Status line: %s", status_line);
+    if (strncmp("State:", status_line, 6) == 0) { 
+      DPRINTF1(DEBUG_READLINE, "read commands <%s>", status_line);
+      status_words = split_with(status_line, "\t");
+      result = (*status_words[1] == 'S'); /* 'S' means: sleeping */
+      free_splitlist(status_words);
+    }
+  }   
+  free_splitlist(status_lines);
+  /* free(status); */
+  close(status_fd);
+  DEBUG_RANDOM_SLEEP;
+  return result;
+}       
+
+
 int skip_rlwrap() { /* this function is called from sigTSTP signal handler. Is it re-entrant? */
   int retval = FALSE;
   DEBUG_RANDOM_SLEEP;
