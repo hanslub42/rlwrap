@@ -1,4 +1,4 @@
-.TH rlwrap 1 "May 8, 2014"
+.TH rlwrap 1 "September 20, 2014"
 .SH NAME
 rlwrap \- readline wrapper
 .de OP
@@ -101,6 +101,9 @@ option to change this to '' (don't insert anything) or some other character.
 Split \fIfile\fP into words and add them to the completion word list. This
 option can be given more than once, and \fIadds\fP to the default
 completion list in  $RLWRAP_HOME or @DATADIR@/rlwrap/completions.
+
+Specifying \fB\-f .\fP will make \fBrlwrap\fP use the current history file as a
+completion word list.
 .TP
 .OL \-g \-\-forget\-matching \fIregexp\fP
 Forget (i.e. drop from history list) all input lines that match 
@@ -130,9 +133,11 @@ When in readline mode, append \fIcommand\fP's output (including echo'ed user inp
 Don't print warnings.
 .TP
 .OL \-N \-\-no\-children
-(linux only) Don't rlwrap \fIcommand\fP's children: whenever \fBrlwrap\fP notices that 
+Don't rlwrap \fIcommand\fP's children: whenever \fBrlwrap\fP notices that 
 \fIcommand\fP is waiting for one of its children, it switches to direct mode, handing down all keypresses immediately.
 With this option commands that need \-\-always\-readline can call editors and pagers and still be usable. 
+
+This option needs /proc/\fIcommand\fP_pid/wchan, so it only works with linux kernels configured with CONFIG_KALLSYMS. 
 .TP
 .OL \-m \-\-multi\-line [\fInewline_substitute\fP]
 Enable multi\-line input using a "newline substitute" character
