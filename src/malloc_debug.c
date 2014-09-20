@@ -28,19 +28,6 @@
 
 #include "rlwrap.h"
 
-/* test this debugger by compiling stand-alone with gcc -otest -DTESTME malloc_debug.c */
-
-
-#ifdef TESTME
-int debug=8;
-#  undef  malloc
-#  undef  mymalloc
-#  undef  free
-#  define mymalloc malloc
-#  define DEBUG_MEMORY_MANAGEMENT 8
-#  define USE_MALLOC_DEBUGGER
-#endif
-
 
 #ifdef DEBUG
 #  define USE_MALLOC_DEBUGGER
@@ -212,11 +199,6 @@ void debug_postmortem() {
 }             
 
       
-#ifdef TESTME
-#  define free(ptr) debug_free(ptr,__FILE__,__LINE__)
-#  define malloc(size) debug_malloc(size,__FILE__,__LINE__)
-#  define test_main main
-#endif
 
 int test_main() {
   char **list = split_with("a bee    ceee", " ");
