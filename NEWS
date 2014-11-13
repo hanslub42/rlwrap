@@ -1,12 +1,21 @@
-0.42  Added --mirror-arguments option 
+0.42  Added --mirror-arguments (-U) option 
 
-      On SunOS tcgetattr(slave pty) failed on with "Invalid argument" 
+      On SunOS tcgetattr(slave pty) failed with "Invalid argument" 
 
       If the completion list contained two words, one of which a
       prefix of the other (e.g. "sea" and "seagull") the shorter one would
       be skipped when displaying a list of completions
 
+      reading completion files (with the -f option, or from
+      $RLWRAP_HOME/<command>_completions) could fail with an incorrect
+      ENOENT ("No such file or directory")
+
+      rlwrap -z listing wouldn't list filters
       
+      When both master and slave pty are unfit for sensing slave
+      commands terminal settings, rlwrap now bails out with an error
+      "cannot determine terminal mode of slave command"
+
 
 0.41  Slightly late SIGCHLD could cause an I/O error on master pty
 
