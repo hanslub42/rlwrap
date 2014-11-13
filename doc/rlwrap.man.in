@@ -312,11 +312,11 @@ directory in which the history and completion files are kept.
 editor to use for multi\-line input. Example:
 .PP
 .nf
-    export RLWRAP_EDITOR="microemacs\ \-l%L:%C"
+    export RLWRAP_EDITOR="vi\ +%L"
     export RLWRAP_EDITOR="vim\ '+call\ cursor(%L,%C)'"
 .fi
 .PP
-The last example is the default; %L and %C are replaced by
+The first example above is the default; %L and %C are replaced by
 line and column numbers corresponding to the cursor position in
 \fBrlwrap\fP's edit buffer
 .TP
