@@ -313,7 +313,7 @@ editor to use for multi\-line input. Example:
 .PP
 .nf
     export RLWRAP_EDITOR="microemacs\ \-l%L:%C"
-    export RLWRAP_EDITOR="vi\ +%L"
+    export RLWRAP_EDITOR="vim\ '+call\ cursor(%L,%C)'"
 .fi
 .PP
 The last example is the default; %L and %C are replaced by

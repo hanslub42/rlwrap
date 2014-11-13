@@ -13,7 +13,7 @@ First, unzip the tarball or clone the git repository (git clone
 https://github.com/hanslub42/rlwrap.git). Then go to the rlwrap
 directory. After a 'git clone' you will not yet have a configure file; 
 build one using autotools (e.g. autoreconf --install, cf. the section 
-BUILD PROBEMS below))
+BUILD PROBLEMS below))
 
 Then:
 
