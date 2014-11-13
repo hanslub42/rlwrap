@@ -153,7 +153,9 @@ AC_RUN_IFELSE(
      AC_SUBST(HAVE_OPTIONAL_ARGS,yes)
      ac_double_colons="yes"],
     [AC_SUBST(HAVE_OPTIONAL_ARGS,no)
-     ac_double_colons="no"])
+     ac_double_colons="no"],
+    [echo
+     AC_MSG_WARN([This test doens't work when cross-compiling. Edit GETOPT_GROKS_OPTIONAL_ARGS in config.h by hand])])
 AC_MSG_RESULT($ac_double_colons)
 
 
