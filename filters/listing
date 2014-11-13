@@ -14,7 +14,7 @@ chdir $ENV{RLWRAP_FILTERDIR} or die "cannot chdir to $ENV{RLWRAP_FILTERDIR}: $!\
 
 
 if ($command_line =~ /\w/) {
-  die("(Command line: <$command_line>) This filter is only used to get a list of filters via 'rlwrap -z listing'\n".
+  die("This filter is only used to get a list of filters via 'rlwrap -z listing'\n".
       "It is not usable as a filter (and would do nothing useful)\n");
 }
 
