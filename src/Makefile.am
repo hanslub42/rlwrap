@@ -11,7 +11,7 @@ AM_CFLAGS=-DDATADIR=\"@datadir@\"
 
 # use old-fashioned suffix rule for non-GNU make
 .rb.c :
-	rbgen $< $@ 
+	rbgen $< $@ || echo "You don't seem to have rbgen (http://libredblack.sourceforge.net/). If you didn't change any .rb files, this is not a problem"   
 
 #clean-local: 
 #	rm -f *~ kaboom rltest1 rltest2 rltest3
