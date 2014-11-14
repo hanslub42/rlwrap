@@ -1,4 +1,4 @@
-rlwrap v 0.41  May 15 2014
+rlwrap v 0.42  Nov 14 2014
 
 * WHAT IT IS: 
 
@@ -79,4 +79,4 @@ filters still are of slightly dubious ('alpha') qualiity.
 Hans Lub, hanslub42@gmail.com
 
 * HOMEPAGE
-http://utopia.knoware.nl/~hlub/uck/rlwrap
+https://github.com/hanslub42/rlwrap
