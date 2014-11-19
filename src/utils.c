@@ -755,7 +755,7 @@ void mirror_args_init(char**argv) {
 
       
 
-void mirror_args(command_pid) {
+void mirror_args(pid_t command_pid) {
   int cmdline_fd;
   long cmdline_length;
   static int been_warned = 0;
