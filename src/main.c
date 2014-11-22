@@ -160,22 +160,25 @@ main(int argc, char **argv)
   char *command_name;
   rlwrap_command_line = unsplit_with(argc, argv, " ");     
   init_completer();
+
+  /* Harvest options and leave optind pointing to first non-option argument: */
   command_name = read_options_and_command_name(argc, argv);
+
+  /* by now, optind points to slave <command>, and &argv[optind] is <command>'s argv. Remember slave command line: */
   command_line = unsplit_with(argc - optind, argv, " ");
-  
-  /* by now, optind points to <command>, and &argv[optind] is <command>'s argv */
+
+  /* if stdin is not a tty, just execute <command>: */ 
   if (!isatty(STDIN_FILENO) && execvp(argv[optind], &argv[optind]) < 0)
-    /* if stdin is not a tty, just execute <command> */ 
     myerror(FATAL|USE_ERRNO, "Cannot execute %s", argv[optind]);	
   init_rlwrap(rlwrap_command_line);
   install_signal_handlers();	
   block_all_signals();
-  fork_child(command_name, argv);
+  fork_child(command_name, argv); /* this will unblock most signals most of the time */
   if (filter_command)
     spawn_filter(filter_command);
   
   main_loop();
-  return 42;			/* not reached, but some compilers are unhappy without this ... */
+  return 42;			/* The Answer, but, sadly, we'll never get there.... */
 }
 
 
