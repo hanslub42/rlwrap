@@ -638,7 +638,7 @@ usage(int status)
   print_option('v', "version", NULL, FALSE, NULL);
   print_option('w', "wait-before-prompt", "N", FALSE, "(msec, <0  : patient mode)");
   print_option('W', "polling", NULL, FALSE, NULL);
-  print_option('z', "filter", "filter command", FALSE, "(-z listing lists installed filters)");  
+  print_option('z', "filter", "filter command", FALSE, "('rlwrap -z listing' writes a list of installed filters)");  
   
  
 #ifdef DEBUG
