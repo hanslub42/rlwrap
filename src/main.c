@@ -335,12 +335,10 @@ main_loop()
 	}	
 	if (!skip_rlwrap()) {                        /* ... or else, it is time to cook the prompt */
 	  if (pre_given && accepted_lines == 0) {
-	    saved_rl_state.input_buffer = mysavestring(pre_given); /* stuff pre-given text into edit buffer */
-	    saved_rl_state.point =  strlen(pre_given);
+            /* input_buffer and point have already been set in init_readline() */
 	    DPRINTF0(DEBUG_READLINE, "Starting line edit (because of -P option)");
 	    within_line_edit = TRUE;
 	    restore_rl_state();
-
 	    continue;
 	  }
 	  

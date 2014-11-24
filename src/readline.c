@@ -83,7 +83,11 @@ init_readline(char *prompt)
   
   rl_catch_signals = FALSE;
   rl_catch_sigwinch = FALSE;
-  saved_rl_state.input_buffer = mysavestring("");
+  saved_rl_state.input_buffer = mysavestring(pre_given ? pre_given : ""); /* Even though the pre-given input won't be displayed before the first 
+                                                                             cooking takes place, we still want it to be accepted when the user 
+                                                                             presses ENTER before that (e.g. because she already knows the 
+                                                                             pre-given input and wants to accept that) */
+  saved_rl_state.point = strlen(saved_rl_state.input_buffer);
   saved_rl_state.raw_prompt = mysavestring("");
   saved_rl_state.cooked_prompt = NULL;
   
