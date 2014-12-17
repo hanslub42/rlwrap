@@ -30,7 +30,7 @@ intervening space.
 in order to provide \fBreadline\fP's line editing, persistent history
 and completion. 
 
-\fBrlwrap\fP tries to be completely transparent \- you
+\fBrlwrap\fP tries (and \fIalmost\fP suceeds) to be completely transparent \- you
 (or your shell) shouldn't notice any difference between \fBcommand\fP and \fBrlwrap
 command\fP \- except the added readline functionality, of course.
 This should even hold true when you are re\-directing, piping and
@@ -46,13 +46,13 @@ you can skip the rest of this manpage.
 .OL \-a \-\-always\-readline [\fIpassword_prompt\fP] 
 Always remain in "readline mode", regardless of \fIcommand\fP's terminal settings.
 Use this option if you want to use \fBrlwrap\fP with \fIcommand\fPs that already
-use readline.  
+do some line editing.  
 \fBNB\fP: With this
 option, rlwrap will echo (and save) passwords, unless you give \fIcommand\fP's
 password prompt as an argument.
 .OA \-a \-\-always\-readline Password:
 
-On a linux machine you can use the \fB\-N\fP (\fB\-\-no\-children\fP) option to prevent the wrapping of 
+On a linux machine you can use the \fB\-N\fP (\fB\-\-no\-children\fP) option to avoid wrapping  
 pagers and editors called from \fIcommand\fP; this should make them much more usable
 
 Many commands that need \fB\-\-always\-readline\fP may also need
@@ -98,15 +98,14 @@ By default, rlwrap appends a space after any inserted completion text. Use this
 option to change this to '' (don't insert anything) or some other character.
 .TP
 .OL \-f \-\-file \fIfile\fP
-Split \fIfile\fP into words and add them to the completion word list. This
-option can be given more than once, and \fIadds\fP to the default
+Split \fIfile\fP into words (using the default word-breaking characters, or those specified by \-\-break\-chars), and add them to the completion word list. This option can be given more than once, and \fIadds\fP to the default
 completion list in  $RLWRAP_HOME or @DATADIR@/rlwrap/completions.
 
 Specifying \fB\-f .\fP will make \fBrlwrap\fP use the current history file as a
 completion word list.
 .TP
 .OL \-g \-\-forget\-matching \fIregexp\fP
-Forget (i.e. drop from history list) all input lines that match 
+Forget (i.e. never put into the history list) all input lines that match 
 the POSIX 1003.2 regular expression \fIregexp\fP.
 The match is always case\-insensitive. \fIregexp\fP may be an ordinary
 string. For more about regular expressions, see  \fBregex (7)\fP
@@ -174,7 +173,7 @@ set the \-\-always\-readline option).
 .OL \-q \-\-quote\-characters \fIlist_of_characters\fP
 Assume that the given characters act as quotes, e.g. when matching
 parentheses. Take care to escape the list properly for your shell (example: \-q "\\"'", which happens to be the
-default, or \-q "\\"" which will be better for Lisp users) 
+default, or \-q "\\"" which will be better for lisp-like input) 
 .TP
 .OL \-r \-\-remember
 Put all words seen on in\- and output on the completion list.  
@@ -201,7 +200,7 @@ This is mainly useful for commands that overwrite command-line password argument
 Print rlwrap version.
 .TP
 .OL \-w \-\-wait\-before\-prompt \fItimeout\fP
-In order to determine if  \fIcommand\fP's last output is a prompt, \fBrlwrap\fP waits \fItimeout\fP millisecs after receiving it.
+In order to determine if  \fIcommand\fP's last output is a prompt, \fBrlwrap\fP waits \fItimeout\fP milliseconds after receiving it.
 Only when no more output has arrived, it is cooked (coloured, filtered and/or replaced by a substitute prompt) and displayed as a prompt.
 Before this the prompt is displayed "uncooked". Most users won't notice, but heavy cookers can prepend the timeout with a minus sign,
 making rlwrap hold back the prompt until it has been cooked ("patient mode"). This will prevent flashing of the prompt, but it will also interfere with long output lines and make switches from direct to readline mode less reliable. Default timeout: 40 ms  
@@ -256,8 +255,8 @@ keypresses. More sophisticated commands tend to use raw mode all the
 time; they may sometimes be rlwrappable with the \fB\-a\fP (and \fB\-N\fP) options.
 
 When you \fBrlwrap\fP \fIcommand\fP, \fBrlwrap\fP will run it a
-in a separate session, with its own "pseudo\-terminal" (pty),
-and monitor this pty to see whether the pty is in raw mode or in
+in a separate session, under its own (controlling) "pseudo\-terminal" (pty),
+and monitor this pty to see whether it is in raw, or in
 cooked mode. In the first case, \fBrlwrap\fP will copy all input
 and output directly between \fIcommand\fP and your terminal ("direct
 mode"). In the second case, \fBrlwrap\fP will use readline to edit your input ("readline mode"), and monitor 
@@ -324,7 +323,7 @@ line and column numbers corresponding to the cursor position in
 Any executable along your PATH can in theory
 be used as a filter, but because filters have to follow a rather outlandish
 protocol (cf. \fBRlwrapFilter (3)\fP) it is a good idea to keep them
-separate. This is why \fBrlwrap\fP adds a special filter directory to $PATH just before launching a filter. By default, this is  
+separate. This is why \fBrlwrap\fP adds a special filter directory in front of $PATH just before launching a filter. By default, this is  
 @DATADIR@/rlwrap/filters, but $RLWRAP_FILTERDIR is used if set.
 .SH SIGNALS
 .PP
