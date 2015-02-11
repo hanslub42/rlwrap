@@ -411,7 +411,7 @@ will notice these races especially on a busy machine and with heavy
 command output are garbled or incorrectly coloured.
   
 \fBrlwrap\fP can try, but often fails to, handle prompts that contain
-control characters.  A flter may be used to clean up the prompt.
+control characters.  A filter may be used to clean up the prompt.
 
 .SH VERSION
 This manpage documents rlwrap version @VERSION@
