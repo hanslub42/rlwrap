@@ -221,6 +221,9 @@ static char *read_tagless() {
 
 void handle_out_of_band(int tag, char *message) {
   int split_em_up = FALSE;
+
+  DPRINTF3(DEBUG_FILTERING, "received out-of-band (%s, %d bytes) %s", tag2description(tag),
+           (int) strlen(message), mangle_string_for_debug_log(message, MANGLE_LENGTH)); 
   switch (tag) {
   case TAG_ERROR:
     if (expected_tag == TAG_COMPLETION) /* start new line when completing (looks better) */
