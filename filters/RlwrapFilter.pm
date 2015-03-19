@@ -142,8 +142,11 @@ sub run {
 			# don't update <previous_tag> and don't reset <cumulative_input>
 			next;
 		}
-	  $self->{cumulative_output} =~ s/(?<![^\n])[^\n]*$// #  s/[^\n]*$// takes way too long on big strings, what is the optimal regex to do this?
-            if $ENV{RLWRAP_IMPATIENT}; # chop off prompt from cumulative_output
+
+          if ($ENV{RLWRAP_IMPATIENT} and  $self->{cumulative_output} !~ /\n$/) { # cumulative output contains prompt: chop it off!
+            $self->{cumulative_output} =~ s/(?<![^\n])[^\n]*$//                  # s/[^\n]*$// takes way too long on big strings,
+                                                                                 # what is the optimal regex to do this?
+          }
 
 	  $response = when_defined $self -> prompt_handler, "$message";
 	  croak "prompts may not contain newlines!" if $response =~ /\n/;
