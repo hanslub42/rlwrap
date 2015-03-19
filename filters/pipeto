@@ -11,14 +11,14 @@ use strict;
 
 
 # we want any piped pager to receive SIGWINCH.
-# SIGWINCH is not in POSIX, which means that  POSIX.pm doesn't 
+# SIGWINCH is not in POSIX, which means that  POSIX.pm doesn't
 # know about it. We use 'kill -l' to find it
 
 my $raw_input;
 
 my @signals = split /\s+/, `kill -l`; # yuck!
 for (my $signo = 1; $signals[$signo-1]; $signo++) {
-    if ($signals[$signo-1] eq 'WINCH') {       
+    if ($signals[$signo-1] eq 'WINCH') {
 	my $sigset_unblock = POSIX::SigSet->new($signo);
 	unless (defined sigprocmask(SIG_UNBLOCK, $sigset_unblock)) {
 	    die "Could not unblock signals: $!\n";
@@ -42,7 +42,7 @@ $filter -> prompts_are_never_empty(1);
 $filter -> input_handler(\&input);
 $filter -> output_handler(\&output);
 $filter -> prompt_handler(\&prompt);
-$filter -> echo_handler(sub {$raw_input}); 
+$filter -> echo_handler(sub {$raw_input});
 
 $filter -> run;
 
@@ -64,8 +64,8 @@ sub prompt {
   $out_chunkno = 0;
   if ($pipeline) {
     $filter -> send_output_oob ("\x08" x length($wait_text). "\n"); # erase $wait_text and go to new line
-    local $SIG{PIPE} =  'IGNORE'; # we don't want to die if the pipeline quits 
-    open PIPELINE, "| $pipeline";   
+    local $SIG{PIPE} =  'IGNORE'; # we don't want to die if the pipeline quits
+    open PIPELINE, "| $pipeline";
     print PIPELINE $filter->cumulative_output;;
     close PIPELINE; # this waits until pipeline has finished
     undef $pipeline;
