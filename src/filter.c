@@ -227,7 +227,7 @@ void handle_out_of_band(int tag, char *message) {
   switch (tag) {
   case TAG_ERROR:
     if (expected_tag == TAG_COMPLETION) /* start new line when completing (looks better) */
-      fprintf(stderr, "\n"); /* @@@ error reporting (still) uses bufered I/O */
+      fprintf(stderr, "\n"); /* @@@ error reporting (still) uses buffered I/O */
       myerror(FATAL|NOERRNO, message);
   case TAG_OUTPUT_OUT_OF_BAND:
     my_putstr(message);
