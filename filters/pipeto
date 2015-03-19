@@ -29,9 +29,14 @@ for (my $signo = 1; $signals[$signo-1]; $signo++) {
 my $filter = new RlwrapFilter;
 my $name = $filter -> name;
 
-$filter -> help_text("Usage: rlwrap -z $name <command>\n".
-		     "Allow piping of <command> output through pagers or other shell commands\n" .
-		     "When input of the form \"| shell pipeline\" is seen, <command>'s following output is sent through the pipeline\n");
+$filter -> help_text(<<DOC);
+Usage: rlwrap -z $name <command>
+Allow piping of <command>'s interactive output through pagers or other shell commands.
+
+When input of the form "<cmd> | <shell pipeline>" is seen, <cmd> is
+given to <command> to interpret, and the output is piped to <shell
+pipeline> instead of being displayed by rlwrap.
+DOC
 
 my $pipeline;
 my $prompt;
