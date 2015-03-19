@@ -36,6 +36,18 @@ Allow piping of <command>'s interactive output through pagers or other shell com
 When input of the form "<cmd> | <shell pipeline>" is seen, <cmd> is
 given to <command> to interpret, and the output is piped to <shell
 pipeline> instead of being displayed by rlwrap.
+
+For a slightly contrived example, let's say you are running the Gauche
+Scheme shell within rlwrap, as \`rlwrap -z pipeto gosh', and defined a
+verbose version of fact as in the Gauche documentation:
+
+(define (fact n)
+        (if (zero? n)
+            1
+            (* n #?=(fact (- n 1)))))
+
+then you can type \`(fact 32) | less' to see the evaluation steps of
+the function call paged through less.
 DOC
 
 my $pipeline;
