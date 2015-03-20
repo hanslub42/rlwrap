@@ -1,6 +1,8 @@
 #!/usr/bin/env perl
 
-# this is maybe the most practical of the filter examples. Is is also a test for rlwraps signal handling.
+# This is maybe the most practical of the filter examples. Is is also
+# a test for rlwrap's signal handling.
+#
 # At present, a CTRL-C in a pager will also kill rlwrap (bad)
 
 use lib ($ENV{RLWRAP_FILTERDIR} or ".");
@@ -10,20 +12,20 @@ use strict;
 
 
 
-# we want any piped pager to receive SIGWINCH.
-# SIGWINCH is not in POSIX, which means that  POSIX.pm doesn't
-# know about it. We use 'kill -l' to find it
+# We want any piped pager to receive SIGWINCH.
+# SIGWINCH is not in POSIX, which means that POSIX.pm doesn't
+# know about it. We use 'kill -l' to find it.
 
 my $raw_input;
 
 my @signals = split /\s+/, `kill -l`; # yuck!
 for (my $signo = 1; $signals[$signo-1]; $signo++) {
-    if ($signals[$signo-1] eq 'WINCH') {
-	my $sigset_unblock = POSIX::SigSet->new($signo);
-	unless (defined sigprocmask(SIG_UNBLOCK, $sigset_unblock)) {
-	    die "Could not unblock signals: $!\n";
-	}
+  if ($signals[$signo-1] eq 'WINCH') {
+    my $sigset_unblock = POSIX::SigSet->new($signo);
+    unless (defined sigprocmask(SIG_UNBLOCK, $sigset_unblock)) {
+      die "Could not unblock signals: $!\n";
     }
+  }
 }
 
 my $filter = new RlwrapFilter;
@@ -63,7 +65,6 @@ $filter -> echo_handler(sub {$raw_input});
 
 $filter -> run;
 
-
 sub input {
   my $input;
   $raw_input = $_;
@@ -71,22 +72,24 @@ sub input {
   return $input;
 }
 
-
 sub output {
-  return ($pipeline ? ($out_chunkno++ == 0 ? $wait_text : "")  : $_); # replace first chunk by $wait_text
+    # Replace first chunk by $wait_text
+  return $pipeline ? ($out_chunkno++ == 0 ? $wait_text : "")  : $_;
 }
 
 sub prompt {
   my ($prompt) = @_;
   $out_chunkno = 0;
+
   if ($pipeline) {
-    $filter -> send_output_oob ("\x08" x length($wait_text). "\n"); # erase $wait_text and go to new line
+    # Erase $wait_text and go to new line
+    $filter -> send_output_oob ("\x08" x length($wait_text). "\n");
     local $SIG{PIPE} =  'IGNORE'; # we don't want to die if the pipeline quits
     open PIPELINE, "| $pipeline";
     print PIPELINE $filter->cumulative_output;;
     close PIPELINE; # this waits until pipeline has finished
     undef $pipeline;
-		$filter ->send_output_oob("\n"); # start prompt on new line
+    $filter ->send_output_oob("\n"); # start prompt on new line
   }
   return $prompt;
 }
