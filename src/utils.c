@@ -510,6 +510,7 @@ change_working_directory()
 }
 
 
+#undef isset
 #define isset(flag) ((flag) ? "set" : "unset")
 
 /* print info about terminal settings */
