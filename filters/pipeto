@@ -1,6 +1,8 @@
 #!/usr/bin/env perl
 
-# this is maybe the most practical of the filter examples. Is is also a test for rlwraps signal handling.
+# This is maybe the most practical of the filter examples. Is is also
+# a test for rlwrap's signal handling.
+#
 # At present, a CTRL-C in a pager will also kill rlwrap (bad)
 
 use lib ($ENV{RLWRAP_FILTERDIR} or ".");
@@ -10,28 +12,45 @@ use strict;
 
 
 
-# we want any piped pager to receive SIGWINCH.
-# SIGWINCH is not in POSIX, which means that  POSIX.pm doesn't 
-# know about it. We use 'kill -l' to find it
+# We want any piped pager to receive SIGWINCH.
+# SIGWINCH is not in POSIX, which means that POSIX.pm doesn't
+# know about it. We use 'kill -l' to find it.
 
 my $raw_input;
 
 my @signals = split /\s+/, `kill -l`; # yuck!
 for (my $signo = 1; $signals[$signo-1]; $signo++) {
-    if ($signals[$signo-1] eq 'WINCH') {       
-	my $sigset_unblock = POSIX::SigSet->new($signo);
-	unless (defined sigprocmask(SIG_UNBLOCK, $sigset_unblock)) {
-	    die "Could not unblock signals: $!\n";
-	}
+  if ($signals[$signo-1] eq 'WINCH') {
+    my $sigset_unblock = POSIX::SigSet->new($signo);
+    unless (defined sigprocmask(SIG_UNBLOCK, $sigset_unblock)) {
+      die "Could not unblock signals: $!\n";
     }
+  }
 }
 
 my $filter = new RlwrapFilter;
 my $name = $filter -> name;
 
-$filter -> help_text("Usage: rlwrap -z $name <command>\n".
-		     "Allow piping of <command> output through pagers or other shell commands\n" .
-		     "When input of the form \"| shell pipeline\" is seen, <command>'s following output is sent through the pipeline\n");
+$filter -> help_text(<<DOC);
+Usage: rlwrap -z $name <command>
+Allow piping of <command>'s interactive output through pagers or other shell commands.
+
+When input of the form "<cmd> | <shell pipeline>" is seen, <cmd> is
+given to <command> to interpret, and the output is piped to <shell
+pipeline> instead of being displayed by rlwrap.
+
+For a slightly contrived example, let's say you are running the Gauche
+Scheme shell within rlwrap, as \`rlwrap -z pipeto gosh', and defined a
+verbose version of fact as in the Gauche documentation:
+
+(define (fact n)
+        (if (zero? n)
+            1
+            (* n #?=(fact (- n 1)))))
+
+then you can type \`(fact 32) | less' to see the evaluation steps of
+the function call paged through less.
+DOC
 
 my $pipeline;
 my $prompt;
@@ -42,10 +61,9 @@ $filter -> prompts_are_never_empty(1);
 $filter -> input_handler(\&input);
 $filter -> output_handler(\&output);
 $filter -> prompt_handler(\&prompt);
-$filter -> echo_handler(sub {$raw_input}); 
+$filter -> echo_handler(sub {$raw_input});
 
 $filter -> run;
-
 
 sub input {
   my $input;
@@ -54,22 +72,24 @@ sub input {
   return $input;
 }
 
-
 sub output {
-  return ($pipeline ? ($out_chunkno++ == 0 ? $wait_text : "")  : $_); # replace first chunk by $wait_text
+    # Replace first chunk by $wait_text
+  return $pipeline ? ($out_chunkno++ == 0 ? $wait_text : "")  : $_;
 }
 
 sub prompt {
   my ($prompt) = @_;
   $out_chunkno = 0;
+
   if ($pipeline) {
-    $filter -> send_output_oob ("\x08" x length($wait_text). "\n"); # erase $wait_text and go to new line
-    local $SIG{PIPE} =  'IGNORE'; # we don't want to die if the pipeline quits 
-    open PIPELINE, "| $pipeline";   
+    # Erase $wait_text and go to new line
+    $filter -> send_output_oob ("\x08" x length($wait_text). "\n");
+    local $SIG{PIPE} =  'IGNORE'; # we don't want to die if the pipeline quits
+    open PIPELINE, "| $pipeline";
     print PIPELINE $filter->cumulative_output;;
     close PIPELINE; # this waits until pipeline has finished
     undef $pipeline;
-		$filter ->send_output_oob("\n"); # start prompt on new line
+    $filter ->send_output_oob("\n"); # start prompt on new line
   }
   return $prompt;
 }
