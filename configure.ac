@@ -377,7 +377,7 @@ AC_LANG_CONFTEST(
                          ]])])
 
 result="no"
-gcc -o conftest conftest.c  
+$CC -o conftest conftest.c  
 ./conftest $random_nonsense1 >/dev/null 2>&1 &
 CONFTEST_PID=$!
 if grep $random_nonsense2 $opt_proc_mountpoint/$CONFTEST_PID/cmdline >/dev/null 2>&1; then
