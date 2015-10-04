@@ -624,11 +624,7 @@ init_rlwrap(char *command_line)
         }
       }
     }
-  } else {			/* ! write_histfile */
-    if (access(history_filename, R_OK) != 0) {
-      myerror(FATAL|USE_ERRNO, "cannot read %s", history_filename);
-    }
-  }
+  } 
 
   /* Initialize history */
   using_history();
