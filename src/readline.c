@@ -227,18 +227,7 @@ line_handler(char *line)
     return_key = 0;
     within_line_edit = FALSE;
 
-    rl_callback_handler_remove();
-    set_echo(FALSE);
-    free(saved_rl_state.input_buffer);
-    free(saved_rl_state.raw_prompt);
-    free(saved_rl_state.cooked_prompt); 
     
-    saved_rl_state.input_buffer = mysavestring("");
-    saved_rl_state.raw_prompt = mysavestring("");
-    saved_rl_state.cooked_prompt = NULL;
-    saved_rl_state.point = 0;
-    saved_rl_state.already_saved = TRUE;
-    redisplay  = TRUE;
   }
 }
 
