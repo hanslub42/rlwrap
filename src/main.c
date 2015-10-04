@@ -23,6 +23,7 @@
 /* global vars */
 
 
+
 /* variables set via command line options */
 int always_readline = FALSE;	             /* -a option: always be in readline mode             */
 char *password_prompt_search_string = NULL;  /* (part of) password prompt (argument of -a option) */
@@ -504,7 +505,7 @@ main_loop()
 						   will make us read 2 bytes 0x90 and then 0xd7, (or maybe the other way round depending on endianness??)
 						   The readline library hides all this complexity and allows one to just "pass the bytes around" */
 	nread = read(STDIN_FILENO, &byte_read, 1);  /* read next byte of input   */
-	assert(sizeof(unsigned char) == 1);      /* gets optimised away */
+	assert(sizeof(unsigned char) == 1);         /* gets optimised away       */
 
 	if (nread <= 0) 
 	  DPRINTF1(DEBUG_TERMIO, "read from stdin returned %d", nread); 
