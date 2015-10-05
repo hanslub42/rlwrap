@@ -226,7 +226,7 @@ line_handler(char *line)
         
     return_key = 0;
     within_line_edit = FALSE;
-
+    rl_already_prompted = TRUE; /* prevent rl_callback_read_char() from reprinting the prompt after we return */
     
   }
 }
