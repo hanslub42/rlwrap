@@ -550,7 +550,7 @@ main_loop()
 	    DPRINTF0(DEBUG_TERMIO, "passing it to readline");	
 	    DPRINTF2(DEBUG_READLINE, "rl_callback_read_char() (_rl_eof_char=%d, term_eof=%d)", _rl_eof_char, term_eof);
 	    rl_callback_read_char();
-            if (!within_line_edit)  { /* line_handler has been called, wash those dishes here (instead of inside line_handler())  */
+            if (!within_line_edit)  { /* line_handler has been called, wash those dishes here (instead of inside line_handler()) */
               rl_callback_handler_remove();
               set_echo(FALSE);
               free(saved_rl_state.input_buffer);

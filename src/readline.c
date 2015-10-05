@@ -226,7 +226,6 @@ line_handler(char *line)
         
     return_key = 0;
     within_line_edit = FALSE;
-
     
   }
 }
