@@ -226,7 +226,7 @@ line_handler(char *line)
         
     return_key = 0;
     within_line_edit = FALSE;
-    if(!(rl_readline_state & RL_STATE_MACROINPUT))
+    if(!RL_ISSTATE(RL_STATE_MACROINPUT))
        rl_callback_handler_remove();
     set_echo(FALSE);
     free(saved_rl_state.input_buffer);
