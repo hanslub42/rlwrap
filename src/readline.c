@@ -226,7 +226,9 @@ line_handler(char *line)
         
     return_key = 0;
     within_line_edit = FALSE;
-    if(!RL_ISSTATE(RL_STATE_MACROINPUT))
+    if(!RL_ISSTATE(RL_STATE_MACROINPUT)) /* when called during playback of a multi-line macro, line_handler() will be called more 
+                                            than once whithout re-entering main_loop(). If we'd remove it here, the second call
+                                            would crash  */ 
        rl_callback_handler_remove();
     set_echo(FALSE);
     free(saved_rl_state.input_buffer);
