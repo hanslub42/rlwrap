@@ -15,7 +15,7 @@
  *  along with this program; see the file COPYING.  If not, write to
  *  the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  You may contact the author by e-mail:  hlub@knoware.nl
+ *  You may contact the author by e-mail:  hanslub42@gmail.nl
  */
 
 #include "rlwrap.h"

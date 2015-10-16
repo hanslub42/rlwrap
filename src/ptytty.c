@@ -1,6 +1,6 @@
 /*
  * Shamelessly ripped out of rxvt-2.7.10 (Copyright (c) 1999-2001
- * Geoff Wing <gcw@pobox.com>) by Hans Lub <hlub@knoware.nl>
+ * Geoff Wing <gcw@pobox.com>) by Hans Lub <hanslub42@gmail.nl>
  *
  * All portions of code are copyright by their respective author/s.
  *
