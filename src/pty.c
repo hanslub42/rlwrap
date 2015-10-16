@@ -15,7 +15,7 @@
     the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
 
     You may contact the author by:
-    e-mail:  hanslub42@gmail.nl
+    e-mail:  hanslub42@gmail.com
 
 */
 
