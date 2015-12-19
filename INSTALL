@@ -107,7 +107,10 @@ autoreconf --install
 On recent OS X sytems, libreadline is not the real thing, but a
 non-GNU replacement. If the linker complains about missing
 symbols, install GNU readline and try again (or, better, use
-a tool like brew)
+a tool like brew) In particular, if you have installed GNU readline
+from brew, you can run configure like this:
+
+./configure  CFLAGS'='-I/usr/local/opt/readline/include CPPFLAGS'='-I/usr/local/opt/readline/include LDFLAGS'='-L/usr/local/opt/readline/lib
 
 Even though rlwrap now uses the excellent pseudo-terminal (pty)
 handling code from rxvt, portable programming with ptys is something
