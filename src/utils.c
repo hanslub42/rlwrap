@@ -20,9 +20,6 @@
 
 #include "rlwrap.h"
 
-
-
-
 char slaves_working_directory[MAXPATHLEN+1]; 
 
 static FILE *log_fp;
@@ -478,6 +475,32 @@ int killed_by(int status) {
   return 0;
 }       
 
+
+
+void
+update_cwd_for_slave_using_libproc(int pid) {
+#if defined(HAVE_LIBPROC_H)
+  int ret;
+  struct proc_vnodepathinfo vpi;
+  char *result;
+  size_t len;
+
+  ret = proc_pidinfo(pid, PROC_PIDVNODEPATHINFO, 0, &vpi, sizeof(vpi));
+  if (ret <= 0) {
+    snprintf1(slaves_working_directory, MAXPATHLEN, "? (%s)", strerror(errno));
+    return;
+  }
+
+  strncpy(slaves_working_directory, vpi.pvi_cdir.vip_path, MAXPATHLEN+1);
+  DPRINTF1(DEBUG_COMPLETION, "get_cwd %s", slaves_working_directory);
+  if (chdir(slaves_working_directory) < 0) {
+    DPRINTF1(DEBUG_COMPLETION, "get_cwd failed to chdir: %s", strerror(errno));
+  }
+#endif /* defined(HAVE_LIBPROC_H) */
+}
+
+
+
 /* change_working_directory() changes rlwrap's working directory to /proc/<command_pid>/cwd
    (on systems where this makes sense, like linux and Solaris) */
    
@@ -504,7 +527,11 @@ change_working_directory()
       snprintf1(slaves_working_directory, MAXPATHLEN, "? (%s)", strerror(errno));
 #endif /* HAVE_READLINK */
   }                 
-#else /* HAVE_PROC_PID_CWD */
+#elif defined(HAVE_LIBPROC_H)
+  if (command_pid  > 0) {
+	update_cwd_for_slave_using_libproc(command_pid);
+  }
+#else /* HAVE_PROC_PID_CWD || defined(HAVE_LIBPROC_H) */
   /* do nothing at all */
 #endif
 }
