@@ -105,10 +105,10 @@ AC_CHECK_HEADERS([ term.h  ncurses/term.h], , ,
 
 # Check for libproc header needed for MacOS to follow slave's current
 # working directory.
-AC_CHECK_HEADER([stdio.h],
+AC_CHECK_HEADER([libproc.h],
                  [AC_DEFINE([HAVE_LIBPROC_H], [1],
                      [Define to 1 if you have <libproc.h>.])],
-                 [AC_MSG_ERROR([no tracking of slave paths on Darwin])])
+                 [AC_MSG_WARN([no tracking of slave paths on Darwin])])
 
 
 # Found this in configure.ac for 'top':
