@@ -39,6 +39,7 @@ static int my_accept_line(int, int);
 static int my_accept_line_and_forget(int, int);
 static int dump_all_keybindings(int,int);
 static int munge_line_in_editor(int, int);
+static int direct_keypress(int, int);
 static int please_update_alaf(int,int);
 static int please_update_ce(int,int);
 
@@ -53,6 +54,7 @@ init_readline(char *prompt)
   rl_add_defun("rlwrap-accept-line-and-forget", my_accept_line_and_forget,-1);
   rl_add_defun("rlwrap-dump-all-keybindings", dump_all_keybindings,-1);
   rl_add_defun("rlwrap-call-editor", munge_line_in_editor, -1);
+  rl_add_defun("rlwrap-direct-keypress", direct_keypress, -1);  
 
   /* rlwrap bindable function names with underscores are deprecated: */
   rl_add_defun("rlwrap_accept_line_and_forget", please_update_alaf,-1);
@@ -577,7 +579,17 @@ munge_line_in_editor(int count, int key)
   return 0;
 }
 
-
+static int
+direct_keypress(int count, int key)
+{
+  char *key_as_str = mysavestring("?");
+  /* put the key in the output queue    */
+  *key_as_str = key;
+  DPRINTF1(DEBUG_AD_HOC,"direct keypress: %s", mangle_char_for_debug_log(key, TRUE));
+  put_in_output_queue(key_as_str);
+  free(key_as_str);
+  return 0;
+}
 
 void
 initialise_colour_codes(char *colour)

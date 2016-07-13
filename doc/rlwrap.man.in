@@ -290,6 +290,10 @@ has a \fBreadline\fP command name  \fIrlwrap\-accept\-line\-and\-forget\fP
 Use an external editor to edit the current input (this will only work if the \-m
 option is set). This action
 has a \fBreadline\fP command name  \fIrlwrap\-call\-editor\fP
+.TP
+.B (Not currently bound)
+Any key can be bound to the \fBreadline\fP command \fIrlwrap-direct-keypress\fP. This key will then always
+be sent directly to \fIcommand\fP,  even when \fBrlwrap\fP is not in direct mode.
 .PP
 These special keys were chosen for no other reason than that they  are not currently bound to any
 readline action. If you don't like them, (or your window manager swallows them) they
@@ -297,8 +301,11 @@ can be re\-bound more sensibly by including lines like the
 following in your \fB~/.inputrc\fP:
 .PP
 .nf
-   "\eM\-\eC\-m": rlwrap\-accept\-line\-and\-forget # ESC\-ENTER 
-   "\eC\-xe":   rlwrap\-call\-editor            # CTRL\-x e 
+   "\eM\-\eC\-m": rlwrap\-accept\-line\-and\-forget         # ESC\-ENTER 
+   "\eC\-xe":   rlwrap\-call\-editor                    # CTRL\-x e 
+    $if erl                                         # (only) for the Erlang shell:
+       "\eC\-g": rlwrap\-direct\-keypress               # always pass CTRL\-g directly
+    $endif  
 .fi
 .PP
 cf. the \fBreadline(3)\fP manpage

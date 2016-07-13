@@ -1,3 +1,5 @@
+0.43  Added bindable readline command rlwrap-direct-keypress
+
 0.42  Added --mirror-arguments (-U) option 
 
       On SunOS tcgetattr(slave pty) failed with "Invalid argument" 
