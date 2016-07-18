@@ -280,6 +280,7 @@ static char* tag2description(int tag) {
   case TAG_HISTORY:                    return "HISTORY";
   case TAG_COMPLETION:                 return "COMPLETION";
   case TAG_PROMPT:                     return "PROMPT";
+  case TAG_HOTKEY:                     return "HOTKEY";
   case TAG_IGNORE:                     return "TAG_IGNORE";
   case TAG_ADD_TO_COMPLETION_LIST:     return "ADD_TO_COMPLETION_LIST";
   case TAG_REMOVE_FROM_COMPLETION_LIST:return "REMOVE_FROM_COMPLETION_LIST";

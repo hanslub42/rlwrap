@@ -1,5 +1,5 @@
 #line 1 "completion.rb"
-/*  completion.c is generated from completion.rb by the program rbgen
+/*  Completion.c is generated from completion.rb by the program rbgen
     (cf. http://libredblack.sourceforge.net/)
     
     completion.rb: maintaining the completion list, my_completion_function()
@@ -1567,6 +1567,7 @@ my_completion_function(char *prefix, int state)
     return my_history_completion_function(prefix + 1, state);
 
   if (state == 0) {		/* first time we're called for this prefix ' */
+
     if (scratch_list)
       rbcloselist(scratch_list);
     if (scratch_tree)

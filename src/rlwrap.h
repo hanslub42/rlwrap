@@ -1,3 +1,4 @@
+
 /*  rlwrap.h: includes, definitions, declarations */
 
 /*  This program is free software; you can redistribute it and/or modify
@@ -439,6 +440,7 @@ extern int newline_came_last;
 #define TAG_HISTORY 2
 #define TAG_COMPLETION 3
 #define TAG_PROMPT 4
+#define TAG_HOTKEY 5
 
 #define TAG_IGNORE 251
 #define TAG_ADD_TO_COMPLETION_LIST 252

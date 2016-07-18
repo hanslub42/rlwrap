@@ -40,6 +40,7 @@ static int my_accept_line_and_forget(int, int);
 static int dump_all_keybindings(int,int);
 static int munge_line_in_editor(int, int);
 static int direct_keypress(int, int);
+static int handle_hotkey(int, int);
 static int please_update_alaf(int,int);
 static int please_update_ce(int,int);
 
@@ -55,10 +56,12 @@ init_readline(char *prompt)
   rl_add_defun("rlwrap-dump-all-keybindings", dump_all_keybindings,-1);
   rl_add_defun("rlwrap-call-editor", munge_line_in_editor, -1);
   rl_add_defun("rlwrap-direct-keypress", direct_keypress, -1);  
-
-  /* rlwrap bindable function names with underscores are deprecated: */
+  rl_add_defun("rlwrap-hotkey", handle_hotkey, -1);
+  
+  /* the old rlwrap bindable function names with underscores are deprecated: */
   rl_add_defun("rlwrap_accept_line_and_forget", please_update_alaf,-1);
   rl_add_defun("rlwrap_call_editor", please_update_ce,-1);
+  
   
   rl_variable_bind("blink-matching-paren","on"); /* Shouldn't this be on by default? */
 
@@ -94,11 +97,6 @@ init_readline(char *prompt)
   saved_rl_state.cooked_prompt = NULL;
   
 }
-
-
-
-
-
 
 
 /* save readline internal state in rl_state, redisplay the prompt
@@ -585,10 +583,44 @@ direct_keypress(int count, int key)
   char *key_as_str = mysavestring("?");
   /* put the key in the output queue    */
   *key_as_str = key;
-  DPRINTF1(DEBUG_AD_HOC,"direct keypress: %s", mangle_char_for_debug_log(key, TRUE));
+  DPRINTF1(DEBUG_READLINE,"direct keypress: %s", mangle_char_for_debug_log(key, TRUE));
   put_in_output_queue(key_as_str);
   free(key_as_str);
   return 0;
+}
+
+static int
+handle_hotkey(int count, int hotkey)
+{
+  char *prefix, *postfix, *filter_food, *filtered, **fragments, *new_prompt;
+  int length;
+
+  DPRINTF1(DEBUG_READLINE, "hotkey press: %s", mangle_char_for_debug_log(hotkey, TRUE));
+  prefix = mysavestring(rl_line_buffer);
+  prefix[rl_point] = '\0';                                     /* chop off just before cursor */
+  postfix = mysavestring(rl_line_buffer + rl_point);  
+  length = strlen(rl_line_buffer) + 4;                         /* key + tab + prefix + tab + postfix + '\n' + '\0' */
+  filter_food = mymalloc(length);   
+  sprintf(filter_food, "%c\t%s\t%s", hotkey, prefix, postfix); /* this is the format that the filter expects */
+  filtered= pass_through_filter(TAG_HOTKEY, filter_food);
+  DPRINTF2(DEBUG_FILTERING, "filter rl_line because of hotkey press. In: <%s> Out: <%s>",
+           mangle_string_for_debug_log(filter_food, MANGLE_LENGTH), mangle_string_for_debug_log(filtered, MANGLE_LENGTH + 10));
+  fragments = split_on_single_char(filtered, '\t');
+  new_prompt = add2strings(fragments[1], fragments[2]);
+
+  rl_delete_text(0, strlen(rl_line_buffer));
+  rl_point = 0;
+  rl_insert_text(new_prompt);
+  rl_point = strlen(fragments[1]);
+  rl_redisplay();
+
+  /* wash those dishes: */
+  free(prefix);
+  free(postfix);
+  free(filter_food);
+  free(filtered);
+  free(fragments);
+  free(new_prompt);
 }
 
 void
