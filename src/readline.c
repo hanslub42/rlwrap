@@ -38,6 +38,7 @@ static void my_add_history(char *);
 static int my_accept_line(int, int);
 static int my_accept_line_and_forget(int, int);
 static int dump_all_keybindings(int,int);
+static void munge_file_in_editor(const char *filename, int lineno, int colno);
 static int munge_line_in_editor(int, int);
 static int direct_keypress(int, int);
 static int handle_hotkey(int, int);
@@ -491,45 +492,26 @@ my_redisplay()
 
 
 
-
-
-
-static int
-munge_line_in_editor(int count, int key)
+static void
+munge_file_in_editor(const char *filename, int lineno, int colno)
 {
-  int line_number = 0, column_number = 0,  ret, tmpfile_fd, bytes_read;
-  size_t tmpfilesize;
-  char *p, *tmpfilename, *text_to_edit;
-  char *editor_command1, *editor_command2, *editor_command3, *editor_command4,
-    *line_number_as_string, *column_number_as_string;
-  char *input, *rewritten_input, *rewritten_input2,  **possible_editor_commands;
 
-
-  if (!multiline_separator)
-    return 0;
-
-  tmpfile_fd = open_unique_tempfile(multi_line_tmpfile_ext, &tmpfilename);
-
-  text_to_edit =
-    search_and_replace(multiline_separator, "\n", rl_line_buffer, rl_point,
-                       &line_number, &column_number);
-  write_patiently(tmpfile_fd, text_to_edit, strlen(text_to_edit), "to temporary file");
-
-  if (close(tmpfile_fd) != 0) /* improbable */
-    myerror(FATAL|USE_ERRNO, "couldn't close temporary file %s", tmpfilename); 
+  int ret;
+  char *editor_command1, *editor_command2, *editor_command3,
+       *editor_command4, *line_number_as_string, *column_number_as_string,  **possible_editor_commands;
 
   /* find out which editor command we have to use */
   possible_editor_commands = list4(getenv("RLWRAP_EDITOR"), getenv("EDITOR"), getenv("VISUAL"), "vi +%L");
   editor_command1 = first_of(possible_editor_commands);
-  line_number_as_string = as_string(line_number);
-  column_number_as_string = as_string(column_number);
+  line_number_as_string = as_string(lineno);
+  column_number_as_string = as_string(colno);
   editor_command2 =
     search_and_replace("%L", line_number_as_string, editor_command1, 0, NULL,
                        NULL);
   editor_command3 =
     search_and_replace("%C", column_number_as_string, editor_command2, 0,
                        NULL, NULL);
-  editor_command4 = add3strings(editor_command3, " ", tmpfilename);
+  editor_command4 = add3strings(editor_command3, " ", filename);
   
 
   /* call editor, temporarily restoring terminal settings */    
@@ -547,6 +529,38 @@ munge_line_in_editor(int count, int key)
   completely_mirror_slaves_terminal_settings();
   ignore_queued_input = TRUE;  
 
+  free(editor_command2);
+  free(editor_command3);
+  free(editor_command4);
+  free(line_number_as_string);
+  free(column_number_as_string);
+}
+
+
+static int
+munge_line_in_editor(int count, int key)
+{
+  int line_number = 0, column_number = 0, tmpfile_fd, bytes_read;
+  size_t tmpfilesize;
+  char *p, *tmpfilename, *text_to_edit;
+  char *input, *rewritten_input, *rewritten_input2;
+
+
+  if (!multiline_separator)
+    return 0;
+
+  tmpfile_fd = open_unique_tempfile(multi_line_tmpfile_ext, &tmpfilename);
+
+  text_to_edit =
+    search_and_replace(multiline_separator, "\n", rl_line_buffer, rl_point,
+                       &line_number, &column_number);
+  write_patiently(tmpfile_fd, text_to_edit, strlen(text_to_edit), "to temporary file");
+
+  if (close(tmpfile_fd) != 0) /* improbable */
+    myerror(FATAL|USE_ERRNO, "couldn't close temporary file %s", tmpfilename); 
+
+  munge_file_in_editor(tmpfilename, line_number, column_number);
+  
   /* read back edited input, replacing real newline with substitute */
   tmpfile_fd = open(tmpfilename, O_RDONLY);
   if (tmpfile_fd < 0)
@@ -580,11 +594,7 @@ munge_line_in_editor(int count, int key)
   /* wash those dishes */
   if (unlink(tmpfilename))
     myerror(FATAL|USE_ERRNO, "could not delete temporary file %s", tmpfilename);
-  free(editor_command2);
-  free(editor_command3);
-  free(editor_command4);
-  free(line_number_as_string);
-  free(column_number_as_string);
+
   free(tmpfilename);
   free(text_to_edit);
   free(input);
