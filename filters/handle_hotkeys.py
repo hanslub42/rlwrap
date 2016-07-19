@@ -20,7 +20,7 @@ def handle_hotkey(key, prefix, postfix):
     elif keyc == 'Y':
         selection = subprocess.check_output(["xsel","-o"], universal_newlines=True)
         return ("", prefix + selection, postfix)
-    elif keyc == '1':
+    elif keyc == 'P':
         return ("",prefix.upper(), postfix.upper())
     else:
         filter.error("unknown hotkey CTRL+{0}".format(keyc), rlwrapfilter.RlwrapFilterError())
