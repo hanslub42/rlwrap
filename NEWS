@@ -1,4 +1,17 @@
-0.43  Added bindable readline command rlwrap-direct-keypress
+0.43  Added bindable readline commands rlwrap-direct-keypress and
+      rlwrap-hotkey
+
+      Playing back a readline macro consisting of more than one line
+      would crash with SIGSEGV
+
+      rlwrap with negative --histsize would fail when there is no
+      history file yet.
+
+      An empty prompt would make $filter->{cumulative_output} miss
+      its last line 
+
+      Pre-given (-P) input would only be put in input line after
+      cooking timeout (usually 40 msec)
 
 0.42  Added --mirror-arguments (-U) option 
 

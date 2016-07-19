@@ -1,4 +1,4 @@
-.TH rlwrap 1 "November 14, 2014"
+.TH rlwrap 1 "July 19, 2016"
 .SH NAME
 rlwrap \- readline wrapper
 .de OP
