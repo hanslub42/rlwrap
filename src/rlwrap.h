@@ -247,6 +247,7 @@ extern struct rl_state
 
 void save_rl_state(void);
 void restore_rl_state(void);
+void message_in_echo_area(char *message);
 void init_readline(char *);
 void my_redisplay(void);
 void initialise_colour_codes(char *colour);

@@ -152,6 +152,24 @@ restore_rl_state()
   prompt_is_still_uncooked =  FALSE; /* has been done right now */
 }
 
+/* display (or remove, if message == NULL) message in echo area, with the appropriate bookkeeping */
+void
+message_in_echo_area(char *message)
+{
+  static int message_in_echo_area = FALSE;
+  DPRINTF1(DEBUG_READLINE, "message: %s", mangle_string_for_debug_log(message, MANGLE_LENGTH));
+  if (message) {
+    rl_save_prompt();
+    message_in_echo_area = TRUE;  
+    rl_message(message);
+  }  else {
+    if (message_in_echo_area)
+      rl_restore_prompt();
+    rl_clear_message();
+    message_in_echo_area = FALSE;
+  }     
+} 
+
 static void
 line_handler(char *line)
 {
@@ -607,11 +625,14 @@ handle_hotkey(int count, int hotkey)
            mangle_string_for_debug_log(filter_food, MANGLE_LENGTH), mangle_string_for_debug_log(filtered, MANGLE_LENGTH + 10));
   fragments = split_on_single_char(filtered, '\t');
   new_prompt = add2strings(fragments[1], fragments[2]);
-
   rl_delete_text(0, strlen(rl_line_buffer));
   rl_point = 0;
   rl_insert_text(new_prompt);
   rl_point = strlen(fragments[1]);
+  if (*fragments[0]) {
+    fragments[0] = append_and_free_old(fragments[0], " ");     /* put space (for readability) between the message and the input line */
+    message_in_echo_area(fragments[0]);
+  }     
   rl_redisplay();
 
   /* wash those dishes: */
@@ -619,7 +640,7 @@ handle_hotkey(int count, int hotkey)
   free(postfix);
   free(filter_food);
   free(filtered);
-  free(fragments);
+  free_splitlist(fragments);
   free(new_prompt);
 }
 

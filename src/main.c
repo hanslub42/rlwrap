@@ -549,7 +549,8 @@ main_loop()
 	    rl_stuff_char(byte_read);  /* stuff it back in readline's input queue */
 	    DPRINTF0(DEBUG_TERMIO, "passing it to readline");	
 	    DPRINTF2(DEBUG_READLINE, "rl_callback_read_char() (_rl_eof_char=%d, term_eof=%d)", _rl_eof_char, term_eof);
-	    rl_callback_read_char();
+            message_in_echo_area(NULL);     
+            rl_callback_read_char();
 	  }
 	}
       }

@@ -129,7 +129,6 @@ sub run {
           if ($self -> hotkey_handler) {
             my ($hotkey, $prefix, $postfix) = split /\t/, $message;
             my ($message, $new_prefix, $new_postfix) = &{$self -> hotkey_handler}($hotkey, $prefix, $postfix);
-            $message and die "sending messages to the echo area is not yet implemented\n";
             $response = "$message\t$new_prefix\t$new_postfix";
           } else {
             $response = $message;

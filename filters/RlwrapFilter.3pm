@@ -181,12 +181,12 @@ method.
 Return a new RlwrapFilter object.
 .SS "\s-1SETTING/GETTING HANDLERS\s0"
 .IX Subsection "SETTING/GETTING HANDLERS"
-Handlers are user-defined callbacks that override a RlwrapFilter
-objects handler methods (handle_input, handle_prompt) They get called
-from the 'run' method in response to a message sent from \fBrlwrap\fR.
-Messages consist of a tag indicating which handler should be called
-(e.g. \s-1TAG_INPUT, TAG_HISTORY\s0) and the message text. Usually, a filter
-overrides only one or at most two methods.
+Handlers are user-defined callbacks that specify one or more of an
+RlwrapFilter object's handler methods (handle_input, handle_prompt)
+They get called from the 'run' method in response to a message sent
+from \fBrlwrap\fR.  Messages consist of a tag indicating which handler
+should be called (e.g. \s-1TAG_INPUT, TAG_HISTORY\s0) and the message
+text. Usually, a filter overrides only one or at most two methods.
 .PP
 \fI\s-1CALLING CONVENTIONS\s0\fR
 .IX Subsection "CALLING CONVENTIONS"
