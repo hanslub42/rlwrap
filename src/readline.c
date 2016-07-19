@@ -629,9 +629,9 @@ handle_hotkey(int count, int hotkey)
   rl_point = 0;
   rl_insert_text(new_prompt);
   rl_point = strlen(fragments[1]);
-  if (*fragments[0]) {
-    fragments[0] = append_and_free_old(fragments[0], " ");     /* put space (for readability) between the message and the input line */
-    message_in_echo_area(fragments[0]);
+  if (*fragments[0] && *fragments[0] != hotkey) {              /* if message has been set, and isn't empty: */ 
+    fragments[0] = append_and_free_old(fragments[0], " ");     /* put space (for readability) between the message and the input line .. */
+    message_in_echo_area(fragments[0]);                        /* .. then write it to echo area */
   }     
   rl_redisplay();
 
