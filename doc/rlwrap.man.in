@@ -290,6 +290,16 @@ has a \fBreadline\fP command name  \fIrlwrap\-accept\-line\-and\-forget\fP
 Use an external editor to edit the current input (this will only work if the \-m
 option is set). This action
 has a \fBreadline\fP command name  \fIrlwrap\-call\-editor\fP
+.TP
+.B (Not currently bound)
+Any key can be bound to the \fBreadline\fP command \fIrlwrap-direct-keypress\fP. This key will then always
+be sent directly to \fIcommand\fP,  even when \fBrlwrap\fP is not in direct mode. 
+.TP
+.B (Not currently bound)
+Any key can be bound to the \fBreadline\fP command \fIrlwrap-hotkey\fP. This key will then cause the current
+input line to be filtered (cf. \fBRlwrapFilter(3pm)\fP) through the current filter (hence be a no-op when
+there is no filter), which then can re-write the input line and move the cursor.
+After that, the user can still edit the resulting input.
 .PP
 These special keys were chosen for no other reason than that they  are not currently bound to any
 readline action. If you don't like them, (or your window manager swallows them) they
@@ -297,11 +307,15 @@ can be re\-bound more sensibly by including lines like the
 following in your \fB~/.inputrc\fP:
 .PP
 .nf
-   "\eM\-\eC\-m": rlwrap\-accept\-line\-and\-forget # ESC\-ENTER 
-   "\eC\-xe":   rlwrap\-call\-editor            # CTRL\-x e 
+   "\eM\-\eC\-m": rlwrap\-accept\-line\-and\-forget         # ESC\-ENTER to accept but keep out of history
+   "\eC\-xe":   rlwrap\-call\-editor                    # CTRL\-x e to edit (multi-line) input in editor of your choice 
+    $if erl                                         # (only) for the Erlang shell:
+       "\eC\-g": rlwrap\-direct\-keypress               # pass CTRL\-g directly to enter user switch command
+    $endif
+    "\eC\-y": rlwrap\-hotkey                           # CTRL\-y to filter input line (and e.g. insert X selection) 
 .fi
 .PP
-cf. the \fBreadline(3)\fP manpage
+cf. the \fBreadline(3)\fP manpage. (NB: take care to not use keys that are already caught by the terminal driver, like CTRL+S, as \fBrlwrap\fP will never see those)
 .SH ENVIRONMENT 
 .TP
 \fBRLWRAP_HOME\fP: 

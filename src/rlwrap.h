@@ -1,3 +1,4 @@
+
 /*  rlwrap.h: includes, definitions, declarations */
 
 /*  This program is free software; you can redistribute it and/or modify
@@ -246,6 +247,7 @@ extern struct rl_state
 
 void save_rl_state(void);
 void restore_rl_state(void);
+void message_in_echo_area(char *message);
 void init_readline(char *);
 void my_redisplay(void);
 void initialise_colour_codes(char *colour);
@@ -439,6 +441,7 @@ extern int newline_came_last;
 #define TAG_HISTORY 2
 #define TAG_COMPLETION 3
 #define TAG_PROMPT 4
+#define TAG_HOTKEY 5
 
 #define TAG_IGNORE 251
 #define TAG_ADD_TO_COMPLETION_LIST 252

@@ -39,6 +39,8 @@ static int my_accept_line(int, int);
 static int my_accept_line_and_forget(int, int);
 static int dump_all_keybindings(int,int);
 static int munge_line_in_editor(int, int);
+static int direct_keypress(int, int);
+static int handle_hotkey(int, int);
 static int please_update_alaf(int,int);
 static int please_update_ce(int,int);
 
@@ -53,10 +55,13 @@ init_readline(char *prompt)
   rl_add_defun("rlwrap-accept-line-and-forget", my_accept_line_and_forget,-1);
   rl_add_defun("rlwrap-dump-all-keybindings", dump_all_keybindings,-1);
   rl_add_defun("rlwrap-call-editor", munge_line_in_editor, -1);
-
-  /* rlwrap bindable function names with underscores are deprecated: */
+  rl_add_defun("rlwrap-direct-keypress", direct_keypress, -1);  
+  rl_add_defun("rlwrap-hotkey", handle_hotkey, -1);
+  
+  /* the old rlwrap bindable function names with underscores are deprecated: */
   rl_add_defun("rlwrap_accept_line_and_forget", please_update_alaf,-1);
   rl_add_defun("rlwrap_call_editor", please_update_ce,-1);
+  
   
   rl_variable_bind("blink-matching-paren","on"); /* Shouldn't this be on by default? */
 
@@ -92,11 +97,6 @@ init_readline(char *prompt)
   saved_rl_state.cooked_prompt = NULL;
   
 }
-
-
-
-
-
 
 
 /* save readline internal state in rl_state, redisplay the prompt
@@ -151,6 +151,24 @@ restore_rl_state()
   rl_prep_terminal(1);
   prompt_is_still_uncooked =  FALSE; /* has been done right now */
 }
+
+/* display (or remove, if message == NULL) message in echo area, with the appropriate bookkeeping */
+void
+message_in_echo_area(char *message)
+{
+  static int message_in_echo_area = FALSE;
+  DPRINTF1(DEBUG_READLINE, "message: %s", mangle_string_for_debug_log(message, MANGLE_LENGTH));
+  if (message) {
+    rl_save_prompt();
+    message_in_echo_area = TRUE;  
+    rl_message(message);
+  }  else {
+    if (message_in_echo_area)
+      rl_restore_prompt();
+    rl_clear_message();
+    message_in_echo_area = FALSE;
+  }     
+} 
 
 static void
 line_handler(char *line)
@@ -577,7 +595,54 @@ munge_line_in_editor(int count, int key)
   return 0;
 }
 
+static int
+direct_keypress(int count, int key)
+{
+  char *key_as_str = mysavestring("?");
+  /* put the key in the output queue    */
+  *key_as_str = key;
+  DPRINTF1(DEBUG_READLINE,"direct keypress: %s", mangle_char_for_debug_log(key, TRUE));
+  put_in_output_queue(key_as_str);
+  free(key_as_str);
+  return 0;
+}
 
+static int
+handle_hotkey(int count, int hotkey)
+{
+  char *prefix, *postfix, *filter_food, *filtered, **fragments, *new_prompt;
+  int length;
+
+  DPRINTF1(DEBUG_READLINE, "hotkey press: %s", mangle_char_for_debug_log(hotkey, TRUE));
+  prefix = mysavestring(rl_line_buffer);
+  prefix[rl_point] = '\0';                                     /* chop off just before cursor */
+  postfix = mysavestring(rl_line_buffer + rl_point);  
+  length = strlen(rl_line_buffer) + 4;                         /* key + tab + prefix + tab + postfix + '\n' + '\0' */
+  filter_food = mymalloc(length);   
+  sprintf(filter_food, "%c\t%s\t%s", hotkey, prefix, postfix); /* this is the format that the filter expects */
+  filtered= pass_through_filter(TAG_HOTKEY, filter_food);
+  DPRINTF2(DEBUG_FILTERING, "filter rl_line because of hotkey press. In: <%s> Out: <%s>",
+           mangle_string_for_debug_log(filter_food, MANGLE_LENGTH), mangle_string_for_debug_log(filtered, MANGLE_LENGTH + 10));
+  fragments = split_on_single_char(filtered, '\t');
+  new_prompt = add2strings(fragments[1], fragments[2]);
+  rl_delete_text(0, strlen(rl_line_buffer));
+  rl_point = 0;
+  rl_insert_text(new_prompt);
+  rl_point = strlen(fragments[1]);
+  if (*fragments[0]) {
+    fragments[0] = append_and_free_old(fragments[0], " ");     /* put space (for readability) between the message and the input line */
+    message_in_echo_area(fragments[0]);
+  }     
+  rl_redisplay();
+
+  /* wash those dishes: */
+  free(prefix);
+  free(postfix);
+  free(filter_food);
+  free(filtered);
+  free_splitlist(fragments);
+  free(new_prompt);
+}
 
 void
 initialise_colour_codes(char *colour)

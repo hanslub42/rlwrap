@@ -200,7 +200,7 @@ unsplit_with(int n, char **strings, const char *delim) {
 /* split_with("a\t\tbla","\t") returns {"a" "bla", NULL}, but we want {"a", "", "bla", NULL} for filter completion.
    We write a special version (can be freed with free_splitlist) */
 char **split_on_single_char(const char *string, char c) {
-  char **list = mymalloc(1 + strlen(string) * sizeof(char **));
+  char **list = mymalloc((2 + strlen(string)) * sizeof(char **)); /* worst case: "ccc.." (n copies of c) yields n+1 empty strings + final NULL pointer */ 
   char *stringcopy = mysavestring(string);
   char *p, **pword, *current_word;
   

@@ -26,6 +26,7 @@ use constant TAG_OUTPUT                        => 1;
 use constant TAG_HISTORY                       => 2;
 use constant TAG_COMPLETION                    => 3;
 use constant TAG_PROMPT                        => 4;
+use constant TAG_HOTKEY                        => 5;
 use constant TAG_IGNORE                        => 251;
 use constant TAG_ADD_TO_COMPLETION_LIST        => 252;
 use constant TAG_REMOVE_FROM_COMPLETION_LIST   => 253;
@@ -88,7 +89,7 @@ sub new {
   my $self = {};
   my @accessors = qw(initialiser help_text input_handler
 		   output_handler prompt_handler echo_handler
-		   message_handler history_handler completion_handler
+		   message_handler history_handler hotkey_handler completion_handler
 		   echo_handler message_handler cloak_and_dagger_verbose
 		   cumulative_output prompts_are_never_empty
 		   minimal_rlwrap_version);
@@ -124,6 +125,14 @@ sub run {
 	  $response = $self -> handle_output($message);
 	} elsif ($tag == TAG_HISTORY) {
 	  $response = when_defined $self -> history_handler, "$message";
+        } elsif ($tag == TAG_HOTKEY) {
+          if ($self -> hotkey_handler) {
+            my ($hotkey, $prefix, $postfix) = split /\t/, $message;
+            my ($message, $new_prefix, $new_postfix) = &{$self -> hotkey_handler}($hotkey, $prefix, $postfix);
+            $response = "$message\t$new_prefix\t$new_postfix";
+          } else {
+            $response = $message;
+          }
 	} elsif ($tag == TAG_COMPLETION) {
 	  my ($line, $prefix, $completions, @completions);
 	  if ($self -> completion_handler) {
@@ -486,13 +495,31 @@ Return a new RlwrapFilter object.
 
 =head2 SETTING/GETTING HANDLERS
 
-Handlers are user-defined callbacks that get called from the
-'run' method with a message  (i.e. the un-filtered input,
-output, prompt) as their first argument. For convenience, $_ is set to the same
-value. They should return the re-written message text. They get called
-in a fixed cyclic order: prompt, completion, history, input, echo,
-output, prompt, ... etc ad infinitum. Rlwrap may always skip a handler when in direct mode,
-on the other hand, completion and output handlers may get called more
+Handlers are user-defined callbacks that specify one or more of an
+RlwrapFilter object's handler methods (handle_input, handle_prompt)
+They get called from the 'run' method in response to a message sent
+from B<rlwrap>.  Messages consist of a tag indicating which handler
+should be called (e.g. TAG_INPUT, TAG_HISTORY) and the message
+text. Usually, a filter overrides only one or at most two methods.
+
+=head3 CALLING CONVENTIONS
+
+In many cases (e.g. TAG_INPUT, TAG_OUTPUT, TAG_PROMPT) the message
+text is a simple string. Their handlers are called with the message
+text (i.e. the un-filtered input, output, prompt) as their only
+argument. For convenience, $_ is set to the same value. They should
+return the re-written message text.
+
+Some handlers (those for TAG_COMPLETION and TAG_HOTKEY) are a little
+more complex: their message text (accessible via $_) is a
+tab-separated list of fields; they get called with multiple arguments
+and are evaluated in list context.
+
+
+The message handlers are called in a fixed cyclic order: prompt,
+completion, history, input, echo, output, prompt, ... etc ad
+infinitum. Rlwrap may always skip a handler when in direct mode; on
+the other hand, completion and output handlers may get called more
 than once in succession. If a handler is left undefined, the result is
 as if the message text were returned unaltered.
 
@@ -526,10 +553,10 @@ method or "reject" the prompt (cf. the B<prompt_rejected> method)
 
 =item $handler = $f -> completion_handler, $f -> completion_handler(\&handler)
 
-The completion handler gets called with the the entire input line, the
-prefix (partial word to complete), and rlwrap's own completion list as
-arguments. It should return a (possibly revised) list of completions.  As
-an example, suppose the user has typed "She played for
+The completion handler gets called with three arguments: the entire input 
+line, the prefix (partial word to complete), and rlwrap's own completion list. 
+It should return a (possibly revised) list of completions.
+As an example, suppose the user has typed "She played for
 AE<lt>TABE<gt>". The handler will be called like this:
 
      myhandler("She played for A", "A", "Arsenal", "Arendal", "Anderlecht")
@@ -541,6 +568,28 @@ it could then return a list of stronger clubs: ("Ajax", "AZ67",  "Arnhem")
 Every input line is submitted to this handler, the return value is put
 in rlwrap's history. Returning an empty or undefined value will keep
 the input line out of the history.
+
+=item $handler = $f -> hotkey_handler, $f -> hotkey_handler(\&handler)
+
+If the user presses a key that is bound to "rlwrap_hotkey" in B<.inputrc>
+the handler is called with three arguments: the hotkey, the prefix (i.e. 
+the part of the current input line before the cursor), and the remaining part of
+the input line (postfix). It should return a list consisting of a possibly 
+empty message (to be displayed in readline's echo area), the re-writen prefix and
+ditto postfix. Example:
+if the current input line is  "pea soup" (with the cursor on the
+space), and the user presses CTRL+P, which happens to be bound to "rlwrap-hotkey"
+in B<.inputrc>, the handler is called like this:
+
+    my_handler(16, "pea", " soup") # 16 = CTRL-P
+
+If you prefer peanut soup, the handler should return
+
+    ("Mmmm!", "peanut", " soup")
+
+after which the input line will be "peanut soup" (with the cursor
+again on the space) and the echo area will display "Mmmm!"
+
 
 =item $handler = $f -> input_handler, $f -> input_handler(\&handler)
 
@@ -820,7 +869,7 @@ the B<logger> filter, using a pipeline:
 
 =head2 RUNNING WITHOUT B<rlwrap>
 
-When called by rlwrap, filters get their input from 
+When called by rlwrap, filters get their input from
 $RLWRAP_INPUT_PIPE_FD and write their output to
 $RLWRAP_OUTPUT_PIPE_FD, and expect and write messages consisting of a
 tag byte, a 32-bit length and the message proper. This is not terribly
