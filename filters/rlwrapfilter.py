@@ -53,6 +53,7 @@ TAG_OUTPUT                      = 1
 TAG_HISTORY                     = 2
 TAG_COMPLETION                  = 3
 TAG_PROMPT                      = 4
+TAG_HOTKEY                      = 5
 TAG_IGNORE                      = 251
 TAG_ADD_TO_COMPLETION_LIST      = 252
 TAG_REMOVE_FROM_COMPLETION_LIST = 253
@@ -217,7 +218,7 @@ def send_error(message,e):
 
 def intercept_error(func):
     """
-    A decorator to intercept an exception, send the message to rlwarp, and raise an exception.
+    A decorator to intercept an exception, send the message to rlwrap, and raise an exception.
     """
     def wrapper(*args, **kwargs):
         try:
@@ -233,35 +234,35 @@ def intercept_error(func):
 
 def is_string(value):
     """
-    A decorator to intercept an exception, send the message to rlwarp, and raise an exception.
+    A decorator to intercept an exception, send the message to rlwrap, and raise an exception.
     """
     return isinstance(value, str) or value == None
 
 
 def is_boolean(value):
     """
-    A decorator to intercept an exception, send the message to rlwarp, and raise an exception.
+    A decorator to intercept an exception, send the message to rlwrap, and raise an exception.
     """
     return isinstance(value, bool) or value == None
 
 
 def is_integer(value):
     """
-    A decorator to intercept an exception, send the message to rlwarp, and raise an exception.
+    A decorator to intercept an exception, send the message to rlwrap, and raise an exception.
     """
     return isinstance(value, int) or value == None
 
 
 def is_float(value):
     """
-    A decorator to intercept an exception, send the message to rlwarp, and raise an exception.
+    A decorator to intercept an exception, send the message to rlwrap, and raise an exception.
     """
     return isinstance(value, numbers.Number) or value == None
 
 
 def is_callable(value):
     """
-    A decorator to intercept an exception, send the message to rlwarp, and raise an exception.
+    A decorator to intercept an exception, send the message to rlwrap, and raise an exception.
     """
     return isinstance(value, collections.Callable) or value == None
 
@@ -316,6 +317,7 @@ class RlwrapFilter:
             'input_handler':is_callable,
             'output_handler':is_callable,
             'prompt_handler':is_callable,
+            'hotkey_handler':is_callable,
             'echo_handler':is_callable,
             'message_handler':is_callable,
             'history_handler':is_callable,
@@ -379,6 +381,13 @@ class RlwrapFilter:
                     completions = completions.split(' ')
                     completions = self.completion_handler(line, prefix, completions)
                     response = "{0}\t{1}\t".format(line, prefix) + ' '.join(completions) + ' '
+                else:
+                    response = message
+            elif (tag == TAG_HOTKEY):
+                if (self.hotkey_handler is not None):
+                    (hotkey, prefix, postfix) = message.split('\t')
+                    (message, new_prefix, new_postfix) = self.hotkey_handler(hotkey, prefix, postfix)
+                    response =  "{0}\t{1}\t{2}".format(message, new_prefix, new_postfix)
                 else:
                     response = message
             elif (tag == TAG_PROMPT):
