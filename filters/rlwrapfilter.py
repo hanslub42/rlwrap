@@ -85,6 +85,7 @@ else:
     FILTER_OUT = sys.stdin.fileno()
 
 
+
 def when_defined(maybe_ref_to_sub, *args):
     """
     when_defined(f, x, y, ...) returns f(x, y, ...) if f is defined, x otherwise
@@ -127,7 +128,7 @@ def read_chunk(fh, timeout):
     """
     if (len(select.select([fh], [], [], timeout)[0]) > 0):
         chunk = os.read(fh, 2**16); # read up-to 2^16=65536 bytes
-        return chunk.decode('utf-8')
+        return chunk.decode(sys.stdin.encoding)
     return ""
 
 
@@ -168,7 +169,7 @@ def read_message():
 
     tag = int.from_bytes(read_patiently(FILTER_IN,1), sys.byteorder)
     length = int.from_bytes(read_patiently(FILTER_IN,4), sys.byteorder)
-    message = read_patiently(FILTER_IN, length).decode('utf-8')
+    message = read_patiently(FILTER_IN, length).decode(sys.stdin.encoding)
     # \Z matches only at the end of the string in python
     message = re.sub(r'\n\Z', '', str(message or ""))
     return tag, message
@@ -179,11 +180,12 @@ def write_message(tag, message):
         return write_to_stdout(tag, message)
 
     message = '\n' if message is None else message + '\n'  # allow undefined message
-    length = len(message)
+    bmessage = bytearray(message, sys.stdin.encoding)
+    length = len(bmessage)
 
     write_patiently(FILTER_OUT, tag.to_bytes(1, sys.byteorder, signed=False))
     write_patiently(FILTER_OUT, length.to_bytes(4, sys.byteorder, signed=False))
-    write_patiently(FILTER_OUT, bytearray(message, 'ascii'))
+    write_patiently(FILTER_OUT, bmessage)
 
 
 def read_from_stdin():
