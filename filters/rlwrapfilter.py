@@ -192,9 +192,30 @@ def read_from_stdin():
     tagname = None
     while (not tag):
         m = re.match("(\S+) (.*?)\r?\n", sys.stdin.readline())
+        if not m:
+            sys.exit()
         tagname, message = m.groups()
         tag = name2tag(tagname)
     return tag, message
+
+
+def tag2name(tag):
+    """
+    Convert the tag (an integer) to its name (e.g. " TAG_PROMPT ")
+    """
+    for name in ['TAG_REMOVE_FROM_COMPLETION_LIST',
+                 'TAG_ADD_TO_COMPLETION_LIST',
+                 'TAG_INPUT',
+                 'TAG_PROMPT',
+                 'TAG_COMPLETION',
+                 'TAG_HISTORY',
+                 'TAG_OUTPUT_OUT_OF_BAND',
+                 'TAG_ERROR',
+                 'TAG_IGNORE',
+                 'TAG_OUTPUT']:
+        if (eval('{0} == {1}'.format(str(tag), name))):
+            return name
+
 
 
 def write_to_stdout(tag, message):
@@ -347,74 +368,13 @@ class RlwrapFilter:
         self.saved_output = ''
         self.cumulative_output = ''
         self.minimal_rlwrap_version = rlwrap_version
-        self.command_line = os.environ['RLWRAP_COMMAND_LINE']
+        self.command_line = os.environ['RLWRAP_COMMAND_LINE'] if 'RLWRAP_COMMAND_LINE' in os.environ else None
         self.running_under_rlwrap = 'RLWRAP_COMMAND_PID' in os.environ
         self.name = os.path.basename(sys.argv[0])
 
         for key in kwargs:
             exec('self.{0} = kwargs[key]'.format(key))
 
-
-    def run(self):
-        """
-        event loop
-        """
-        #if(not we_are_running_under_rlwrap):
-        if os.environ['RLWRAP_COMMAND_PID'] == '0':
-            write_message(TAG_OUTPUT_OUT_OF_BAND, self.help_text + '\n')
-
-        while(True):
-            tag, message = read_message()
-
-            message = when_defined(self.message_handler, message, tag) # ignore return value
-
-            if (tag == TAG_INPUT):
-                response = when_defined(self.input_handler, message)
-            elif (tag == TAG_OUTPUT):
-                response = self.handle_output(message)
-            elif (tag == TAG_HISTORY):
-                response = when_defined(self.history_handler, message)
-            elif (tag == TAG_COMPLETION):
-                if (self.completion_handler is not None):
-                    message = re.sub('[ ]+$', '', message) # eat final space
-                    (line, prefix, completions) = message.split('\t')
-                    completions = completions.split(' ')
-                    completions = self.completion_handler(line, prefix, completions)
-                    response = "{0}\t{1}\t".format(line, prefix) + ' '.join(completions) + ' '
-                else:
-                    response = message
-            elif (tag == TAG_HOTKEY):
-                if (self.hotkey_handler is not None):
-                    (hotkey, prefix, postfix) = message.split('\t')
-                    (message, new_prefix, new_postfix) = self.hotkey_handler(hotkey, prefix, postfix)
-                    response =  "{0}\t{1}\t{2}".format(message, new_prefix, new_postfix)
-                else:
-                    response = message
-            elif (tag == TAG_PROMPT):
-                if (message == REJECT_PROMPT or
-                    (self.prompts_are_never_empty is not None and message == '')):
-                    write_message(tag,REJECT_PROMPT);
-                    # don't update <previous_tag> and don't reset <cumulative_input>
-                    next
-                if (os.environ['RLWRAP_IMPATIENT'] and not re.match('\n$', self.cumulative_output)):
-                    # cumulative output contains prompt: chop it off!
-                    # s/[^\n]*$// takes way too long on big strings,
-                    # what is the optimal regex to do this?
-                    self.cumulative_output = re.sub('(?<![^\n])[^\n]*$', '', self.cumulative_output)
-
-                response = when_defined(self.prompt_handler, message)
-                if (re.match('\n', response)):
-                    send_error('prompts may not contain newlines!')
-            else:
-                # No error message, compatible with future rlwrap
-                # versions that may define new tag types
-                response = message
-
-            if (not (out_of_band(tag) and (tag == TAG_PROMPT and response == REJECT_PROMPT))):
-                self.previous_tag = tag
-                self.previous_message = message
-
-            write_message(tag, response)
 
 
     def handle_output(self, message):
@@ -497,19 +457,7 @@ class RlwrapFilter:
         """
         Convert the tag (an integer) to its name (e.g. " TAG_PROMPT ")
         """
-        for name in ['TAG_REMOVE_FROM_COMPLETION_LIST',
-                     'TAG_ADD_TO_COMPLETION_LIST',
-                     'TAG_INPUT',
-                     'TAG_PROMPT',
-                     'TAG_COMPLETION',
-                     'TAG_HISTORY',
-                     'TAG_OUTPUT_OUT_OF_BAND',
-                     'TAG_ERROR',
-                     'TAG_IGNORE',
-                     'TAG_OUTPUT']:
-            if (eval('{0} == {1}'.format(str(tag), name))):
-                return name
-
+        return tag2name(tag)
 
     def warn(self, message):
         """
@@ -535,6 +483,69 @@ class RlwrapFilter:
 
     def cwd(self):
         return os.getcwd()
+
+    def run(self):
+        """
+        event loop
+        """
+        #if(not we_are_running_under_rlwrap):
+        if 'RLWRAP_COMMAND_PID' not in os.environ:
+            write_message(TAG_OUTPUT_OUT_OF_BAND, self.help_text + '\n')
+
+        while(True):
+            tag, message = read_message()
+
+            message = when_defined(self.message_handler, message, tag) # ignore return value
+
+            if (tag == TAG_INPUT):
+                response = when_defined(self.input_handler, message)
+            elif (tag == TAG_OUTPUT):
+                response = self.handle_output(message)
+            elif (tag == TAG_HISTORY):
+                response = when_defined(self.history_handler, message)
+            elif (tag == TAG_COMPLETION):
+                if (self.completion_handler is not None):
+                    message = re.sub('[ ]+$', '', message) # eat final space
+                    (line, prefix, completions) = message.split('\t')
+                    completions = completions.split(' ')
+                    completions = self.completion_handler(line, prefix, completions)
+                    response = "{0}\t{1}\t".format(line, prefix) + ' '.join(completions) + ' '
+                else:
+                    response = message
+            elif (tag == TAG_HOTKEY):
+                if (self.hotkey_handler is not None):
+                    (hotkey, prefix, postfix) = message.split('\t')
+                    (message, new_prefix, new_postfix) = self.hotkey_handler(hotkey, prefix, postfix)
+                    response =  "{0}\t{1}\t{2}".format(message, new_prefix, new_postfix)
+                else:
+                    response = message
+            elif (tag == TAG_PROMPT):
+                if (message == REJECT_PROMPT or
+                    (self.prompts_are_never_empty is not None and message == '')):
+                    write_message(tag,REJECT_PROMPT);
+                    # don't update <previous_tag> and don't reset <cumulative_input>
+                    next
+                if (os.environ['RLWRAP_IMPATIENT'] and not re.match('\n$', self.cumulative_output)):
+                    # cumulative output contains prompt: chop it off!
+                    # s/[^\n]*$// takes way too long on big strings,
+                    # what is the optimal regex to do this?
+                    self.cumulative_output = re.sub('(?<![^\n])[^\n]*$', '', self.cumulative_output)
+
+                response = when_defined(self.prompt_handler, message)
+                if (re.match('\n', response)):
+                    send_error('prompts may not contain newlines!')
+            else:
+                # No error message, compatible with future rlwrap
+                # versions that may define new tag types
+                response = message
+
+            if (not (out_of_band(tag) and (tag == TAG_PROMPT and response == REJECT_PROMPT))):
+                self.previous_tag = tag
+                self.previous_message = message
+
+            write_message(tag, response)
+
+
 
 
 if __name__ == '__main__':
