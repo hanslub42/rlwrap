@@ -128,7 +128,7 @@ def read_chunk(fh, timeout):
     """
     if (len(select.select([fh], [], [], timeout)[0]) > 0):
         chunk = os.read(fh, 2**16); # read up-to 2^16=65536 bytes
-        return chunk.decode(sys.stdin.encoding)
+        return chunk.decode(sys.stdin.encoding, errors="ignore")
     return ""
 
 
@@ -169,7 +169,7 @@ def read_message():
 
     tag = int.from_bytes(read_patiently(FILTER_IN,1), sys.byteorder)
     length = int.from_bytes(read_patiently(FILTER_IN,4), sys.byteorder)
-    message = read_patiently(FILTER_IN, length).decode(sys.stdin.encoding)
+    message = read_patiently(FILTER_IN, length).decode(sys.stdin.encoding, errors = "ignore")
     # \Z matches only at the end of the string in python
     message = re.sub(r'\n\Z', '', str(message or ""))
     return tag, message
