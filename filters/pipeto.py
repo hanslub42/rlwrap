@@ -3,8 +3,15 @@
 # this is maybe the most practical of the filter examples. Is is also a test for rlwraps signal handling.
 # At present, a CTRL-C in a pager will also kill rlwrap (bad)
 
-import rlwrapfilter
+import sys
 import os
+
+if 'RLWRAP_FILTERDIR' in os.environ:
+    sys.path.append(os.environ['RLWRAP_FILTERDIR'])
+else:
+    sys.path.append('.')
+
+import rlwrapfilter
 import re
 
 filter = rlwrapfilter.RlwrapFilter()
@@ -14,7 +21,7 @@ raw_input = ''
 
 filter.help_text = '\n'.join([
     "Usage: rlwrap -z {0} <command>".format(me),
-    "Allow piping of <command> output through pagers or other shell commands",
+    "Allow piping of <command>'s interactive output through pagers or other shell commands.",
     "When input of the form \"| shell pipeline\" is seen, <command>'s following output is sent through the pipeline\n"
     ])
 

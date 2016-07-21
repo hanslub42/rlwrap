@@ -6,7 +6,10 @@ Synopsis
 ```
     import os
     import sys
-    sys.path.append(os.environ['RLWRAP_FILTERDIR'] if 'RLWRAP_FILTERDIR' in os.environ else '.')
+    if 'RLWRAP_FILTERDIR' in os.environ:
+        sys.path.append(os.environ['RLWRAP_FILTERDIR'])
+    else:
+        sys.path.append('.')
     import rlwrapfilter
     filter = rlwrapfilter.RlwrapFilter(message_handler=do_something)
     filter.help_text = 'useful help'

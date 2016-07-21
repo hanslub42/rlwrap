@@ -16,7 +16,10 @@ SUBDIRS    = doc src filters
 nobase_pkgdata_DATA  = completions/testclient completions/coqtop\
 		       filters/README filters/RlwrapFilter.pm filters/RlwrapFilter.3pm filters/count_in_prompt filters/pipeto\
                        filters/logger filters/null filters/unbackspace filters/pipeline filters/ftp_filter filters/history_format\
-                       filters/simple_macro filters/template filters/scrub_prompt filters/paint_prompt filters/censor_passwords filters/listing
+                       filters/simple_macro filters/template filters/scrub_prompt filters/paint_prompt filters/censor_passwords filters/listing\
+                       filters/paint_prompt.py filters/handle_hotkeys.py filters/logger.py filters/pipeto.py\
+                       filters/rlwrapfilter.py filters/null.py filters/censor_passwords.py\
+                       filters/count_in_prompt.py filters/ftp_filter.py
 
 
 

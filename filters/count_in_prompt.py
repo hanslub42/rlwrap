@@ -6,6 +6,15 @@ a demo for simple prompt-munging
 Usage:
 rlwrap -z ./count_in_prompt.py telnet
 """
+
+import sys
+import os
+
+if 'RLWRAP_FILTERDIR' in os.environ:
+    sys.path.append(os.environ['RLWRAP_FILTERDIR'])
+else:
+    sys.path.append('.')
+
 import rlwrapfilter
 
 N = 0
