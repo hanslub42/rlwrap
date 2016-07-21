@@ -1,0 +1,91 @@
+#!/usr/bin/env perl
+
+use lib ($ENV{RLWRAP_FILTERDIR} or ".");
+use RlwrapFilter;
+use strict;
+
+
+my $filter = new RlwrapFilter;
+my $name = $filter -> name;
+
+$filter -> help_text("Usage: rlwrap -z $name <command>\n".
+		     "handle hotkeys (but only if bound to 'rlwrap-hotkey' in your .inputrc):\n" .
+                     document_all_hotkeys());
+
+
+$filter -> hotkey_handler(\&hotkey);
+
+$filter -> run;
+
+
+sub hotkey {
+    my ($key, $prefix, $postfix) = @_;                                  # key = e.g.  "<CTRL-Y>" 
+    my $key_without_ctl = lc pack("c", unpack("c", $key) + 64);         # $key_without_ctl = "y"
+    my ($message, $prefix, $postfix) = eval("hotkey_$key_without_ctl('$prefix','$postfix')"); # call hotkey_y(..)
+    die "hotkey CTRL-<$key_without_ctl>: $@\n" if $@;                                                   # hotkey_y may be undefined
+    return ($message, $prefix, $postfix);
+}
+
+
+############################# individual hotkey handlers ###############################################
+
+
+sub hotkey_template {
+    my($prefix, $postfix, $doc) = @_;
+    $doc and return "some docstring";
+    # $prefix is input line before cursor, postfix the remainder
+    # do something useful with them, and then:
+    my $message = ""; # not yet implemented: message to be echo'ed in message area   
+    return ($message, $prefix, $postfix);
+}
+
+sub hotkey_y {
+    my($prefix, $postfix, $doc) = @_;
+    $doc and return "insert from clipboard";
+    my $selection = safe_backtick(qw(xsel -o));
+    return ("", $prefix . $selection, $postfix);
+}
+
+
+sub hotkey_t {
+    my($prefix, $postfix, $doc) = @_;
+    $doc and return "show current time in echo area";
+    my $date = safe_backtick(qw(date +%H:%M));
+    return ("($date) ", $prefix, $postfix);
+}
+
+sub hotkey_p {
+    my($prefix, $postfix, $doc) = @_;
+    $doc and return "uppercase entire input line";
+    return ("", uc $prefix, uc $postfix);
+}   
+
+############################## helper functions #########################################################
+
+sub document_all_hotkeys {
+    my $doclist;
+    foreach my $k  ("a".."z") {
+        my $doc = eval("hotkey_$k('', '', 1)");
+        $doclist .= "    CTRL+$k:   $doc\n" unless $@;
+    }
+    my $inputrc = "$ENV{HOME}/.inputrc";
+    $doclist .= "Currently bound hotkeys in $inputrc:\n";
+    $doclist .= safe_backtick("grep", "rlwrap-hotkey", $inputrc);
+    return $doclist;
+}
+
+
+sub safe_backtick {
+    my @command_line = @_;
+    my $command_line = join ' ', @command_line;
+    open my $pipefh, '-|' or exec @command_line or die "$command_line failed: $!\n";
+    my $result;
+    { local $/;               # slurp all output in one go
+      $result = <$pipefh>; 
+      close $pipefh;
+    }
+    chomp $result;            # chop off last newline
+    return $result
+}
+
+
