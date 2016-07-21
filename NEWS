@@ -1,6 +1,9 @@
 0.43  Added bindable readline commands rlwrap-direct-keypress and
       rlwrap-hotkey
 
+      Added Hisanobu Okuda's rlwrapfilter.py python3 module
+      and example filters
+
       Playing back a readline macro consisting of more than one line
       would crash with SIGSEGV
 

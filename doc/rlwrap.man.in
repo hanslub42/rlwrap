@@ -210,9 +210,8 @@ EXPERIMENTAL: Wake up every \fItimeout\fP millisecs, where \fItimeout\fP is the 
 .TP
 .OL \-z \-\-filter  \fIfilter\fP
 Use a filter to change \fBrlwrap\fP's behaviour. A filter can be used to keep certain input out of the history, 
-to change the prompt, to implement simple macros or programmable completion.. \fBrlwrap\fP comes with a special \fBperl\fP module
-(cf. \fBRlwrapFilter(3pm)\fP) for easy filter writing. A number of example filters are installed in the directory 
-@DATADIR@/rlwrap/filters. "rlwrap \-z \fIfilter\fP" displays information about a filter, "rlwrap \-z listing" lists all currently installed filters.
+to change the prompt, to implement simple macros or programmable completion.. \fBrlwrap\fP comes with a \fBperl\fP and a \fBpython3\fP module
+to make filter writing easy. (cf. \fBRlwrapFilter(3pm)\fP for the perl module, the python one is very similar) A number of example filters are installed in the directory  @DATADIR@/rlwrap/filters. "rlwrap \-z \fIfilter\fP" displays information about a filter, "rlwrap \-z listing" lists all currently installed filters.
 If \fIfilter\fP needs arguments, you should quote the whole filter command line: 
 .nf
 
