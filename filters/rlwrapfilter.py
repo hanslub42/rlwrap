@@ -491,8 +491,10 @@ class RlwrapFilter:
         event loop
         """
 
-        if 'RLWRAP_COMMAND_PID' not in os.environ        # e.g. when run from terminal
-            or os.environ['RLWRAP_COMMAND_PID'] == "0":  # e.g. when called as rlwrap -z filter.py (without a command)
+        # $RLWRAP_COMMAND_PID can be undefined (e.g. when run interactively, or under rlwrap -z listing
+        # or == "0" (when rlwrap is called without a command name, like in rlwrap -z filter.py)
+        # In both cases: print help text
+        if 'RLWRAP_COMMAND_PID' not in os.environ or os.environ['RLWRAP_COMMAND_PID'] == "0":
             write_message(TAG_OUTPUT_OUT_OF_BAND, self.help_text + '\n')
 
         while(True):
