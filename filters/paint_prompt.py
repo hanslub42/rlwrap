@@ -10,9 +10,16 @@ other terminal emulators like rxvt)
 try `rlwrap -z './paint_prompt.py 0087ff--ff0000' telnet`
 """
 
+import sys
+import os
+
+if 'RLWRAP_FILTERDIR' in os.environ:
+    sys.path.append(os.environ['RLWRAP_FILTERDIR'])
+else:
+    sys.path.append('.')
+
 import rlwrapfilter
 import re
-import sys
 
 rampsize = 0xe7 - 0x10; # works on my gnome terminal
 

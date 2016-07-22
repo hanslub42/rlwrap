@@ -24,9 +24,16 @@ This example was tested on the pair of ftp bundled in RHEL6/7, Fedora21 and vsft
 Please see `man ftp` to find out how to disable it, if this filter does not work for you.
 """
 
+import sys
+import os
+
+if 'RLWRAP_FILTERDIR' in os.environ:
+    sys.path.append(os.environ['RLWRAP_FILTERDIR'])
+else:
+    sys.path.append('.')
+
 import rlwrapfilter
 import re
-import os
 
 
 ############################ subroutines ####################################

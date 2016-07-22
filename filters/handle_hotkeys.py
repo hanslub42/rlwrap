@@ -2,14 +2,21 @@
 
 """handle hotkeys"""
 
-import sys, subprocess
+import subprocess
+import sys
+import os
+
+if 'RLWRAP_FILTERDIR' in os.environ:
+    sys.path.append(os.environ['RLWRAP_FILTERDIR'])
+else:
+    sys.path.append('.')
 
 import rlwrapfilter
 
 filter = rlwrapfilter.RlwrapFilter()
 
-filter.help_text = "Usage: rlwrap [-options] -z handle_hotkeys.py <command>\na filter that handles hotkeys"
-
+filter.help_text = "Usage: rlwrap [-options] -z handle_hotkeys.py <command>\n"\
+                   + "a filter that handles hotkeys"
 
 
 def handle_hotkey(key, prefix, postfix):

@@ -9,7 +9,12 @@ rlwrap -z './logger.py -l logger.log' telnet
 
 import os
 import sys
-sys.path.append(os.environ['RLWRAP_FILTERDIR'] if 'RLWRAP_FILTERDIR' in os.environ else '.')
+
+if 'RLWRAP_FILTERDIR' in os.environ:
+    sys.path.append(os.environ['RLWRAP_FILTERDIR'])
+else:
+    sys.path.append('.')
+
 import rlwrapfilter
 import argparse
 import re
@@ -47,7 +52,11 @@ def logit(message, tag):
 filter = rlwrapfilter.RlwrapFilter(message_handler=logit);
 
 
-filter.help_text = "Usage: rlwrap -z 'logger [-l] logfile' <command>\n" + "log messages to a file (for debugging)\n" + "give logfile name as an argument, -l for long format\n" + "useful in a pipeline (rlwrap -z 'pipeline logger in:filter:logger out')"
+filter.help_text = "Usage: rlwrap -z 'logger [-l] logfile' <command>\n"\
+                   + "log messages to a file (for debugging)\n"\
+                   + "give logfile name as an argument, -l for long format\n"\
+                   + "useful in a pipeline "\
+                   + "(rlwrap -z 'pipeline logger in:filter:logger out')"
 
 
 filter.run()

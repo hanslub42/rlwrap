@@ -10,13 +10,21 @@ SQL > create user test identified by secret;
 
 """
 
-#from RlwrapFilter import *
+import sys
+import os
+
+if 'RLWRAP_FILTERDIR' in os.environ:
+    sys.path.append(os.environ['RLWRAP_FILTERDIR'])
+else:
+    sys.path.append('.')
+
 import rlwrapfilter
 import re
 
 filter = rlwrapfilter.RlwrapFilter()
 
-filter.help_text = "This filter removes the password from SQL 'identified by' clauses\n"
+filter.help_text = "rlwrap -H history -z censor_passwords.py sqlplus scott@<hostname>:1521/ORCL\n"\
+                   +"This filter removes the password from SQL 'identified by' clauses\n"
 
 filter.history_handler = lambda x: re.sub(r'(identified\s+by\s+)(\S+)', r'\1xXxXxXxX', x)
 
