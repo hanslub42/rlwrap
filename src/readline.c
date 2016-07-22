@@ -37,16 +37,20 @@ static void line_handler(char *);
 static void my_add_history(char *);
 static int my_accept_line(int, int);
 static int my_accept_line_and_forget(int, int);
-static int dump_all_keybindings(int,int);
 static void munge_file_in_editor(const char *filename, int lineno, int colno);
+static Keymap getmap(const char *name);
+static void bindkey(int key, rl_command_func_t *function, const char *maplist);
+
+
+/* readline bindable functions: */
+static int dump_all_keybindings(int,int);
 static int munge_line_in_editor(int, int);
+static int edit_history(int,int);
 static int direct_keypress(int, int);
 static int handle_hotkey(int, int);
 static int please_update_alaf(int,int);
 static int please_update_ce(int,int);
 
-static Keymap getmap(const char *name);
-static void bindkey(int key, rl_command_func_t *function, const char *maplist);
 
 void
 init_readline(char *prompt)
@@ -56,6 +60,7 @@ init_readline(char *prompt)
   rl_add_defun("rlwrap-accept-line-and-forget", my_accept_line_and_forget,-1);
   rl_add_defun("rlwrap-dump-all-keybindings", dump_all_keybindings,-1);
   rl_add_defun("rlwrap-call-editor", munge_line_in_editor, -1);
+  rl_add_defun("rlwrap-edit-history", edit_history, -1);
   rl_add_defun("rlwrap-direct-keypress", direct_keypress, -1);  
   rl_add_defun("rlwrap-hotkey", handle_hotkey, -1);
   
@@ -652,6 +657,34 @@ handle_hotkey(int count, int hotkey)
   free(filtered);
   free_splitlist(fragments);
   free(new_prompt);
+  return 0;
+}
+
+static int
+edit_history(int count, int key)
+{
+  char *tmpfilename;
+  int tmpfile_fd;
+  struct termios saved_terminal_settings;
+  if (tcgetattr(STDIN_FILENO, &saved_terminal_settings) < 0)
+    myerror(FATAL|USE_ERRNO, "tcgetattr error on stdin");
+  tmpfile_fd = open_unique_tempfile(".history", &tmpfilename);
+  /* we don't use tmpfile_fd, only the name */
+  if (write_history(tmpfilename))
+    myerror(FATAL|USE_ERRNO, "could not write history to '%s'", tmpfilename); 
+  close(tmpfile_fd);
+  munge_file_in_editor(tmpfilename, where_history() - history_base, rl_point);
+  clear_history();
+  if(read_history(tmpfilename))
+    myerror(FATAL|USE_ERRNO, "could not read history from file '%s'", tmpfilename);  
+  if (unlink(tmpfilename))
+    myerror(FATAL|USE_ERRNO, "could not unlink edited history file '%s'", tmpfilename);  
+  free(tmpfilename);
+  if (tcsetattr(STDIN_FILENO, TCSANOW,  &saved_terminal_settings) < 0)
+    myerror(FATAL|USE_ERRNO, "tcsetattr error on stdin");
+  //rl_redisplay();
+  cursor_hpos(rl_point);
+  return 0;
 }
 
 void

@@ -46,8 +46,6 @@ static char *term_cr;           /* carriage return (or 0, if none defined in ter
 static char *term_clear_line;
 char *term_name;
 
-/* TODO: replace termcap functions by terminfo ones, keeping termcap as a fallback for ancient systems
-   we might have to give both terminfo-style and termcap names, like in my_tigetstr("cub1", "le") */
 
 static char *my_tgetstr (char *id) {
   char *term_string_buf = (char *)mymalloc(2048), *tb = term_string_buf;
@@ -58,7 +56,35 @@ static char *my_tgetstr (char *id) {
   return retval;
 }
 
-#define FALLBACK_TERMINAL "vt100" /* terminal to use when we don't know which terminal we're on */
+static char *my_tigetstr (char *tid) {
+#ifdef HAVE_CURSES_H
+  static int term_has_been_setup = FALSE;
+  char *stringcap, *retval;
+  if (!term_has_been_setup) { 
+     setupterm(term_name, STDIN_FILENO, (int *)0); /* like tgetent() before tgetstr(), we have to call setupterm() befor tigetstr() */  
+     term_has_been_setup = TRUE;
+  }     
+  stringcap = tigetstr(tid); 
+  retval = stringcap ? mysavestring(stringcap) : NULL;
+  DPRINTF2(DEBUG_TERMIO, "tigetstr(\"%s\") = %s", tid, (stringcap ? mangle_string_for_debug_log(stringcap,20) : "NULL"));
+  return retval;
+#else
+  return NULL;
+#endif
+}
+
+/* Get (copies of) escape codes ("string capabilities") by name. First try terminfo name, then termcap name  */
+static char *
+tigetstr_or_else_tgetstr(char *capname, char *tcap_code)
+{
+  char *retval;
+  retval = my_tigetstr(capname);
+  if (!retval)
+    retval = my_tgetstr(tcap_code);
+  return retval;
+}
+  
+#define FALLBACK_TERMINAL "vt100" /* hard-coded terminal name to use when we don't know which terminal we're on */
 
 void
 init_terminal(void)
@@ -83,42 +109,52 @@ init_terminal(void)
   /* init some variables: */
   term_name = getenv("TERM");
   DPRINTF1(DEBUG_TERMIO, "found TERM = %s", term_name);  
+  
+  
 
-  if (!term_name || strlen(term_name)==0) {
-    myerror(WARNING|USE_ERRNO, "environment variable TERM not set, assuming %s", FALLBACK_TERMINAL); 
-    term_name = FALLBACK_TERMINAL;
-  }
-   
+
   term_buf = (char *)mymalloc(4096);
 
   term_backspace = NULL;
   term_cr = NULL;
   term_clear_line = NULL;
   term_cursor_hpos = NULL;
-   
-  /* On weird and scary HP-UX 11 succesful tgetent() returns 0: */  
+
+
+  /* On weird and scary HP-UX 11 succesful tgetent() returns 0, so we need the followig to portably catch errors: */  
   we_are_on_hp_ux11 = tgetent(term_buf, "vt100") == 0 && tgetent(term_buf,"QzBgt57gr6xwxw") == -1; /* assuming there is no terminal called Qz... */
   #define T_OK(retval) ((retval) > 0 || ((retval)== 0 && we_are_on_hp_ux11))
 
-  /* Test whether we can find stringcaps, use FALLBACK_TERMINAL name if not  */
+  /* if TERM is not set, use FALLBACK_TERMINAL */
+  if (!term_name || strlen(term_name)==0) {
+    myerror(WARNING|USE_ERRNO, "environment variable TERM not set, assuming %s", FALLBACK_TERMINAL); 
+    term_name = FALLBACK_TERMINAL;
+  }
+  
+  /* If we cannot find stringcaps, use FALLBACK_TERMINAL  */
   if (! (we_have_stringcaps = T_OK(tgetent(term_buf, term_name))) && strcmp(term_name, FALLBACK_TERMINAL)) { 
     myerror(WARNING|NOERRNO, "your $TERM is '%s' but %s couldn't find it in the terminfo database. We'll use '%s'", 
                             term_name, program_name, FALLBACK_TERMINAL);
     term_name = FALLBACK_TERMINAL;
-  }       
-  if (! (we_have_stringcaps = T_OK(tgetent(term_buf, FALLBACK_TERMINAL)))) 
+  }
+
+
+  /* If we cannot find stringcaps, even for FALLBACK_TERMINAL, complain */
+  if (!we_have_stringcaps && ! (we_have_stringcaps = T_OK(tgetent(term_buf, FALLBACK_TERMINAL)))) 
     myerror(WARNING|NOERRNO, "Even %s is not found in the terminfo database. Expect some problems...", FALLBACK_TERMINAL);
-  
-  
+
   DPRINTF1(DEBUG_TERMIO, "using TERM = %s", term_name);  
   mysetenv("TERM", term_name);
 
+ 
+
+  
   if (we_have_stringcaps)  { 
-    term_backspace      = my_tgetstr("le");
-    term_cr             = my_tgetstr("cr");
-    term_clear_line     = my_tgetstr("ce");
-    term_clear_screen   = my_tgetstr("cl");
-    term_cursor_hpos    = my_tgetstr("ch");
+    term_backspace      = tigetstr_or_else_tgetstr("cub1",   "le");
+    term_cr             = tigetstr_or_else_tgetstr("cr",     "cr");
+    term_clear_line     = tigetstr_or_else_tgetstr("el",     "ce");
+    term_clear_screen   = tigetstr_or_else_tgetstr("clear",  "cl");
+    term_cursor_hpos    = tigetstr_or_else_tgetstr("hpa",    "ch"); //my_tgetstr("ch") ? my_tgetstr("ch") :  my_tigetstr("hpa");
     term_cursor_left    = my_tgetstr("le");
     term_rmcup          = my_tgetstr("te"); /* rlwrap still uses ye olde termcappe names */
     term_rmkx           = my_tgetstr("ke");

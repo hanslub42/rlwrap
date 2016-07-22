@@ -305,10 +305,6 @@ void set_ulimit(int resource, long value) {
 
 
 
-
-
-
-
 int open_unique_tempfile(const char *suffix, char **tmpfile_name) {
   char **tmpdirs = list4(getenv("TMPDIR"), getenv("TMP"), getenv("TEMP"), "/tmp");
   char *tmpdir = first_of(tmpdirs);
