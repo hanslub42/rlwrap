@@ -575,14 +575,7 @@ init_rlwrap(char *command_line)
   char *homedir, *histdir, *homedir_prefix, *hostname;
   time_t now;
   
-  /* open debug file if necessary */
 
-  if (debug) {    
-    debug_fp = fopen(DEBUG_FILENAME, "w");
-    if (!debug_fp)
-      myerror(FATAL|USE_ERRNO, "Couldn't open debug file %s", DEBUG_FILENAME);
-    setbuf(debug_fp, NULL); /* always write debug messages to disk at once */
-  }
   hostname = getenv("HOSTNAME") ? getenv("HOSTNAME") : "?";
   now = time(NULL);
   DPRINTF0(DEBUG_ALL, "-*- mode: grep -*-");
@@ -747,14 +740,15 @@ read_options_and_command_name(int argc, char **argv)
     case 'd':
 #ifdef DEBUG
       if (option_count > 1)
-        myerror(FATAL|NOERRNO, "-d or --debug option has to be the *first* rlwrap option");
-      if (check_optarg('d', remaining))
-        debug = atoi(optarg);
-      else
-        debug = DEBUG_DEFAULT;
+        myerror(FATAL|NOERRNO, "-d or --debug option has to be the *first* rlwrap option\n"
+                               "in order to be able to follow the processing  of all subsequent options");
+      debug = check_optarg('d', remaining) ? atoi(optarg) : DEBUG_DEFAULT;
+      debug_fp = fopen(DEBUG_FILENAME, "w");
+      if (!debug_fp)
+         myerror(FATAL|USE_ERRNO, "Couldn't open debug file %s", DEBUG_FILENAME);
+      setbuf(debug_fp, NULL); /* always write debug messages to disk at once */
 #else
-     myerror(FATAL|NOERRNO, "To use -d( for debugging), configure %s with --enable-debug and rebuild",
-         program_name);
+      myerror(FATAL|NOERRNO, "To use -d( for debugging), configure %s with --enable-debug and rebuild",program_name);
 #endif
       break;
 
@@ -853,7 +847,7 @@ read_options_and_command_name(int argc, char **argv)
       usage(EXIT_FAILURE);
     }
   }
-
+  
   if (!complete_filenames && !opt_b) {	/* use / and . as default breaking characters whenever we don't complete filenames */
     rl_basic_word_break_characters =
       add2strings(rl_basic_word_break_characters, "/.");
