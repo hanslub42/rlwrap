@@ -490,9 +490,9 @@ class RlwrapFilter:
         """
         event loop
         """
-        #if(not we_are_running_under_rlwrap):
-        if 'RLWRAP_COMMAND_PID' not in os.environ:
-            raise Exception("Help text" + self.help_text)
+
+        if 'RLWRAP_COMMAND_PID' not in os.environ        # e.g. when run from terminal
+            or os.environ['RLWRAP_COMMAND_PID'] == "0":  # e.g. when called as rlwrap -z filter.py (without a command)
             write_message(TAG_OUTPUT_OUT_OF_BAND, self.help_text + '\n')
 
         while(True):
