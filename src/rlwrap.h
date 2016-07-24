@@ -575,8 +575,11 @@ void filter_test(void);
 #  define DPRINTF4(mask, format,arg1, arg2, arg3, arg4)
 #  define ERRMSG(b)
 #  define SHOWCURSOR
-#  define NDEBUG                /* disable assertions */
 #  define DEBUG_RANDOM_SLEEP  
+
+/* Don't #define NDEBUG!  There are assertions that cannot be skipped, as in assert(important_function_call()) */
+/* Todo (maybe) #define myassert(x) if(DEBUG){assert(x)} for the other (skippable) assertions                  */
+
 #endif
 
 #include <assert.h>
