@@ -609,11 +609,11 @@ init_rlwrap(char *command_line)
       if (access(history_filename, R_OK | W_OK) != 0) {
 	myerror(FATAL|USE_ERRNO, "cannot read and write %s", history_filename);
       }
-      /* OK, we can read and write it, but do we want to? Not if we don't own
-         the history file  (like after sudo rlwrap on Ubuntu) */
+      /* OK, we can read and write it, but do we want to? Not if our effective UID
+        doesn't match the owner of the history file (like after sudo rlwrap on Ubuntu) */
       assert(!stat(history_filename, &statbuf));
-      if(statbuf.st_uid != getuid()) {
-        myerror(WARNING | NOERRNO, "You are not the (real) owner of %s. History will be read-only", history_filename);
+      if(statbuf.st_uid != geteuid()) {
+        myerror(WARNING | NOERRNO, "Owner of %s and your effective UID don't match. History will be read-only", history_filename);
         write_histfile = FALSE;
       } 
     } else {			        /* doesn't exist, can we create it? */
