@@ -573,6 +573,7 @@ init_rlwrap(char *command_line)
 {
 
   char *homedir, *histdir, *homedir_prefix, *hostname;
+  struct stat statbuf;
   time_t now;
   
 
@@ -600,12 +601,21 @@ init_rlwrap(char *command_line)
     histdir = homedir;
     history_filename = add3strings(homedir_prefix, command_name, "_history");
   }
+
+
   
   if (write_histfile) {
     if (access(history_filename, F_OK) == 0) {	/* already exists, can we read/write it? */
       if (access(history_filename, R_OK | W_OK) != 0) {
 	myerror(FATAL|USE_ERRNO, "cannot read and write %s", history_filename);
       }
+      /* OK, we can read and write it, but do we want to? Not if we don't own
+         the history file  (like after sudo rlwrap on Ubuntu) */
+      assert(!stat(history_filename, &statbuf));
+      if(statbuf.st_uid != getuid()) {
+        myerror(WARNING | NOERRNO, "You are not the (effective) owner of %s. History will be read-only", history_filename);
+        write_histfile = FALSE;
+      } 
     } else {			        /* doesn't exist, can we create it? */
       if(access(histdir, W_OK) != 0) {
         if (errno == ENOENT) {
