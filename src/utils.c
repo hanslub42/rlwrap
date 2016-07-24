@@ -123,7 +123,7 @@ my_pselect(int n, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, const st
 }       
 
 struct termios *
-my_tcgetattr(int fd, char *which) /* the 'which' argument is only needed for error reporting */
+my_tcgetattr(int fd, char *UNUSED(which)) 
 {
   struct termios *pterm =
     (struct termios *)mymalloc(sizeof(struct termios));
@@ -131,10 +131,11 @@ my_tcgetattr(int fd, char *which) /* the 'which' argument is only needed for err
 }
 
 
+/* empty signal handler */
 void
-do_nothing(int unused)
+do_nothing(int UNUSED(signal))
 {
-  ; /* yawn.... */
+  /* yawn.... */
 }
 
 

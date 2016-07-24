@@ -455,7 +455,7 @@ void remove_padding_and_terminate(char *buf, int length) {
       *copyptr++ = *readptr;
   }
   *copyptr = '\0';
-  if (debug && strlen(buf) != length)
+  if (debug && strlen(buf) != (unsigned int) length)
     DPRINTF2(DEBUG_TERMIO, "removed %d zero bytes (padding?) from %s", length - (int) strlen(buf), mangle_string_for_debug_log(buf, MANGLE_LENGTH));
 }       
         

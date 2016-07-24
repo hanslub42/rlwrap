@@ -200,7 +200,7 @@ set_echo(int yes)
  
   log_terminal_settings(pterm);
   if (tcsetattr(STDIN_FILENO, TCSANOW, pterm) < 0 && errno != ENOTTY)
-    ;   /* myerror(FATAL|USE_ERRNO, "cannot prepare terminal (tcsetattr error on stdin)"); */
+    { /* nothing */ }   /* myerror(FATAL|USE_ERRNO, "cannot prepare terminal (tcsetattr error on stdin)"); */
   free(pterm);
 }
 

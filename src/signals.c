@@ -349,7 +349,7 @@ void wipe_textarea(struct winsize *old_winsize)
 }       
 
 static void
-child_died(int unused)
+child_died(int UNUSED(signo))
 {
   int saved_errno;
   DEBUG_RANDOM_SLEEP;
@@ -456,7 +456,7 @@ myalarm_was_set = TRUE;
 }
 
 void
-handle_sigALRM(int signo) {
+handle_sigALRM(int UNUSED(signo)) {
   received_sigALRM = TRUE;
   assert(myalarm_was_set); /* cry wolf if sigALRM is caught when none was requested by myalarm */
   myalarm_was_set= FALSE;

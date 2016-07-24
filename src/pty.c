@@ -264,7 +264,7 @@ completely_mirror_slaves_terminal_settings()
   pterm_slave = my_tcgetattr(slave_pty_sensing_fd, "slave pty");
   log_terminal_settings(pterm_slave);
   if (pterm_slave && tcsetattr(STDIN_FILENO, TCSANOW, pterm_slave) < 0 && errno != ENOTTY)
-    ;   /* myerror(FATAL|USE_ERRNO, "cannot prepare terminal (tcsetattr error on stdin)"); */
+    { /* nothing ... */  }   /* myerror(FATAL|USE_ERRNO, "cannot prepare terminal (tcsetattr error on stdin)"); */
   myfree(pterm_slave);
   DEBUG_RANDOM_SLEEP;
 }

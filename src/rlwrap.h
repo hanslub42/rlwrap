@@ -515,11 +515,17 @@ void filter_test(void);
 #  define DEBUG_DEFAULT                          (DEBUG_TERMIO | DEBUG_SIGNALS | DEBUG_READLINE)
 #  define DEBUG_ALL                              (2*DEBUG_MAX-1)
 
+# define MAYBE_UNUSED(x)                         (void) (x)
+# define MAYBE_UNUSED2(x,y)                      (void) (x); (void) (y)
 
-
-
-# ifndef __GNUC__
-# define __FUNCTION__ ""
+# ifdef __GNUC__
+#   define __MYFUNCTION__ __extension__ __FUNCTION__
+#   define UNUSED(x) UNUSED_ ## x __attribute__((__unused__))
+#   define UNUSED_FUNCTION(f) __attribute__((__unused__)) UNUSED_ ## f
+# else
+#   define __MYFUNCTION__ ""
+#   define UNUSED(x) UNUSED_ ## x
+#   define UNUSED_FUNCTION(f) UNUSED_ ## f  
 # endif
 
 # define WHERE_AND_WHEN \
@@ -527,7 +533,7 @@ void filter_test(void);
   if(debug & DEBUG_WITH_TIMESTAMPS) timestamp(when, sizeof(when)); else *when='\0'; \
   debug = 0; /* don't debug while evaluating the DPRINTF arguments */ \
   snprintf2(file_line, sizeof(file_line),"%.15s:%d:",__FILE__,__LINE__); \
-  fprintf(debug_fp, "%-20s %s %-25.25s ", file_line, when, __FUNCTION__);\
+  fprintf(debug_fp, "%-20s %s %-25.25s ", file_line, when, __MYFUNCTION__);\
 
 
 #  define NL_AND_FLUSH           fputc('\n', debug_fp) ; fflush(debug_fp); debug = debug_saved;
@@ -555,9 +561,13 @@ void filter_test(void);
 
 
 #else
-#  define HEAVEN_FORBID(exp)     (exp)
-#  define OH_PLEASE(exp)         (exp)
+#  define UNUSED(x) x
+#  define UNUSED_FUNCTION(f) f
+#  define MAYBE_UNUSED(x)
+#  define MAYBE_UNUSED2(x,y)
 #  define MANGLE_LENGTH          0
+#  define MAYBE_UNUSED(x)           
+#  define MAYBE_UNUSED2(x,y)                     
 #  define DPRINTF0(mask, format)
 #  define DPRINTF1(mask, format,arg)
 #  define DPRINTF2(mask, format,arg1, arg2)

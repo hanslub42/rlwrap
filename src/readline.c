@@ -26,7 +26,7 @@
 int remember_for_completion = FALSE;    /* whether we should put al words from in/output on the list */
 char *multiline_separator = NULL;       /* character sequence to use in lieu of newline when storing multi-line input in a single history line */
 char *pre_given = NULL;                 /* pre-given user input when rlwrap starts up */
-struct rl_state saved_rl_state = { "", "", 0, 0 };      /* saved state of readline */
+struct rl_state saved_rl_state = { "", "", 0, 0, 0 };      /* saved state of readline */
 static char return_key;                 /* Key pressed to enter line */
 static int forget_line;
 static char *colour_start, *colour_end;        /* colour codes */
@@ -55,7 +55,7 @@ static int dump_all_keybindings(int,int);
 static int dump_history(int,int);
 
 void
-init_readline(char *prompt)
+init_readline(char *UNUSED(prompt))
 {
   DPRINTF1(DEBUG_READLINE, "Initialising readline version %x", rl_readline_version);   
   rl_add_defun("rlwrap-accept-line", my_accept_line,-1);
@@ -277,7 +277,7 @@ line_handler(char *line)
 /* this function (drop-in replacement for readline's own accept-line())
    will be bound to RETURN key: */
 static int
-my_accept_line(int count, int key)
+my_accept_line(int UNUSED(count), int key)
 {
   rl_point = 0;			/* leave cursor on predictable place */
   my_redisplay();
@@ -288,7 +288,7 @@ my_accept_line(int count, int key)
 
 /* this function will be bound to rl_accept_key_and_forget key (normally CTRL-O) */
 static int
-my_accept_line_and_forget(int count, int key)
+my_accept_line_and_forget(int count, int UNUSED(key))
 {
   forget_line = 1;
   return my_accept_line(count, '\n');
@@ -548,7 +548,7 @@ munge_file_in_editor(const char *filename, int lineno, int colno)
 
 
 static int
-munge_line_in_editor(int count, int key)
+munge_line_in_editor(int UNUSED(count), int UNUSED(key))
 {
   int line_number = 0, column_number = 0, tmpfile_fd, bytes_read;
   size_t tmpfilesize;
@@ -616,7 +616,7 @@ munge_line_in_editor(int count, int key)
 }
 
 static int
-direct_keypress(int count, int key)
+direct_keypress(int UNUSED(count), int key)
 {
   char *key_as_str = mysavestring("?");
   /* put the key in the output queue    */
@@ -628,7 +628,7 @@ direct_keypress(int count, int key)
 }
 
 static int
-handle_hotkey(int count, int hotkey)
+handle_hotkey(int UNUSED(count), int hotkey)
 {
   char *prefix, *postfix, *filter_food, *filtered, **fragments, *new_rl_line_buffer;
   int length;
@@ -675,7 +675,7 @@ handle_hotkey(int count, int hotkey)
 static char*
 my_read_history(const char *filename)
 {
-  char *copyname, *line_after_empty_line, line[BUFFSIZE+1], *last_after_empty = NULL;
+  char *copyname, line[BUFFSIZE+1], *last_after_empty = NULL;
   FILE *in, *out;
   int histpos = where_history(), histsize_before = history_length,  count = 0, keep_next_line = FALSE;
   assert((in = fopen(filename, "r")));
@@ -714,7 +714,7 @@ my_read_history(const char *filename)
 
 /* Debugging aid: dump information about the current history state on stdout */
 static int
-dump_history(int count, int key)
+dump_history(int UNUSED(count), int UNUSED(key))
 {
   int i;
   HIST_ENTRY **p;
@@ -730,7 +730,7 @@ dump_history(int count, int key)
 
 
 static int
-edit_history(int count, int key)
+edit_history(int UNUSED(count), int UNUSED(key))
 {
   char *tmpfilename, *new_rl_line_buffer;
   int tmpfile_fd, histpos;
@@ -859,7 +859,7 @@ prompt_is_single_line(void)
 }
 
 
-char *process_new_output(const char* buffer, struct rl_state* state) {
+char *process_new_output(const char* buffer, struct rl_state* UNUSED(state)) {
   char*last_nl, *old_prompt_plus_new_output, *new_prompt, *result;
   
   old_prompt_plus_new_output = append_and_free_old(saved_rl_state.raw_prompt, buffer); 
@@ -970,11 +970,11 @@ static int please_update(const char *varname) {
   return 0;
 }       
 
-static int please_update_alaf(int count, int key) {
+static int please_update_alaf(int UNUSED(count), int UNUSED(key)) {
   return please_update("rlwrap_accept_line_and_forget");
 }
 
-static int please_update_ce(int count, int key) {
+static int please_update_ce(int UNUSED(count), int UNUSED(key)) {
   return please_update("rlwrap_call_editor");
 }
 

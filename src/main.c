@@ -189,7 +189,7 @@ main(int argc, char **argv)
  * read_options_and_command_name() has harvested rlwrap's own options
  */  
 static void
-fork_child(char *command_name, char **argv)
+fork_child(char *UNUSED(command_name), char **argv)
 {
   char *arg = argv[optind], *p;
   int pid;
@@ -656,6 +656,8 @@ init_rlwrap(char *command_line)
 static char *
 check_optarg(char opt, int remaining)
 {
+  MAYBE_UNUSED2(opt, remaining);
+  
   if (!optarg)
     last_option_didnt_have_optional_argument = TRUE; /* if this variable is set, and  if command is not found,
 							suggest that it may have been meant
@@ -945,7 +947,7 @@ flush_output_queue()
   how_much = min(BUFFSIZE, nl ? 1+ nl - output_queue : queuelen); /* never write more than one line, and never more than BUFFSIZE in one go */
   nwritten = write(master_pty_fd, output_queue, how_much);
 
-  assert(nwritten <= strlen(output_queue));
+  assert(nwritten <= (int) strlen(output_queue));
   if (debug) {
     char scratch = output_queue[nwritten];
     output_queue[nwritten] = '\0'; /* temporarily replace the last written byte + 1 by a '\0' */
@@ -1001,7 +1003,7 @@ cleanup_rlwrap_and_exit(int status)
   
   if (terminal_settings_saved)
     if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &saved_terminal_settings) < 0)  /* ignore errors (almost dead anyway) */ 
-      ; /* fprintf(stderr, "Arggh\n"); don't use myerror!!*/
+      { /* nothing ... */ } /* fprintf(stderr, "Arggh\n"); don't use myerror!!*/
 
   if (!newline_came_last) /* print concluding newline, if necessary */
     my_putstr("\n");
