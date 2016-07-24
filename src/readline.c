@@ -43,7 +43,6 @@ static void bindkey(int key, rl_command_func_t *function, const char *maplist);
 
 
 /* readline bindable functions: */
-static int dump_all_keybindings(int,int);
 static int munge_line_in_editor(int, int);
 static int edit_history(int,int);
 static int direct_keypress(int, int);
@@ -51,6 +50,9 @@ static int handle_hotkey(int, int);
 static int please_update_alaf(int,int);
 static int please_update_ce(int,int);
 
+/* only useful while debugging: */
+static int dump_all_keybindings(int,int);
+static int dump_history(int,int);
 
 void
 init_readline(char *prompt)
@@ -58,11 +60,15 @@ init_readline(char *prompt)
   DPRINTF1(DEBUG_READLINE, "Initialising readline version %x", rl_readline_version);   
   rl_add_defun("rlwrap-accept-line", my_accept_line,-1);
   rl_add_defun("rlwrap-accept-line-and-forget", my_accept_line_and_forget,-1);
-  rl_add_defun("rlwrap-dump-all-keybindings", dump_all_keybindings,-1);
   rl_add_defun("rlwrap-call-editor", munge_line_in_editor, -1);
   rl_add_defun("rlwrap-edit-history", edit_history, -1);
   rl_add_defun("rlwrap-direct-keypress", direct_keypress, -1);  
   rl_add_defun("rlwrap-hotkey", handle_hotkey, -1);
+
+  /* only useful while debugging */
+  rl_add_defun("rlwrap-dump-all-keybindings", dump_all_keybindings,-1);
+  rl_add_defun("rlwrap-dump-history", dump_history,-1);
+
   
   /* the old rlwrap bindable function names with underscores are deprecated: */
   rl_add_defun("rlwrap_accept_line_and_forget", please_update_alaf,-1);
@@ -76,10 +82,9 @@ init_readline(char *prompt)
   bindkey(15, my_accept_line_and_forget, "emacs-standard; vi-insert; vi-command");	/* ascii #15 (Control-O) is unused in readline's emacs and vi keymaps */
   if (multiline_separator) 
     bindkey(30, munge_line_in_editor, "emacs-standard;vi-insert;vi-command");            /* CTRL-^: unused in vi-insert-mode, hardly used in emacs  (doubles arrow-up) */
-  if (debug)
-    bindkey(7, dump_all_keybindings,"emacs-standard; vi-insert; vi-move; vi-command" /* "emacs-ctlx; emacs-meta" */); /* CTRL-G */
-  
 
+  
+  
   /* rl_variable_bind("gnah","gnerp"); It is not possible to create new readline variables (only functions) */
   rl_catch_signals = 0;
   rl_initialize();		/* This has to happen *before* we set rl_redisplay_function, otherwise
@@ -298,6 +303,7 @@ dump_all_keybindings(int count, int key)
   return 0;
 }       
 
+
 /* format line and add it to history list, avoiding duplicates if necessary */
 static void
 my_add_history(char *line)
@@ -321,13 +327,12 @@ my_add_history(char *line)
   new_entry = filtered_line;    
   
   lookback = min(history_length, lookback);      
-  for (count = 0, here = history_length + history_base - 1;
+  for (count = 0, here = history_length - 1;
        count < lookback ;
        count++, here--) {
-    /* DPRINTF3(DEBUG_READLINE, "strcmping <%s> and <%s> (count = %d)", line, history_get(here)->line ,count); */
-    if (strncmp(new_entry, history_get(here) -> line, 10000) == 0) {
-      HIST_ENTRY *entry = remove_history (here - history_base); /* according to the history library doc this should be
-                                                                   remove_history(here) @@@?*/
+    DPRINTF4(DEBUG_READLINE, "strcmping <%s> and <%s> (count = %d, here = %d)", line, history_get(history_base + here)->line ,count, here);
+    if (strncmp(new_entry, history_get(history_base + here) -> line, 10000) == 0) { /* history_get uses the logical offset history_base .. */
+       HIST_ENTRY *entry = remove_history (here);                                   /* .. but remove_history doesn't!                      */
       DPRINTF2(DEBUG_READLINE, "removing duplicate entry #%d (%s)", here, entry->line);
       free_foreign(entry->line);
       free_foreign(entry);
@@ -497,6 +502,7 @@ my_redisplay()
 
 
 
+
 static void
 munge_file_in_editor(const char *filename, int lineno, int colno)
 {
@@ -510,13 +516,11 @@ munge_file_in_editor(const char *filename, int lineno, int colno)
   editor_command1 = first_of(possible_editor_commands);
   line_number_as_string = as_string(lineno);
   column_number_as_string = as_string(colno);
-  editor_command2 =
-    search_and_replace("%L", line_number_as_string, editor_command1, 0, NULL,
-                       NULL);
-  editor_command3 =
-    search_and_replace("%C", column_number_as_string, editor_command2, 0,
-                       NULL, NULL);
-  editor_command4 = add3strings(editor_command3, " ", filename);
+  editor_command2 = search_and_replace("%L", line_number_as_string, editor_command1, 0, NULL, NULL);
+  editor_command3 = search_and_replace("%C", column_number_as_string, editor_command2, 0, NULL, NULL);
+  editor_command4 = strstr(editor_command3, "%F") ?
+    search_and_replace("%F", filename, editor_command3, 0, NULL, NULL) :
+    add3strings(editor_command3, " ", filename);
   
 
   /* call editor, temporarily restoring terminal settings */    
@@ -534,6 +538,7 @@ munge_file_in_editor(const char *filename, int lineno, int colno)
   completely_mirror_slaves_terminal_settings();
   ignore_queued_input = TRUE;  
 
+  free(possible_editor_commands);
   free(editor_command2);
   free(editor_command3);
   free(editor_command4);
@@ -625,7 +630,7 @@ direct_keypress(int count, int key)
 static int
 handle_hotkey(int count, int hotkey)
 {
-  char *prefix, *postfix, *filter_food, *filtered, **fragments, *new_prompt;
+  char *prefix, *postfix, *filter_food, *filtered, **fragments, *new_rl_line_buffer;
   int length;
 
   DPRINTF1(DEBUG_READLINE, "hotkey press: %s", mangle_char_for_debug_log(hotkey, TRUE));
@@ -639,10 +644,10 @@ handle_hotkey(int count, int hotkey)
   DPRINTF2(DEBUG_FILTERING, "filter rl_line because of hotkey press. In: <%s> Out: <%s>",
            mangle_string_for_debug_log(filter_food, MANGLE_LENGTH), mangle_string_for_debug_log(filtered, MANGLE_LENGTH + 10));
   fragments = split_on_single_char(filtered, '\t');
-  new_prompt = add2strings(fragments[1], fragments[2]);
+  new_rl_line_buffer = add2strings(fragments[1], fragments[2]);
   rl_delete_text(0, strlen(rl_line_buffer));
   rl_point = 0;
-  rl_insert_text(new_prompt);
+  rl_insert_text(new_rl_line_buffer);
   rl_point = strlen(fragments[1]);
   if (*fragments[0] && *fragments[0] != hotkey) {              /* if message has been set, and isn't empty: */ 
     fragments[0] = append_and_free_old(fragments[0], " ");     /* put space (for readability) between the message and the input line .. */
@@ -656,34 +661,100 @@ handle_hotkey(int count, int hotkey)
   free(filter_food);
   free(filtered);
   free_splitlist(fragments);
-  free(new_prompt);
+  free(new_rl_line_buffer);
   return 0;
 }
+
+
+
+
+/* copy <filename> to <filename.1>, skipping empty lines, 
+   call read_history on the copy, and unlink both files.
+   (a copy of) the line after the last empty line is returned (to 
+   become the new input line) or NULL, if there is none */
+static char*
+my_read_history(const char *filename)
+{
+  char *copyname, *line_after_empty_line, line[BUFFSIZE+1], *last_after_empty = NULL;
+  FILE *in, *out;
+  int histpos = where_history(), histsize_before = history_length,  count = 0, keep_next_line = FALSE;
+  assert((in = fopen(filename, "r")));
+  copyname = add2strings(filename, ".1"); /* @@@ is this unsafe? */
+  assert((out = fopen(copyname, "w")));
+
+  while((fgets(line, BUFFSIZE, in))) {
+      if(*line == '\n') {          /* empty line: remember next one */
+        keep_next_line = TRUE;
+      } else {
+        assert(fputs(line, out) >= 0);
+        count++;
+        if(keep_next_line) {
+          keep_next_line = FALSE;
+          free(last_after_empty);
+          line[strlen(line)-1] = '\0'; /* chop off newline */
+          last_after_empty = mysavestring(line);
+          histpos = count - 1;
+          DPRINTF2(DEBUG_READLINE, "After empty line: histpos %d, line: <%s>", histpos, last_after_empty);
+        }  
+      }
+  }
+  fclose(in);
+  fclose(out);
+  clear_history();
+  assert(!read_history(copyname));
+  if (!last_after_empty && count != histsize_before) /* If the number of lines (history entries)  has changed, and no empty .. */
+    histpos = count;                                 /* ..line is found we cannot keep the history position the same           */ 
+              
+  history_set_pos(histpos);      /* histpos can have changed, but only if an empty line was seen           */        
+  assert(!unlink(filename));
+  assert(!unlink(copyname));
+  free(copyname);
+  return last_after_empty;
+}
+
+/* Debugging aid: dump information about the current history state on stdout */
+static int
+dump_history(int count, int key)
+{
+  int i;
+  HIST_ENTRY **p;
+  printf("\n-------------- History breakdown ---------------------------\n");
+  printf("history_base: %d\nhistory_length: %d\nwhere_history: %d\n", history_base, history_length, where_history()); 
+  for (p = history_list(), i = 0; *p; p++, i++) {
+    printf("%03d: %s\n", i, (*p) -> line);
+  }
+  rl_on_new_line();
+  rl_redisplay();
+  return 0;
+}       
+
 
 static int
 edit_history(int count, int key)
 {
-  char *tmpfilename;
-  int tmpfile_fd;
+  char *tmpfilename, *new_rl_line_buffer;
+  int tmpfile_fd, histpos;
   struct termios saved_terminal_settings;
-  if (tcgetattr(STDIN_FILENO, &saved_terminal_settings) < 0)
-    myerror(FATAL|USE_ERRNO, "tcgetattr error on stdin");
-  tmpfile_fd = open_unique_tempfile(".history", &tmpfilename);
-  /* we don't use tmpfile_fd, only the name */
-  if (write_history(tmpfilename))
-    myerror(FATAL|USE_ERRNO, "could not write history to '%s'", tmpfilename); 
+  assert (!tcgetattr(STDIN_FILENO, &saved_terminal_settings));
+  tmpfile_fd = open_unique_tempfile(".history", &tmpfilename);  
+  /* we dont use tmpfile_fd, only the name */
+  assert(!write_history(tmpfilename)); 
   close(tmpfile_fd);
-  munge_file_in_editor(tmpfilename, where_history() - history_base, rl_point);
-  clear_history();
-  if(read_history(tmpfilename))
-    myerror(FATAL|USE_ERRNO, "could not read history from file '%s'", tmpfilename);  
-  if (unlink(tmpfilename))
-    myerror(FATAL|USE_ERRNO, "could not unlink edited history file '%s'", tmpfilename);  
-  free(tmpfilename);
-  if (tcsetattr(STDIN_FILENO, TCSANOW,  &saved_terminal_settings) < 0)
-    myerror(FATAL|USE_ERRNO, "tcsetattr error on stdin");
-  //rl_redisplay();
-  cursor_hpos(rl_point);
+  histpos = where_history();
+  munge_file_in_editor(tmpfilename, histpos + 1, rl_point + 1); 
+  new_rl_line_buffer = my_read_history(tmpfilename);
+  assert(!tcsetattr(STDIN_FILENO, TCSANOW,  &saved_terminal_settings));
+  
+  if (new_rl_line_buffer) {
+    rl_delete_text(0, strlen(rl_line_buffer));
+    rl_point = 0;
+    rl_insert_text(new_rl_line_buffer);
+    clear_line();
+    rl_on_new_line();
+    rl_redisplay();
+  } else {
+    cursor_hpos(rl_point);
+  }
   return 0;
 }
 

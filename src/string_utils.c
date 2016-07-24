@@ -246,7 +246,7 @@ void free_splitlist (char **list) {
    
 
 char *
-search_and_replace(char *patt, char *repl, const char *string, int cursorpos,
+search_and_replace(char *patt, const char *repl, const char *string, int cursorpos,
                    int *line, int *col)
 {
   int i, j, k;
@@ -429,6 +429,7 @@ list4 (char *el0, char *el1, char *el2, char *el3)
   list[1] = el1;
   list[2] = el2;
   list[3] = el3;
+  DPRINTF4(DEBUG_AD_HOC, "el0: <%s> el1: <%s> el2: <%s> el3: <%s>", el0, el1, el2, el3);
   return list;
 }
 

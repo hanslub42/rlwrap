@@ -325,7 +325,7 @@ int open_unique_tempfile(const char *suffix, char **tmpfile_name) {
   }
 #endif
   if (tmpfile_fd < 0)
-    myerror(FATAL|USE_ERRNO, "could not create temporary file %s", tmpfile_name);
+    myerror(FATAL|USE_ERRNO, "could not create readable/writable temporary file %s", tmpfile_name);
   free(tmpdirs);
   return tmpfile_fd;
 }  

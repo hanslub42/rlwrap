@@ -362,7 +362,7 @@ char *mangle_char_for_debug_log(char c, int quote_me);
 char *mangle_string_for_debug_log(const char *string, int maxlen);
 char *mangle_buffer_for_debug_log(const char *buffer, int length);
 char *mem2str(const char *mem, int size);
-char *search_and_replace(char *patt, char *repl, const char *string,
+char *search_and_replace(char *patt, const char *repl, const char *string,
                          int cursorpos, int *line, int *col);
 char *first_of(char **strings);
 char *as_string(int i);

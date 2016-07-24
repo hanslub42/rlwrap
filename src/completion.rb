@@ -230,8 +230,8 @@ my_completion_function(char *prefix, int state)
   
   rl_completion_append_character = *extra_char_after_completion;
   
-  if (*prefix == '!')
-    return my_history_completion_function(prefix + 1, state);
+  /* if (*prefix == '!')
+    return my_history_completion_function(prefix + 1, state); */
 
   if (state == 0) {		/* first time we're called for this prefix ' */
 

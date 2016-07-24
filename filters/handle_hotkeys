@@ -57,7 +57,7 @@ sub hotkey_t {
 sub hotkey_p {
     my($prefix, $postfix, $doc) = @_;
     $doc and return "uppercase entire input line";
-    return ("", uc $prefix, uc $postfix);
+    return ("", uc $prefix, uc $postfix); 
 }   
 
 ############################## helper functions #########################################################

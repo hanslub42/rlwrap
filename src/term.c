@@ -22,6 +22,13 @@
 
 #include "rlwrap.h"
 
+/* rlwrap needs a little bit of cursor acrobatics to cope with multi-line prompts, recovering from CTRL-Z and editors that may have used 
+the alternate screen. All such cursor movements are done via the functions in this file. In the past, rlwrap relied on only the termcap 
+library (or an emulation of it), and would fall back on reasonable defaults ("\r", "\b" etc) if this was not found. 
+
+In the future it will also use terminfo or even ncurses. But the fall-back to older libraries is still important, as rlwrap seems 
+to be especially needed on older machines                                                                                            */ 
+
 /*global vars */
 char term_eof;                  /* end_of_file char */
 char term_stop;                 /* stop (suspend) key */
@@ -48,12 +55,16 @@ char *term_name;
 
 
 static char *my_tgetstr (char *id) {
+#ifdef HAVE_TERMCAP_H
   char *term_string_buf = (char *)mymalloc(2048), *tb = term_string_buf;
   char *stringcap = tgetstr(id, &tb); /*  rl_get_termcap(id) only gets capabilities used by readline */
   char *retval = stringcap ? mysavestring(stringcap) : NULL; 
   DPRINTF2(DEBUG_TERMIO, "tgetstr(\"%s\") = %s", id, (stringcap ? mangle_string_for_debug_log(stringcap,20) : "NULL"));
   free(term_string_buf);
   return retval;
+#else
+  return NULL;
+#endif
 }
 
 static char *my_tigetstr (char *tid) {
@@ -89,7 +100,7 @@ tigetstr_or_else_tgetstr(char *capname, char *tcap_code)
 void
 init_terminal(void)
 {                               /* save term settings and determine term type */
-  char *term_buf;
+  char *term_buf = mymalloc(2048);
   int  we_have_stringcaps;
   int  we_are_on_hp_ux11;
 
@@ -113,12 +124,6 @@ init_terminal(void)
   
 
 
-  term_buf = (char *)mymalloc(4096);
-
-  term_backspace = NULL;
-  term_cr = NULL;
-  term_clear_line = NULL;
-  term_cursor_hpos = NULL;
 
 
   /* On weird and scary HP-UX 11 succesful tgetent() returns 0, so we need the followig to portably catch errors: */  
@@ -154,21 +159,17 @@ init_terminal(void)
     term_cr             = tigetstr_or_else_tgetstr("cr",     "cr");
     term_clear_line     = tigetstr_or_else_tgetstr("el",     "ce");
     term_clear_screen   = tigetstr_or_else_tgetstr("clear",  "cl");
-    term_cursor_hpos    = tigetstr_or_else_tgetstr("hpa",    "ch"); //my_tgetstr("ch") ? my_tgetstr("ch") :  my_tigetstr("hpa");
-    term_cursor_left    = my_tgetstr("le");
-    term_rmcup          = my_tgetstr("te"); /* rlwrap still uses ye olde termcappe names */
-    term_rmkx           = my_tgetstr("ke");
-    if (term_cursor_hpos && !strstr(term_cursor_hpos, "%p")) {
-      /* Some RedHat or Debian people with out-of sync devel packages will get problems when tgoto expects terminfo-style caps
-         and their tgetstr returns termcap-style. This is a rather heavy-handed way of avoiding those problems: */    
-      DPRINTF0(DEBUG_TERMIO, "term_cursor_hpos appears to be termcap-style, not terminfo; NULLing it");
-      term_cursor_hpos = NULL;
-    }   
-    term_cursor_up      = my_tgetstr("up");
-    term_cursor_down    = my_tgetstr("do");
+    term_cursor_hpos    = tigetstr_or_else_tgetstr("hpa",    "ch"); 
+    term_cursor_left    = tigetstr_or_else_tgetstr("cub1",   "le");
+    term_cursor_up      = tigetstr_or_else_tgetstr("cuu1",   "up");
+    term_cursor_down    = tigetstr_or_else_tgetstr("cud1",   "do");
+
+    
+    /* the following codes are never output by rlwrap, but used to filter out "garbage" that is coming from commands that use them */ 
+    term_rmcup          = tigetstr_or_else_tgetstr("rmcup",  "te"); 
+    term_rmkx           = tigetstr_or_else_tgetstr("rmkx",   "ke");
 
     /* 
-    setupterm(term_name, 1, (int *)0);
     term_colors         = tigetnum("colors");
     DPRINTF1(DEBUG_TERMIO, "terminal colors: %d", term_colors); 
     */

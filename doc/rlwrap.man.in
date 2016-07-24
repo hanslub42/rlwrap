@@ -228,7 +228,7 @@ Wrap \fBsmbclient\fP (which uses readline itself), keep passwords out of the his
 .B rlwrap\ \-aPassword:\ \-N\ smbclient //PEANUT/C
 .TP 
 Wrap \fBgauche\fP (a Scheme interpreter) with a bold blue prompt, enable multi\-line editing (using .scm as filename extension) and don't consider single quotes as quotes (so that the parentheses in e.g. (print 'q) match)   
-.B rlwrap\ \-pBlue \-m\ \-M\ .scm\ \-q'"' gosh
+.B rlwrap\ \-pBlue \-m\ \-M\ .scm\ \-q'\"' gosh
 .TP
 Get a list of all currently installed filters
 .B rlwrap\ \-z\ listing
@@ -279,16 +279,15 @@ perform a number of actions on it, depending on the given options:
 filtering (\fB\-z\fP), substituting (\fB\-S\fP) and colouring
 (\fB\-p\fP), in this order. The resulting "cooked" prompt is then
 printed (after erasing the "raw" prompt, if necessary)
-.SH SPECIAL KEYS
+.SH SPECIAL KEYS AND BINDABLE COMMANDS
 .TP
 .B Control + O
 Accept the current line, but don't put it in the history list. This action
 has a \fBreadline\fP command name  \fIrlwrap\-accept\-line\-and\-forget\fP
 .TP
 .B Control + ^
-Use an external editor to edit the current input (this will only work if the \-m
-option is set). This action
-has a \fBreadline\fP command name  \fIrlwrap\-call\-editor\fP
+Use an external editor (see RLWRAP_EDITOR below) to edit the current input (this will only work if the \-m
+option is set). This action has a \fBreadline\fP command name  \fIrlwrap\-call\-editor\fP
 .TP
 .B (Not currently bound)
 Any key can be bound to the \fBreadline\fP command \fIrlwrap-direct-keypress\fP. This key will then always
@@ -299,9 +298,14 @@ Any key can be bound to the \fBreadline\fP command \fIrlwrap-hotkey\fP. This key
 input line to be filtered (cf. \fBRlwrapFilter(3pm)\fP) through the current filter (hence be a no-op when
 there is no filter), which then can re-write the input line and move the cursor.
 After that, the user can still edit the resulting input.
+.TP
+.B (Not currently bound)
+Any key can be bound to the \fBreadline\fP command \fIrlwrap-edit-history\fP. This key will then
+call an external editor (see RLWRAP_EDITOR below) with the complete history. You can then edit, or remove any (or all)
+history entries. Inserting an empty line will put the next line  in the edit buffer after exiting the editor
 .PP
-These special keys were chosen for no other reason than that they  are not currently bound to any
-readline action. If you don't like them, (or your window manager swallows them) they
+The special keys were chosen for no other reason than that they  are not currently bound to any
+readline action. If you don't like them, (or your window manager swallows them) they (and the other 3 commands)
 can be re\-bound more sensibly by including lines like the
 following in your \fB~/.inputrc\fP:
 .PP
@@ -321,16 +325,18 @@ cf. the \fBreadline(3)\fP manpage. (NB: take care to not use keys that are alrea
 directory in which the history and completion files are kept.
 .TP
 \fBRLWRAP_EDITOR\fP (or else \fBEDITOR\fP, or else \fBVISUAL\fP): 
-editor to use for multi\-line input. Example:
+editor to use for multi\-line input (and rlwrap-edit-history). Example:
 .PP
 .nf
     export RLWRAP_EDITOR="vi\ +%L"
     export RLWRAP_EDITOR="vim\ '+call\ cursor(%L,%C)'"
+    export RLWRAP_EDITOR="emacs +%L:%C %F"
 .fi
 .PP
 The first example above is the default; %L and %C are replaced by
 line and column numbers corresponding to the cursor position in
-\fBrlwrap\fP's edit buffer
+\fBrlwrap\fP's edit buffer, %F is replaced by name of the (temporary) file.
+If %F is not used, this name is put after the (expanded) $RLWAP_EDITOR  
 .TP
 \fBRLWRAP_FILTERDIR\fP: 
 Any executable along your PATH can in theory

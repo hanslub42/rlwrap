@@ -1,9 +1,31 @@
-0.43  Added bindable readline commands rlwrap-direct-keypress and
-      rlwrap-hotkey
-
-      Added Hisanobu Okuda's rlwrapfilter.py python3 module
+0.43  Added Hisanobu Okuda's rlwrapfilter.py python3 module
       and example filters
 
+      Added bindable readline command rlwrap-direct-keypress
+      that bypasses readline editing and sends its keypress directly
+      to the rlwrapped command (like CTRL-G for the Erlang shell)
+      
+      Added bindable readline command rlwrap-hotkey that passes
+      the current input buffer to the filter (or filter pipeline)
+      specified with the '-z' option. This can be used e.g. to
+      insert the current selection at the cursor position
+
+      Added bindable readline command rlwrap-edit-history that
+      opens the entire history in $RLWRAP_EDITOR, and reads it back
+      afterwards. This uncovered quite a few bugs and inconsistencies:
+         - My ncurses' termcap emulation misses some codes (like
+           term_cursor_hpos) that its terminfo has. rlwrap now
+           always searches terminfo before termcap.
+         - rlwrap was confused about the role of history_offset,
+           resulting in muddled and unclear (although correct) code.
+
+      still not fixed:
+         - it is not quite clear what rlwrap --history-size -0 is
+           supposed to do
+         - rlwrap's limited history expansion (only !word at the
+           start of a line) is primitive compared to what the
+           history library has to offer (cf bash (1), HISTORY EXPANSION)
+      
       Playing back a readline macro consisting of more than one line
       would crash with SIGSEGV
 
@@ -15,6 +37,9 @@
 
       Pre-given (-P) input would only be put in input line after
       cooking timeout (usually 40 msec)
+
+      rlwrap didn't delete the tempfiles used in a multi-line
+      edit
 
 0.42  Added --mirror-arguments (-U) option 
 
