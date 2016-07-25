@@ -815,7 +815,7 @@ read_options_and_command_name(int argc, char **argv)
     case 'R': renice = TRUE;	break;
     case 's':
       histsize = atoi(optarg);
-      if (histsize < 0) {
+      if (histsize < 0 || *optarg == '-') {
         write_histfile = 0;
         histsize = -histsize;
       }

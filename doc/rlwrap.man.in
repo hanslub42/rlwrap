@@ -184,7 +184,7 @@ interrupting \fIcommand\fP to display a prompt when \fIcommand\fP is still "thin
 .TP
 .OL \-s \-\-histsize \fIN\fP
 Limit the history list to N entries, truncating the history file
-(default: 300). A negative size \-N means the same as N, but treats the history file as read\-only.
+(default: 300). A negative size \-N (even \-0) means the same as N, but treats the history file as read\-only.
 .TP
 .OL \-S \-\-substitute\-prompt \fIprompt\fP
 Substitute the specified prompt for  \fIcommand\fP's own prompt. Mainly useful when  \fIcommand\fP doesn't have a prompt.

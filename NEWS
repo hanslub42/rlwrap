@@ -18,13 +18,8 @@
            always searches terminfo before termcap.
          - rlwrap was confused about the role of history_offset,
            resulting in muddled and unclear (although correct) code.
-
-      still not fixed:
-         - it is not quite clear what rlwrap --history-size -0 is
-           supposed to do
-         - rlwrap's limited history expansion (only !word at the
-           start of a line) is primitive compared to what the
-           history library has to offer (cf bash (1), HISTORY EXPANSION)
+         - rlwrap --history-size -0 would clobber the history file
+           (as per the manual - that has been updated as well)
       
       Playing back a readline macro consisting of more than one line
       would crash with SIGSEGV
@@ -38,9 +33,15 @@
       Pre-given (-P) input would only be put in input line after
       cooking timeout (usually 40 msec)
 
+      One-shot (-o) rlwrap could accept more than one line when input
+      in quick succession.
+
       rlwrap didn't delete the tempfiles used in a multi-line
       edit
 
+      configure.ac now works even when cross-compiling (skipping some
+      tests, but providing sensible defaults)
+      
 0.42  Added --mirror-arguments (-U) option 
 
       On SunOS tcgetattr(slave pty) failed with "Invalid argument" 
