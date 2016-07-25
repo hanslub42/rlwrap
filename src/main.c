@@ -531,9 +531,6 @@ main_loop()
 	    restore_rl_state();
 	  } 
 	                                        
-	  
-	  
-
 	  if (term_eof && byte_read == term_eof && strlen(rl_line_buffer) == 0) {	/* hand a term_eof (usually CTRL-D) directly to command */ 
 	    char *sent_EOF = mysavestring("?");
 	    *sent_EOF = term_eof;
@@ -800,10 +797,7 @@ read_options_and_command_name(int argc, char **argv)
     case 'M': multi_line_tmpfile_ext = mysavestring(optarg); break;
     case 'N': commands_children_not_wrapped = TRUE; break;
     case 'o': 
-      one_shot_rlwrap = TRUE;
-      impatient_prompt = FALSE;
-      wait_before_prompt = 200;
-      break;
+      one_shot_rlwrap = TRUE; break;
     case 'O': prompt_regexp = mysavestring(optarg); match_regexp("just testing", prompt_regexp, 1); break;
     case 'p':
       colour_the_prompt = TRUE;
