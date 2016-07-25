@@ -194,7 +194,7 @@ Set \fIcommand\fP's TERM to \fIname\fP. Programs that confuse \fBrlwrap\fP with 
 .TP
 .OL \-U \-\-mirror-arguments
 (linux only) Keep track of \fIcommand\fP's arguments as seen by the \fBps (1)\fP command, and mirror them in \fBrlwrap\fP's own arguments
-This is mainly useful for commands that overwrite command-line password arguments that would be exposed by rlwrap without this option.
+This is mainly useful for commands that overwrite command-line password arguments that would be exposed by \fBrlwrap\fP without this option.
 .TP
 .OL \-v \-\-version
 Print rlwrap version.
@@ -210,13 +210,14 @@ EXPERIMENTAL: Wake up every \fItimeout\fP millisecs, where \fItimeout\fP is the 
 .TP
 .OL \-z \-\-filter  \fIfilter\fP
 Use a filter to change \fBrlwrap\fP's behaviour. A filter can be used to keep certain input out of the history, 
-to change the prompt, to implement simple macros or programmable completion.. \fBrlwrap\fP comes with a \fBperl\fP and a \fBpython3\fP module
+to change the prompt, to implement simple macros or programmable completion.. \fBrlwrap\fP comes with a \fBperl\fP and a \fBPython 3\fP module
 to make filter writing easy. (cf. \fBRlwrapFilter(3pm)\fP for the perl module, the python one is very similar) A number of example filters are installed in the directory  @DATADIR@/rlwrap/filters. "rlwrap \-z \fIfilter\fP" displays information about a filter, "rlwrap \-z listing" lists all currently installed filters.
 If \fIfilter\fP needs arguments, you should quote the whole filter command line: 
 .nf
 
-    rlwrap \-z 'filter args' command
-
+    rlwrap \-z 'filter args' command ...
+    rlwrap \-z 'pipeline filter1 ... : filter2 ... : ...' command ... 
+    
 .fi
 If  this command line contains shell metacharacters, \fBrlwrap\fP passes it to the system shell for parsing. 
 .SH EXAMPLES

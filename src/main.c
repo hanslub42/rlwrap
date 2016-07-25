@@ -776,7 +776,7 @@ read_options_and_command_name(int argc, char **argv)
         myerror(FATAL|NOERRNO, "-e (--extra-char-after-completion) argument should be at most one character");
       break;
     case 'f':
-      if (strncmp(optarg, ".", 10) == 0)
+      if (strcmp(optarg, ".") == 0)
         feed_history_into_completion_list =  TRUE;
       else
         feed_file_into_completion_list(optarg);

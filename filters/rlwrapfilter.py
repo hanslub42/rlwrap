@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Python library for [rlwrap](https://github.com/hanslub42/rlwrap) filters
+Python 3 library for [rlwrap](https://github.com/hanslub42/rlwrap) filters
 
 * Synopsis
 
@@ -15,7 +15,7 @@ Python library for [rlwrap](https://github.com/hanslub42/rlwrap) filters
     filter.run()
 
 This is an [RlwrapFilter](http://utopia.knoware.nl/~hlub/uck/rlwrap/RlwrapFilter.html)
-clone written in Python. The focus is on providing the same API's
+clone written in Python 3. The focus is on providing the same API's
 and usage of the Perl version of [RlwrapFilter](http://utopia.knoware.nl/~hlub/uck/rlwrap/RlwrapFilter.html)
 as possible.
 
@@ -29,8 +29,8 @@ aspect of rlwrap's interaction with the user: changing the history,
 re-writing output and input, calling a pager or computing completion
 word lists from the current input.
 
-RlwrapFilter makes it very simple to write rlwrap
-filters in perl. A filter only needs to instantiate a RlwrapFilter
+rlwrapfilter.py makes it very simple to write rlwrap
+filters in Python 3. A filter only needs to instantiate a RlwrapFilter
 object, change a few of its default handlers and then call its 'run'
 method.
 """

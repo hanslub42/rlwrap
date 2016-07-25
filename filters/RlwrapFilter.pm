@@ -479,6 +479,10 @@ filters in perl. A filter only needs to instantiate a RlwrapFilter
 object, change a few of its default handlers and then call its 'run'
 method.
 
+There is also a Python 3 module B<rlwrapfilter.py>, distributed
+together with B<rlwrap>, that provides  more or less the same API as
+its B<perl> counterpart.
+
 =head1 PUBLIC METHODS
 
 =head2 CONSTRUCTOR
@@ -553,8 +557,8 @@ method or "reject" the prompt (cf. the B<prompt_rejected> method)
 
 =item $handler = $f -> completion_handler, $f -> completion_handler(\&handler)
 
-The completion handler gets called with three arguments: the entire input 
-line, the prefix (partial word to complete), and rlwrap's own completion list. 
+The completion handler gets called with three arguments: the entire input
+line, the prefix (partial word to complete), and rlwrap's own completion list.
 It should return a (possibly revised) list of completions.
 As an example, suppose the user has typed "She played for
 AE<lt>TABE<gt>". The handler will be called like this:
@@ -572,9 +576,9 @@ the input line out of the history.
 =item $handler = $f -> hotkey_handler, $f -> hotkey_handler(\&handler)
 
 If the user presses a key that is bound to "rlwrap_hotkey" in B<.inputrc>
-the handler is called with three arguments: the hotkey, the prefix (i.e. 
+the handler is called with three arguments: the hotkey, the prefix (i.e.
 the part of the current input line before the cursor), and the remaining part of
-the input line (postfix). It should return a list consisting of a possibly 
+the input line (postfix). It should return a list consisting of a possibly
 empty message (to be displayed in readline's echo area), the re-writen prefix and
 ditto postfix. Example:
 if the current input line is  "pea soup" (with the cursor on the
