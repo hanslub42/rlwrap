@@ -136,7 +136,9 @@ append_and_free_old(char *str1, const char *str2)
 char *
 mybasename(char *filename)
 {                               /* determine basename of "filename" */
-
+#if defined(HAVE_BASENAME) && defined(_GNU_SOURCE) /* we want only the GNU version */
+  return basename(filename);
+#else
   char *p;
 
   /* find last '/' in name (if any) */
@@ -144,11 +146,15 @@ mybasename(char *filename)
     if (*(p - 1) == '/')
       break;
   return p;
+#endif
 }
 
 char *
 mydirname(char *filename)
 {                               /* determine directory component of "name" */
+#ifdef HAVE_DIRNAME
+  return dirname(filename);
+#else
   char *p;
 
   /* find last '/' in name (if any) */
@@ -156,6 +162,7 @@ mydirname(char *filename)
     if (*(p - 1) == '/')
       break;
   return (p == filename ? "." : mystrndup(filename, p - filename));
+#endif
 }
 
 
