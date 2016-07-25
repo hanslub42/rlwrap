@@ -342,10 +342,6 @@ main_loop()
 	    restore_rl_state();
 	    continue;
 	  }
-	  
-	  if (accepted_lines == 1 && one_shot_rlwrap) 
-	    cleanup_rlwrap_and_exit(EXIT_SUCCESS);
-
 			  
 	  move_cursor_to_start_of_prompt(ERASE); /* cooked prompt may be shorter than raw prompt, hence the ERASE */
 	  /* move and erase before cooking, as we need to move/erase according

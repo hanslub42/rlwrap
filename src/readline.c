@@ -270,6 +270,9 @@ line_handler(char *line)
     saved_rl_state.point = 0;
     saved_rl_state.already_saved = TRUE;
     redisplay  = TRUE;
+
+    if (one_shot_rlwrap)
+      write_EOF_to_master_pty();
   }
 }
 
