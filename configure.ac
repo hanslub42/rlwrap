@@ -155,7 +155,8 @@ AC_RUN_IFELSE(
     [AC_SUBST(HAVE_OPTIONAL_ARGS,no)
      ac_double_colons="no"],
     [echo
-     AC_MSG_WARN([This test doens't work when cross-compiling. Edit GETOPT_GROKS_OPTIONAL_ARGS in config.h by hand])])
+     AC_MSG_WARN([This test doesn't work when cross-compiling. Edit GETOPT_GROKS_OPTIONAL_ARGS in config.h by hand. Guessing: ])
+     ac_double_colons=no])
 AC_MSG_RESULT($ac_double_colons)
 
 
@@ -348,11 +349,19 @@ AC_MSG_RESULT(yes)
 # check for existence of myself under $opt_proc_mountpoint/$$/cwd If the user specified --disable-proc-mountpoint we'll still do these tests
 # but they wil fail unless /no is a procfs mountpoint ;-)
 
-echo "Will rlwrap find command's working directory under ${opt_proc_mountpoint}/<commands pid>/cwd? let's see..."                                 
-AC_CHECK_FILES($opt_proc_mountpoint/$$/cwd/configure.ac,[                                                                                      
+AC_MSG_CHECKING("Will rlwrap find command's working directory under ${opt_proc_mountpoint}/<commands pid>/cwd? let's see...")
+if test $cross_compiling = "yes"; then
+   AC_DEFINE(HAVE_PROC_PID_CWD, 0, [Define to 1 if <opt_proc_mountpoint>/<pid>/cwd is a link to working directory of process <pid>])
+   AC_SUBST(HAVE_PROC_PID_CWD,[no])
+   echo
+   AC_MSG_WARN([This test doesn't work when cross-compiling. Edit HAVE_PROC_PID_CWD in config.h by hand. Guessing: ])   
+else 
+   AC_CHECK_FILES($opt_proc_mountpoint/$$/cwd/configure.ac,[                                                                                      
                  AC_DEFINE(HAVE_PROC_PID_CWD, 1 ,[Define to 1 if <opt_proc_mountpoint>/<pid>/cwd is a link to working directory of process <pid>]) 
                  AC_SUBST(HAVE_PROC_PID_CWD,[yes])
               ],[AC_SUBST(HAVE_PROC_PID_CWD,[no])])
+fi
+AC_MSG_RESULT([$HAVE_PROC_PID_CWD])
 
 
 AC_DEFINE_UNQUOTED(PROC_MOUNTPOINT, "[$opt_proc_mountpoint]", [Define to location of Linux-style procfs mountpoint if provided and valid])
@@ -367,7 +376,13 @@ random_nonsense2="iraliuuklajcorjfunavdsytdiydjaoaeauiapidtoxogfplrxfmfcmajikwen
 
 AC_DEFINE_UNQUOTED(RANDOM_NONSENSE2, "\"$random_nonsense2\"", nonsense arg to overwrite conftest argv with)
 
-AC_LANG_CONFTEST(
+if test $cross_compiling = "yes"; then
+   AC_DEFINE(ENABLE_MIRROR_ARGS, 0, [Define if overwriting argv changes args visible in ps (1)])
+   echo
+   AC_MSG_WARN([This test doesn't work when cross-compiling. Edit ENABLE_MIRROR_ARGS  in config.h by hand. Guessing:])
+   result="no"
+else
+   AC_LANG_CONFTEST(
         [AC_LANG_SOURCE([[#include <unistd.h>
                           #include <string.h>
                           int main(int argc, char **argv) {
@@ -376,17 +391,32 @@ AC_LANG_CONFTEST(
                                    }
                          ]])])
 
-result="no"
-$CC -o conftest conftest.c  
-./conftest $random_nonsense1 >/dev/null 2>&1 &
-CONFTEST_PID=$!
-if grep $random_nonsense2 $opt_proc_mountpoint/$CONFTEST_PID/cmdline >/dev/null 2>&1; then
-    AC_DEFINE(ENABLE_MIRROR_ARGS, 1, [Define if overwriting argv changes args visible in ps (1)])
-    result="yes"
+  result="no"
+  $CC -o conftest conftest.c  
+  ./conftest $random_nonsense1 >/dev/null 2>&1 &
+  CONFTEST_PID=$!
+  if grep $random_nonsense2 $opt_proc_mountpoint/$CONFTEST_PID/cmdline >/dev/null 2>&1; then
+      AC_DEFINE(ENABLE_MIRROR_ARGS, 1, [Define if overwriting argv changes args visible in ps (1)])
+      result="yes"
+  fi 
+  kill $! 
 fi
-kill $! 
 AC_MSG_RESULT($result)
 
+if test $cross_compiling = yes; then
+  cat <<EOF
+
+
+    **************************************************************************************
+    * This configure script runs a few handwritten scripts and ad-hoc programs in order  *
+    * to determine capabilities of the host (mostly around the /proc filesystem)         *
+    * When cross-compiling, this makes no sense, as you can see above.                   *
+    * Hence, after configuration, please set HAVE_PROC_PID_CWD,                          *
+    * GETOPT_GROKS_OPTIONAL_ARGS and ENABLE_MIRROR_ARGS by hand (in config.h)            *
+    **************************************************************************************
+
+EOF
+fi
 
 
 echo
