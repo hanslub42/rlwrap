@@ -323,10 +323,12 @@ void  mirror_args(pid_t command_pid);
 #define USE_ERRNO 1
 #define NOERRNO   0
 
+/* constant to signify the end of a free_multiple() argument list (NULL would't work) */
+#define FMEND  ((void *) -1)
 
 void  myerror(int error_flags, const char *message, ...);
 void  *mymalloc(size_t size);
-void  myfree(void *ptr);
+void  free_multiple(void *ptr, ...);
 void  mysetsid(void);
 void  close_open_files_without_writing_buffers(void);
 size_t filesize(const char *filename);

@@ -399,6 +399,8 @@ myerror(int error_flags, const char *message_format, ...)
 }
 
 
+    
+
 void
 open_logfile(const char *filename)
 {
@@ -693,12 +695,26 @@ mymalloc(size_t size)
   return ptr;
 }
 
-/* free of possibly NULL pointer (only needed on very olde systems) */
-void myfree(void *ptr) {
-  if (ptr)
-    free(ptr);
+
+/* free() with variable number of arguments. To show where the argumets end, last arg should be NULL, 
+   so we need to pass *pointers* to the variables we want to free as in free(&ptr1, &ptr2, .., NULL), 
+   otherwise we could not free variables that could possibly have a NULL value
+ */
+
+void
+free_multiple(void *ptr, ...)
+{
+  void *p;
+  va_list ap;
+  free(ptr);
+  va_start(ap, ptr);
+  while((p = va_arg(ap, void *)) != FMEND) {
+    free(p);
+  }
+  va_end(ap);
 }       
-  
+
+
 void mysetsid() {
 # ifdef HAVE_SETSID /* c'mon, this is POSIX! */
   pid_t ret = setsid();

@@ -542,12 +542,8 @@ munge_file_in_editor(const char *filename, int lineno, int colno)
   completely_mirror_slaves_terminal_settings();
   ignore_queued_input = TRUE;  
 
-  free(possible_editor_commands);
-  free(editor_command2);
-  free(editor_command3);
-  free(editor_command4);
-  free(line_number_as_string);
-  free(column_number_as_string);
+  free_multiple(possible_editor_commands, editor_command2, editor_command3,
+                editor_command4, line_number_as_string, column_number_as_string, FMEND);
 }
 
 
@@ -653,20 +649,38 @@ debug_ad_hoc(int UNUSED(count), int UNUSED(hotkey))
   return 42;
 }       
   
-                        
+
+
 static int
-handle_hotkey(int UNUSED(count), int hotkey)
+handle_hotkey2(int UNUSED(count), int hotkey, int ignore_history)
 {
-  char *prefix, *postfix, *filter_food, *filtered, **fragments, *new_rl_line_buffer;
+  char *prefix, *postfix, *filter_food, *filtered, **fragments, *history, *new_rl_line_buffer, *histpos_as_string;
   int length;
 
+  static const unsigned int MAX_HISTPOS_DIGITS = 6; /* one million history items should suffice */
+
   DPRINTF1(DEBUG_READLINE, "hotkey press: %s", mangle_char_for_debug_log(hotkey, TRUE));
+
+  if (hotkey == '\t') /* this would go horribly wrong with all the splitting on '\t' going on.... @@@ or pass key as a string e.g. "009" */
+    myerror(FATAL | NOERRNO, "Sorry, you cannot use TAB as an hotkey in rlwrap");
+  
   prefix = mysavestring(rl_line_buffer);
   prefix[rl_point] = '\0';                                     /* chop off just before cursor */
-  postfix = mysavestring(rl_line_buffer + rl_point);  
-  length = strlen(rl_line_buffer) + 4;                         /* key + tab + prefix + tab + postfix + '\n' + '\0' */
+  postfix = mysavestring(rl_line_buffer + rl_point);
+
+  if (ignore_history) {
+    histpos_as_string = mysavestring("0");
+    history = mysavestring("");
+  } else {
+    histpos_as_string = as_string(where_history());
+    assert(strlen(histpos_as_string) <= MAX_HISTPOS_DIGITS);
+    history = entire_history_as_one_string();
+  }     
+
+  /* filter_food = key + tab + prefix + tab + postfix + tab + history + tab + histpos  + '\0' */
+  length = strlen(rl_line_buffer) + strlen(history) + MAX_HISTPOS_DIGITS + 5; 
   filter_food = mymalloc(length);   
-  sprintf(filter_food, "%c\t%s\t%s", hotkey, prefix, postfix); /* this is the format that the filter expects */
+  sprintf(filter_food, "%c\t%s\t%s\t%s\t%s", hotkey, prefix, postfix, history, histpos_as_string); /* this is the format that the filter expects */
   filtered= pass_through_filter(TAG_HOTKEY, filter_food);
   DPRINTF2(DEBUG_FILTERING, "filter rl_line because of hotkey press. In: <%s> Out: <%s>",
            mangle_string_for_debug_log(filter_food, MANGLE_LENGTH), mangle_string_for_debug_log(filtered, MANGLE_LENGTH + 10));
@@ -676,23 +690,34 @@ handle_hotkey(int UNUSED(count), int hotkey)
   rl_point = 0;
   rl_insert_text(new_rl_line_buffer);
   rl_point = strlen(fragments[1]);
+
+  if (!ignore_history) {
+
+  }
+  
+  
   if (*fragments[0] && *fragments[0] != hotkey) {              /* if message has been set, and isn't empty: */ 
     fragments[0] = append_and_free_old(fragments[0], " ");     /* put space (for readability) between the message and the input line .. */
     message_in_echo_area(fragments[0]);                        /* .. then write it to echo area */
   }     
   rl_redisplay();
 
-  /* wash those dishes: */
-  free(prefix);
-  free(postfix);
-  free(filter_food);
-  free(filtered);
-  free_splitlist(fragments);
-  free(new_rl_line_buffer);
+  free_multiple(prefix, postfix, filter_food, filtered, fragments, new_rl_line_buffer, history, histpos_as_string, FMEND);
   return 0;
 }
 
 
+static int
+handle_hotkey(int count, int hotkey)
+{
+  return handle_hotkey2(count, hotkey, TRUE);
+}       
+
+static int
+UNUSED_FUNCTION(handle_hotkey_ignore_history(int count, int hotkey))
+{
+  return handle_hotkey2(count, hotkey, FALSE);
+}       
 
 
 /* copy <filename> to <filename.1>, skipping empty lines, 
