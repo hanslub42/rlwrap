@@ -336,6 +336,7 @@ void  open_logfile(const char *filename);
 void  write_logfile(const char *str);
 void  close_logfile(void);
 void  timestamp(char *buf, int size);
+unsigned long hash_multiple(int n, ...);
 int   killed_by(int status);
 void  change_working_directory(void);
 void  log_terminal_settings(struct termios *terminal_settings);

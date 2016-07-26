@@ -469,6 +469,27 @@ timestamp(char *buf, int size)
 }
 
 
+
+/* Dan Bernsteins djb2, hashing n strings in one go */
+unsigned long
+hash_multiple(int n, ...)
+{
+  unsigned long hash = 5381;
+  int i, c;
+  char *str;
+
+  va_list ap;
+  va_start(ap, n);
+  for(i = 0; i < n; i++) {
+    str = va_arg(ap, char *);
+    while ((c = (unsigned char) *str++))
+      hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
+  }
+  va_end(ap);
+  return hash;
+}
+
+
 int killed_by(int status) {
 #ifdef WTERMSIG
   if (WIFSIGNALED(status))
@@ -713,6 +734,8 @@ free_multiple(void *ptr, ...)
   }
   va_end(ap);
 }       
+
+
 
 
 void mysetsid() {

@@ -19,11 +19,11 @@ $filter -> run;
 
 
 sub hotkey {
-    my ($key, $prefix, $postfix) = @_;                                  # key = e.g.  "<CTRL-Y>" 
-    my $key_without_ctl = lc pack("c", unpack("c", $key) + 64);         # $key_without_ctl = "y"
-    my ($message, $prefix, $postfix) = eval("hotkey_$key_without_ctl('$prefix','$postfix')"); # call hotkey_y(..)
+    my ($key, @other_params) = @_;                                  # key = e.g.  "<CTRL-Y>" 
+    my $key_without_ctl = lc pack("c", unpack("c", $key) + 64);     # $key_without_ctl = "y"
+    my @result = eval("hotkey_$key_without_ctl(0, \@other_params)");   # call hotkey_y(..)
     die "hotkey CTRL-<$key_without_ctl>: $@\n" if $@;                                                   # hotkey_y may be undefined
-    return ($message, $prefix, $postfix);
+    return @result;
 }
 
 
@@ -31,33 +31,33 @@ sub hotkey {
 
 
 sub hotkey_template {
-    my($prefix, $postfix, $doc) = @_;
+    my ($doc, $prefix, $postfix, $history, $histpos) = @_;
     $doc and return "some docstring";
     # $prefix is input line before cursor, postfix the remainder
     # do something useful with them, and then:
     my $message = ""; # not yet implemented: message to be echo'ed in message area   
-    return ($message, $prefix, $postfix);
+    return ($message, $prefix, $postfix, $history, $histpos);
 }
 
 sub hotkey_y {
-    my($prefix, $postfix, $doc) = @_;
+    my ($doc, $prefix, $postfix, $history, $histpos) = @_;
     $doc and return "insert from clipboard";
     my $selection = safe_backtick(qw(xsel -o));
-    return ("", $prefix . $selection, $postfix);
+    return ("", $prefix . $selection, $postfix, $history, $histpos);
 }
 
 
 sub hotkey_t {
-    my($prefix, $postfix, $doc) = @_;
+    my ($doc, $prefix, $postfix, $history, $histpos) = @_;
     $doc and return "show current time in echo area";
     my $date = safe_backtick(qw(date +%H:%M));
-    return ("($date) ", $prefix, $postfix);
+    return ("($date) ", $prefix, $postfix, $history, $histpos);
 }
 
 sub hotkey_p {
-    my($prefix, $postfix, $doc) = @_;
+    my ($doc, $prefix, $postfix, $history, $histpos) = @_;
     $doc and return "uppercase entire input line";
-    return ("", uc $prefix, uc $postfix); 
+    return ("", uc $prefix, uc $postfix, $history, $histpos); 
 }   
 
 ############################## helper functions #########################################################
@@ -65,7 +65,7 @@ sub hotkey_p {
 sub document_all_hotkeys {
     my $doclist;
     foreach my $k  ("a".."z") {
-        my $doc = eval("hotkey_$k('', '', 1)");
+        my $doc = eval("hotkey_$k(1)");
         $doclist .= "    CTRL+$k:   $doc\n" unless $@;
     }
     my $inputrc = "$ENV{HOME}/.inputrc";

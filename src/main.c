@@ -1023,13 +1023,18 @@ cleanup_rlwrap_and_exit(int status)
 
 
 
+extern int test_haystack(const char *haystack, const char *needle);
 static void test_main() {
 #ifdef DEBUG
   if(debug & DEBUG_TEST_MAIN) {
     /* test, test */
-    test_unbackspace("abc","abc");
-    test_unbackspace("abc\bd","abd");
-    test_unbackspace("abc\r","abc");
+
+    test_haystack("rabarber","r");
+    test_haystack("","r");
+    test_haystack("rr rr rr rrr","rr");
+    /* test_haystack("bobobo",""); */
+    test_haystack("lalalalalal","la");
+
     test_unbackspace("abc\rd","dbc");
     test_unbackspace("abc\bd\re","ebd");
     test_unbackspace("abc\rde\rf","fec");

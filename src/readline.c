@@ -654,8 +654,11 @@ debug_ad_hoc(int UNUSED(count), int UNUSED(hotkey))
 static int
 handle_hotkey2(int UNUSED(count), int hotkey, int ignore_history)
 {
-  char *prefix, *postfix, *filter_food, *filtered, **fragments, *history, *new_rl_line_buffer, *histpos_as_string;
-  int length;
+  char *prefix, *postfix, *history,  *histpos_as_string;
+  char *new_prefix, *new_postfix, *new_history, *new_histpos_as_string, *message; 
+  char *filter_food, *filtered, **fragments,  *new_rl_line_buffer;
+  int length, new_histpos;
+  unsigned long int hash;
 
   static const unsigned int MAX_HISTPOS_DIGITS = 6; /* one million history items should suffice */
 
@@ -663,7 +666,8 @@ handle_hotkey2(int UNUSED(count), int hotkey, int ignore_history)
 
   if (hotkey == '\t') /* this would go horribly wrong with all the splitting on '\t' going on.... @@@ or pass key as a string e.g. "009" */
     myerror(FATAL | NOERRNO, "Sorry, you cannot use TAB as an hotkey in rlwrap");
-  
+
+
   prefix = mysavestring(rl_line_buffer);
   prefix[rl_point] = '\0';                                     /* chop off just before cursor */
   postfix = mysavestring(rl_line_buffer + rl_point);
@@ -675,34 +679,51 @@ handle_hotkey2(int UNUSED(count), int hotkey, int ignore_history)
     histpos_as_string = as_string(where_history());
     assert(strlen(histpos_as_string) <= MAX_HISTPOS_DIGITS);
     history = entire_history_as_one_string();
+    hash = hash_multiple(2, history, histpos_as_string);
   }     
 
   /* filter_food = key + tab + prefix + tab + postfix + tab + history + tab + histpos  + '\0' */
   length = strlen(rl_line_buffer) + strlen(history) + MAX_HISTPOS_DIGITS + 5; 
   filter_food = mymalloc(length);   
   sprintf(filter_food, "%c\t%s\t%s\t%s\t%s", hotkey, prefix, postfix, history, histpos_as_string); /* this is the format that the filter expects */
+
+  /* let the filter filter ...! */
   filtered= pass_through_filter(TAG_HOTKEY, filter_food);
-  DPRINTF2(DEBUG_FILTERING, "filter rl_line because of hotkey press. In: <%s> Out: <%s>",
+  DPRINTF2(DEBUG_FILTERING, "filtering input and  history  because of hotkey press. In: <%s> Out: <%s>",
            mangle_string_for_debug_log(filter_food, MANGLE_LENGTH), mangle_string_for_debug_log(filtered, MANGLE_LENGTH + 10));
+  
+  /* OK, we now have to read back everything */
   fragments = split_on_single_char(filtered, '\t');
-  new_rl_line_buffer = add2strings(fragments[1], fragments[2]);
+  message               = fragments[0];
+  new_prefix            = fragments[1];
+  new_postfix           = fragments[2];
+  new_history           = fragments[3];
+  new_histpos_as_string = fragments[4];
+  
+  if (!ignore_history && hash_multiple(2, new_history, new_histpos_as_string) != hash) { /* history has been rewritten */
+    char **linep, **history_lines = split_on_single_char(new_history, '\n');
+    clear_history();
+    for (linep = history_lines; *linep; linep++) 
+      add_history(*linep);
+    assert(!(new_histpos = atoi(new_histpos_as_string)));  /* todo one day: @@@ write my_atoi() that uses strtol and detects  errors */
+    history_set_pos(new_histpos);
+    free_splitlist(history_lines);
+  }
+  new_rl_line_buffer = add2strings(new_prefix, new_postfix);
   rl_delete_text(0, strlen(rl_line_buffer));
   rl_point = 0;
   rl_insert_text(new_rl_line_buffer);
-  rl_point = strlen(fragments[1]);
-
-  if (!ignore_history) {
-
-  }
+  rl_point = strlen(new_prefix);
   
   
-  if (*fragments[0] && *fragments[0] != hotkey) {              /* if message has been set, and isn't empty: */ 
-    fragments[0] = append_and_free_old(fragments[0], " ");     /* put space (for readability) between the message and the input line .. */
-    message_in_echo_area(fragments[0]);                        /* .. then write it to echo area */
+  if (*message && *message != hotkey) {                          /* if message has been set (i.e. != hotkey) , and isn't empty: */ 
+    message = append_and_free_old(mysavestring(message), " ");   /* put space (for readability) between the message and the input line .. */
+    message_in_echo_area(message);                          /* .. then write it to echo area */
   }     
   rl_redisplay();
 
-  free_multiple(prefix, postfix, filter_food, filtered, fragments, new_rl_line_buffer, history, histpos_as_string, FMEND);
+  free_splitlist(fragments);                                   /* this will free all the fragments (and the list itself) in one go  */
+  free_multiple(prefix, postfix, filter_food, filtered, new_rl_line_buffer, history, histpos_as_string, FMEND);
   return 0;
 }
 
@@ -710,13 +731,14 @@ handle_hotkey2(int UNUSED(count), int hotkey, int ignore_history)
 static int
 handle_hotkey(int count, int hotkey)
 {
-  return handle_hotkey2(count, hotkey, TRUE);
+  return handle_hotkey2(count, hotkey, FALSE);
 }       
+
 
 static int
 UNUSED_FUNCTION(handle_hotkey_ignore_history(int count, int hotkey))
 {
-  return handle_hotkey2(count, hotkey, FALSE);
+  return handle_hotkey2(count, hotkey, TRUE);
 }       
 
 
@@ -747,7 +769,7 @@ my_read_history(const char *filename, int *empty_lines_before)
           free(last_after_empty);
           line[strlen(line)-1] = '\0'; /* chop off newline */
           last_after_empty = mysavestring(line);
-          histpos = line_count - 1;
+          histpos = line_count - 1;  /* first line has line_count == 1, so histpos 0 */
           DPRINTF2(DEBUG_READLINE, "After empty line: histpos %d, line: <%s>", histpos, last_after_empty);
         }  
       }
