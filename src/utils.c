@@ -696,9 +696,9 @@ mymalloc(size_t size)
 }
 
 
-/* free() with variable number of arguments. To show where the argumets end, last arg should be NULL, 
-   so we need to pass *pointers* to the variables we want to free as in free(&ptr1, &ptr2, .., NULL), 
-   otherwise we could not free variables that could possibly have a NULL value
+/* free() with variable number of arguments. To show where the argumets end, the last argument should be special,
+   (and never a legitimate pointer) but we cannot use NULL (as the to-be-freed pointers may legitimately be NULL)
+   We now use FMEND (#defined as ((void *) -1) in rlwrap.h, but @@@ is this fool-proof?
  */
 
 void
