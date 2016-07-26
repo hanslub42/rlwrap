@@ -641,6 +641,7 @@ static char* entire_history_as_one_string(void) {
     stringp +=length;
     *stringp++ = '\n';
   }
+  DPRINTF1(DEBUG_READLINE, "stringified %d bytes of history", (int) strlen(big_string));
   return big_string;
 }       
 

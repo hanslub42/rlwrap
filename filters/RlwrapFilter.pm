@@ -127,9 +127,9 @@ sub run {
 	  $response = when_defined $self -> history_handler, "$message";
         } elsif ($tag == TAG_HOTKEY) {
           if ($self -> hotkey_handler) {
-            my ($hotkey, $prefix, $postfix) = split /\t/, $message;
-            my ($message, $new_prefix, $new_postfix) = &{$self -> hotkey_handler}($hotkey, $prefix, $postfix);
-            $response = "$message\t$new_prefix\t$new_postfix";
+            my @params = split /\t/, $message;
+            my @result = &{$self -> hotkey_handler}(@params);
+            $response = join("\t", @result);
           } else {
             $response = $message;
           }

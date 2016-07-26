@@ -520,9 +520,9 @@ class RlwrapFilter:
                     response = message
             elif (tag == TAG_HOTKEY):
                 if (self.hotkey_handler is not None):
-                    (hotkey, prefix, postfix) = message.split('\t')
-                    (message, new_prefix, new_postfix) = self.hotkey_handler(hotkey, prefix, postfix)
-                    response =  "{0}\t{1}\t{2}".format(message, new_prefix, new_postfix)
+                    params = message.split("\t")
+                    result = self.hotkey_handler(*params)
+                    response = "\t".join(result)
                 else:
                     response = message
             elif (tag == TAG_PROMPT):
