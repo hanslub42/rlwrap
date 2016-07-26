@@ -366,7 +366,7 @@ sub cloak_and_dagger {
 sub tag2name {
   my ($self, $tag) = @_;
   for my $name (qw(TAG_REMOVE_FROM_COMPLETION_LIST TAG_ADD_TO_COMPLETION_LIST TAG_INPUT TAG_PROMPT TAG_COMPLETION
-		   TAG_HISTORY TAG_OUTPUT_OUT_OF_BAND TAG_ERROR  TAG_IGNORE TAG_OUTPUT)) {
+		   TAG_HOTKEY TAG_HISTORY TAG_OUTPUT_OUT_OF_BAND TAG_ERROR  TAG_IGNORE TAG_OUTPUT)) {
     return $name if (eval "$tag == $name");
   }
   croak "unknown tag $tag";

@@ -210,6 +210,7 @@ def tag2name(tag):
                  'TAG_INPUT',
                  'TAG_PROMPT',
                  'TAG_COMPLETION',
+                 'TAG_HOTKEY',
                  'TAG_HISTORY',
                  'TAG_OUTPUT_OUT_OF_BAND',
                  'TAG_ERROR',
