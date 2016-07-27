@@ -175,7 +175,7 @@ my_atoi(const char *nptr)
   
   errno = 0;
   result = (int) strtol(nptr, &endptr, 10);
-  if (errno || endptr == nptr)
+  if (errno || endptr == nptr || *endptr)
     myerror(FATAL|USE_ERRNO, "Could not make sense of <%s> as an integer", mangle_string_for_debug_log(nptr, 10));
   return result;
 }       
