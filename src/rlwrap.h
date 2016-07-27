@@ -360,7 +360,7 @@ int my_atoi(const char *nptr);
 char *mystrtok(const char *s, const char *delim);
 char **split_with(const char *string, const char *delim);
 char *unsplit_with(int n, char ** strings, const char *delim);
-char **split_on_single_char(const char *string, char c);
+char **split_on_single_char(const char *string, char c, int expected_count);
 int scan_metacharacters(const char* string, const char *metacharacters);
 char **list4 (char *el0, char *el1, char *el2, char *el3);
 void free_splitlist (char **list);
