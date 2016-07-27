@@ -133,11 +133,15 @@ append_and_free_old(char *str1, const char *str2)
 /* mybasename and mydirname: wrappers around basename and dirname, if
    available, otherwise emulations of them */ 
 
+
 char *
-mybasename(char *filename)
+mybasename(const char *filename)
 {                               /* determine basename of "filename" */
 #if defined(HAVE_BASENAME) && defined(_GNU_SOURCE) /* we want only the GNU version */
-  return basename(filename);
+  char *filename_copy = mysavestring(filename);
+  char *result = basename(filename_copy);
+  free(filename_copy);
+  return result;
 #else
   char *p;
 
@@ -150,10 +154,13 @@ mybasename(char *filename)
 }
 
 char *
-mydirname(char *filename)
+mydirname(const char *filename)
 {                               /* determine directory component of "name" */
 #ifdef HAVE_DIRNAME
-  return dirname(filename);
+  char *filename_copy = mysavestring(filename);
+  char *result = dirname(filename_copy);
+  free(filename_copy);
+  return result;
 #else
   char *p;
 
@@ -164,6 +171,7 @@ mydirname(char *filename)
   return (p == filename ? "." : mystrndup(filename, p - filename));
 #endif
 }
+
 
 
 /* Better atoi() with error checking */

@@ -348,8 +348,8 @@ extern char slaves_working_directory[];
 
 
 /* in string_utils.c */
-char *mybasename(char *filename);
-char *mydirname(char *filename);
+char *mybasename(const char *filename);
+char *mydirname(const char *filename);
 void  mystrlcpy(char *dst, const char *src, size_t size);
 void  mystrlcat(char *dst, const char *src, size_t size);
 char *mystrstr(const char *haystack, const char *needle);
