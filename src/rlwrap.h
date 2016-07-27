@@ -356,6 +356,7 @@ char *mystrstr(const char *haystack, const char *needle);
 char *mysavestring(const char *string);
 char *add3strings(const char *str1, const char *str2, const char *str3);
 #define add2strings(a,b)  add3strings(a,b,"")
+int my_atoi(const char *nptr);
 char *mystrtok(const char *s, const char *delim);
 char **split_with(const char *string, const char *delim);
 char *unsplit_with(int n, char ** strings, const char *delim);

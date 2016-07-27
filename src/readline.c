@@ -699,13 +699,15 @@ handle_hotkey2(int UNUSED(count), int hotkey, int ignore_history)
   new_postfix           = fragments[2];
   new_history           = fragments[3];
   new_histpos_as_string = fragments[4];
-  
+
+  /* @@@ Do a sanity check here: e.g were there enough '\t' chars to split on? */
   if (!ignore_history && hash_multiple(2, new_history, new_histpos_as_string) != hash) { /* history has been rewritten */
     char **linep, **history_lines = split_on_single_char(new_history, '\n');
+    DPRINTF3(DEBUG_AD_HOC, "hash=%lu, new_history is %d bytes long, histpos <%s>", hash, (int) strlen(new_history), new_histpos_as_string);
     clear_history();
     for (linep = history_lines; *linep; linep++) 
       add_history(*linep);
-    assert(!(new_histpos = atoi(new_histpos_as_string)));  /* todo one day: @@@ write my_atoi() that uses strtol and detects  errors */
+    new_histpos = my_atoi(new_histpos_as_string);
     history_set_pos(new_histpos);
     free_splitlist(history_lines);
   }

@@ -482,6 +482,7 @@ hash_multiple(int n, ...)
   va_start(ap, n);
   for(i = 0; i < n; i++) {
     str = va_arg(ap, char *);
+    assert(str != NULL);
     while ((c = (unsigned char) *str++))
       hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
   }

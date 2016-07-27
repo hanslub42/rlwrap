@@ -397,6 +397,7 @@ sub die_with_error_message {
   my $myself = $0;
   $myself =~ s#^.*/([^.]+)$#$1#;
   write_message(TAG_ERROR, "$myself: $error_message");
+  print "zzzz\n";
   sleep 2;
   exit 1;
 }

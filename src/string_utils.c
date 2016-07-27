@@ -166,6 +166,20 @@ mydirname(char *filename)
 }
 
 
+/* Better atoi() with error checking */
+int
+my_atoi(const char *nptr)
+{
+  int result;
+  char *endptr;
+  
+  errno = 0;
+  result = (int) strtol(nptr, &endptr, 10);
+  if (errno || endptr == nptr)
+    myerror(FATAL|USE_ERRNO, "Could not make sense of <%s> as an integer", mangle_string_for_debug_log(nptr, 10));
+  return result;
+}       
+
 /* TODO: clean up the following mess. strtok() is cute, but madness. Write one function
    char *tokenize(const char *string, const char *delimiters, bool allow_empty_strings), and make 
    both split_with functions a special case of it. Drop mystrtok, count_str_occurrences and count_char_occurrences */ 
