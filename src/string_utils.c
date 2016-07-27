@@ -140,7 +140,6 @@ mybasename(const char *filename)
 #if defined(HAVE_BASENAME) && defined(_GNU_SOURCE) /* we want only the GNU version */
   char *filename_copy = mysavestring(filename);
   char *result = basename(filename_copy);
-  free(filename_copy);
   return result;
 #else
   char *p;
@@ -159,7 +158,6 @@ mydirname(const char *filename)
 #ifdef HAVE_DIRNAME
   char *filename_copy = mysavestring(filename);
   char *result = dirname(filename_copy);
-  free(filename_copy);
   return result;
 #else
   char *p;
