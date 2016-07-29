@@ -269,7 +269,8 @@ unsplit_with(int n, char **strings, const char *delim) {
 /* split_with("a\t\tbla", '\t') returns {"a" "bla", NULL}, but we want {"a", "", "bla", NULL} for filter completion.
    We write a special version (can be freed with free_splitlist), that optionally checkst the number of components (if expected_count > 0) */
 char **split_on_single_char(const char *string, char c, int expected_count) {
-  char **list = mymalloc((1 + count_char_occurrences(string,c)) * sizeof(char **));
+  /* the 1st +1 for the last element ("bla"), the 2nd +1 for the marker element (NULL) */
+  char **list = mymalloc((count_char_occurrences(string,c) + 1 + 1) * sizeof(char **));
   char *stringcopy = mysavestring(string);
   char *p, **pword, *current_word;
   

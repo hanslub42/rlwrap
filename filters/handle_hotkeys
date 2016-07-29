@@ -12,6 +12,7 @@ use File::Slurp;
 my $keymap =
 { "y" => \&yank_clipboard,
   "n" => \&edit_history, 
+  "r" => \&peco_history, 
   "t" => \&date_in_echo_area,
 };  
 
@@ -96,6 +97,20 @@ sub edit_history {
   }
   return ("", $prefix, $postfix, (join "\n", @new_history), $histpos);
  }   
+
+sub peco_history {
+    my ($doc, $prefix, $postfix, $history, $histpos) = @_;
+    $doc and return "edit current history";  
+    my $editfile = ($ENV{TMP} || $ENV{TEMP} || "/tmp") . "/history.$$.txt";
+    my $lineno = $histpos + 1;
+    my $colno = length($prefix) + 1;
+    $history ||= " "; #writefile crashes  if called on an empty string....
+    write_file($editfile , $history);
+    my $peco = "peco";
+    my $select_1 = `$peco --select-1 --query "$prefix" $editfile`;
+    chomp $select_1;
+    return ("", $select_1, $postfix, $history, $histpos);
+}
 
 ############################## helper functions #########################################################
 
