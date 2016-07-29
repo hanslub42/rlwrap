@@ -156,7 +156,7 @@ slave_is_in_raw_mode()
   }     
  
   in_raw_mode = !(pterm_slave -> c_lflag & ICANON);
-  myfree(pterm_slave);
+  free(pterm_slave);
   return in_raw_mode;
   
 }
@@ -224,7 +224,7 @@ write_EOF_to_master_pty()
   *sent_EOF = (pterm_slave && pterm_slave->c_cc[VEOF]  ? pterm_slave->c_cc[VEOF] : 4) ; /*@@@ HL shouldn't we directly mysavestring(pterm_slave->c_cc[VEOF]) ??*/
   DPRINTF1(DEBUG_TERMIO, "Sending %s", mangle_string_for_debug_log(sent_EOF, MANGLE_LENGTH));
   put_in_output_queue(sent_EOF);
-  myfree(pterm_slave);
+  free(pterm_slave);
   free(sent_EOF);
 }
 
@@ -251,7 +251,7 @@ write_EOL_to_master_pty(char *received_eol)
     }
   } 
   put_in_output_queue(sent_eol);
-  myfree(pterm_slave);
+  free(pterm_slave);
   free(sent_eol);
 }
 
@@ -265,7 +265,7 @@ completely_mirror_slaves_terminal_settings()
   log_terminal_settings(pterm_slave);
   if (pterm_slave && tcsetattr(STDIN_FILENO, TCSANOW, pterm_slave) < 0 && errno != ENOTTY)
     { /* nothing ... */  }   /* myerror(FATAL|USE_ERRNO, "cannot prepare terminal (tcsetattr error on stdin)"); */
-  myfree(pterm_slave);
+  free(pterm_slave);
   DEBUG_RANDOM_SLEEP;
 }
 
@@ -280,8 +280,8 @@ completely_mirror_slaves_output_settings()
     pterm_stdin -> c_oflag = pterm_slave -> c_oflag;
     tcsetattr(STDIN_FILENO, TCSANOW, pterm_stdin);
   }     
-  myfree(pterm_slave);
-  myfree(pterm_stdin);
+  free(pterm_slave);
+  free(pterm_stdin);
   DEBUG_RANDOM_SLEEP;
 }
 
@@ -330,8 +330,8 @@ completely_mirror_slaves_special_characters()
     pterm_stdin -> c_lflag ^= (isig_slave ^ ISIG); /* copy ISIG bit from slave */ 
     tcsetattr(STDIN_FILENO, TCSANOW, pterm_stdin);
   }
-  myfree(pterm_slave);
-  myfree(pterm_stdin);
+  free(pterm_slave);
+  free(pterm_stdin);
   DEBUG_RANDOM_SLEEP;
 }
 

@@ -399,6 +399,8 @@ myerror(int error_flags, const char *message_format, ...)
 }
 
 
+    
+
 void
 open_logfile(const char *filename)
 {
@@ -464,6 +466,28 @@ timestamp(char *buf, int size)
   diff_sec = diff_usec / 1000000.0;
   
   snprintf1(buf, size, "%f ", diff_sec);
+}
+
+
+
+/* Dan Bernsteins djb2, hashing n strings in one go */
+unsigned long
+hash_multiple(int n, ...)
+{
+  unsigned long hash = 5381;
+  int i, c;
+  char *str;
+
+  va_list ap;
+  va_start(ap, n);
+  for(i = 0; i < n; i++) {
+    str = va_arg(ap, char *);
+    assert(str != NULL);
+    while ((c = (unsigned char) *str++))
+      hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
+  }
+  va_end(ap);
+  return hash;
 }
 
 
@@ -693,12 +717,28 @@ mymalloc(size_t size)
   return ptr;
 }
 
-/* free of possibly NULL pointer (only needed on very olde systems) */
-void myfree(void *ptr) {
-  if (ptr)
-    free(ptr);
+
+/* free() with variable number of arguments. To show where the argumets end, the last argument should be special,
+   (and never a legitimate pointer) but we cannot use NULL (as the to-be-freed pointers may legitimately be NULL)
+   We now use FMEND (#defined as ((void *) -1) in rlwrap.h, but @@@ is this fool-proof?
+ */
+
+void
+free_multiple(void *ptr, ...)
+{
+  void *p;
+  va_list ap;
+  free(ptr);
+  va_start(ap, ptr);
+  while((p = va_arg(ap, void *)) != FMEND) {
+    free(p);
+  }
+  va_end(ap);
 }       
-  
+
+
+
+
 void mysetsid() {
 # ifdef HAVE_SETSID /* c'mon, this is POSIX! */
   pid_t ret = setsid();

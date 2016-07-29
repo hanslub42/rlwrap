@@ -51,6 +51,7 @@ static int please_update_alaf(int,int);
 static int please_update_ce(int,int);
 
 /* only useful while debugging: */
+static int debug_ad_hoc(int,int);
 static int dump_all_keybindings(int,int);
 static int dump_history(int,int);
 
@@ -68,7 +69,7 @@ init_readline(char *UNUSED(prompt))
   /* only useful while debugging */
   rl_add_defun("rlwrap-dump-all-keybindings", dump_all_keybindings,-1);
   rl_add_defun("rlwrap-dump-history", dump_history,-1);
-
+  rl_add_defun("rlwrap-debug-ad-hoc", debug_ad_hoc, -1);
   
   /* the old rlwrap bindable function names with underscores are deprecated: */
   rl_add_defun("rlwrap_accept_line_and_forget", please_update_alaf,-1);
@@ -541,12 +542,8 @@ munge_file_in_editor(const char *filename, int lineno, int colno)
   completely_mirror_slaves_terminal_settings();
   ignore_queued_input = TRUE;  
 
-  free(possible_editor_commands);
-  free(editor_command2);
-  free(editor_command3);
-  free(editor_command4);
-  free(line_number_as_string);
-  free(column_number_as_string);
+  free_multiple(possible_editor_commands, editor_command2, editor_command3,
+                editor_command4, line_number_as_string, column_number_as_string, FMEND);
 }
 
 
@@ -630,45 +627,120 @@ direct_keypress(int UNUSED(count), int key)
   return 0;
 }
 
+static char* entire_history_as_one_string(void) {
+  HIST_ENTRY **the_list = history_list(), **entryp;
+  char *big_string = mymalloc(history_total_bytes() + history_length + 1);
+  char * stringp =  big_string;
+  for (entryp = the_list; *entryp; entryp++) {
+    int length = strlen((*entryp)->line);
+    strncpy(stringp, (*entryp)->line, length); /* copy line, without closing NULL byte; */
+    stringp +=length;
+    *stringp++ = '\n';
+  }
+  DPRINTF1(DEBUG_READLINE, "stringified %d bytes of history", (int) strlen(big_string));
+  return big_string;
+}       
+
 static int
-handle_hotkey(int UNUSED(count), int hotkey)
+debug_ad_hoc(int UNUSED(count), int UNUSED(hotkey))
 {
-  char *prefix, *postfix, *filter_food, *filtered, **fragments, *new_rl_line_buffer;
-  int length;
+  printf("\n%s", entire_history_as_one_string());
+  cleanup_rlwrap_and_exit(EXIT_SUCCESS);
+  return 42;
+}       
+  
+
+
+static int
+handle_hotkey2(int UNUSED(count), int hotkey, int ignore_history)
+{
+  char *prefix, *postfix, *history,  *histpos_as_string;
+  char *new_prefix, *new_postfix, *new_history, *new_histpos_as_string, *message; 
+  char *filter_food, *filtered, **fragments,  *new_rl_line_buffer;
+  int length, new_histpos;
+  unsigned long int hash;
+
+  static const unsigned int MAX_HISTPOS_DIGITS = 6; /* one million history items should suffice */
 
   DPRINTF1(DEBUG_READLINE, "hotkey press: %s", mangle_char_for_debug_log(hotkey, TRUE));
+
+  if (hotkey == '\t') /* this would go horribly wrong with all the splitting on '\t' going on.... @@@ or pass key as a string e.g. "009" */
+    myerror(FATAL | NOERRNO, "Sorry, you cannot use TAB as an hotkey in rlwrap");
+
+
   prefix = mysavestring(rl_line_buffer);
   prefix[rl_point] = '\0';                                     /* chop off just before cursor */
-  postfix = mysavestring(rl_line_buffer + rl_point);  
-  length = strlen(rl_line_buffer) + 4;                         /* key + tab + prefix + tab + postfix + '\n' + '\0' */
+  postfix = mysavestring(rl_line_buffer + rl_point);
+
+  if (ignore_history) {
+    histpos_as_string = mysavestring("0");
+    history = mysavestring("");
+  } else {
+    histpos_as_string = as_string(where_history());
+    assert(strlen(histpos_as_string) <= MAX_HISTPOS_DIGITS);
+    history = entire_history_as_one_string();
+    hash = hash_multiple(2, history, histpos_as_string);
+  }     
+
+  /* filter_food = key + tab + prefix + tab + postfix + tab + history + tab + histpos  + '\0' */
+  length = strlen(rl_line_buffer) + strlen(history) + MAX_HISTPOS_DIGITS + 5; 
   filter_food = mymalloc(length);   
-  sprintf(filter_food, "%c\t%s\t%s", hotkey, prefix, postfix); /* this is the format that the filter expects */
+  sprintf(filter_food, "%c\t%s\t%s\t%s\t%s", hotkey, prefix, postfix, history, histpos_as_string); /* this is the format that the filter expects */
+
+  /* let the filter filter ...! */
   filtered= pass_through_filter(TAG_HOTKEY, filter_food);
-  DPRINTF2(DEBUG_FILTERING, "filter rl_line because of hotkey press. In: <%s> Out: <%s>",
+  DPRINTF2(DEBUG_FILTERING, "filtering input and  history  because of hotkey press. In: <%s> Out: <%s>",
            mangle_string_for_debug_log(filter_food, MANGLE_LENGTH), mangle_string_for_debug_log(filtered, MANGLE_LENGTH + 10));
-  fragments = split_on_single_char(filtered, '\t');
-  new_rl_line_buffer = add2strings(fragments[1], fragments[2]);
+  
+  /* OK, we now have to read back everything. There should be exactly 5 TAB-separated components*/
+  fragments = split_on_single_char(filtered, '\t', 5);
+  message               = fragments[0];
+  new_prefix            = fragments[1];
+  new_postfix           = fragments[2];
+  new_history           = fragments[3];
+  new_histpos_as_string = fragments[4];
+
+  if (!ignore_history && hash_multiple(2, new_history, new_histpos_as_string) != hash) { /* history has been rewritten */
+    char **linep, **history_lines = split_on_single_char(new_history, '\n', 0);
+    DPRINTF3(DEBUG_AD_HOC, "hash=%lu, new_history is %d bytes long, histpos <%s>", hash, (int) strlen(new_history), new_histpos_as_string);
+    clear_history();
+    for (linep = history_lines; *linep; linep++) 
+      add_history(*linep);
+    new_histpos = my_atoi(new_histpos_as_string);
+    history_set_pos(new_histpos);
+    free_splitlist(history_lines);
+  }
+  new_rl_line_buffer = add2strings(new_prefix, new_postfix);
   rl_delete_text(0, strlen(rl_line_buffer));
   rl_point = 0;
   rl_insert_text(new_rl_line_buffer);
-  rl_point = strlen(fragments[1]);
-  if (*fragments[0] && *fragments[0] != hotkey) {              /* if message has been set, and isn't empty: */ 
-    fragments[0] = append_and_free_old(fragments[0], " ");     /* put space (for readability) between the message and the input line .. */
-    message_in_echo_area(fragments[0]);                        /* .. then write it to echo area */
+  rl_point = strlen(new_prefix);
+  
+  
+  if (*message && *message != hotkey) {                          /* if message has been set (i.e. != hotkey) , and isn't empty: */ 
+    message = append_and_free_old(mysavestring(message), " ");   /* put space (for readability) between the message and the input line .. */
+    message_in_echo_area(message);                          /* .. then write it to echo area */
   }     
   rl_redisplay();
 
-  /* wash those dishes: */
-  free(prefix);
-  free(postfix);
-  free(filter_food);
-  free(filtered);
-  free_splitlist(fragments);
-  free(new_rl_line_buffer);
+  free_splitlist(fragments);                                   /* this will free all the fragments (and the list itself) in one go  */
+  free_multiple(prefix, postfix, filter_food, filtered, new_rl_line_buffer, history, histpos_as_string, FMEND);
   return 0;
 }
 
 
+static int
+handle_hotkey(int count, int hotkey)
+{
+  return handle_hotkey2(count, hotkey, FALSE);
+}       
+
+
+static int
+UNUSED_FUNCTION(handle_hotkey_ignore_history(int count, int hotkey))
+{
+  return handle_hotkey2(count, hotkey, TRUE);
+}       
 
 
 /* copy <filename> to <filename.1>, skipping empty lines, 
@@ -676,27 +748,29 @@ handle_hotkey(int UNUSED(count), int hotkey)
    (a copy of) the line after the last empty line is returned (to 
    become the new input line) or NULL, if there is none */
 static char*
-my_read_history(const char *filename)
+my_read_history(const char *filename, int *empty_lines_before)
 {
   char *copyname, line[BUFFSIZE+1], *last_after_empty = NULL;
   FILE *in, *out;
-  int histpos = where_history(), histsize_before = history_length,  count = 0, keep_next_line = FALSE;
+  int histpos = where_history(), histsize_before = history_length,  line_count = 0, empty_line_count = FALSE;
   assert((in = fopen(filename, "r")));
   copyname = add2strings(filename, ".1"); /* @@@ is this unsafe? */
   assert((out = fopen(copyname, "w")));
 
   while((fgets(line, BUFFSIZE, in))) {
       if(*line == '\n') {          /* empty line: remember next one */
-        keep_next_line = TRUE;
+        empty_line_count++;
       } else {
         assert(fputs(line, out) >= 0);
-        count++;
-        if(keep_next_line) {
-          keep_next_line = FALSE;
+        line_count++;
+        if(empty_line_count > 0) {
+           if(empty_lines_before)
+            *empty_lines_before = empty_line_count;
+          empty_line_count = 0;
           free(last_after_empty);
           line[strlen(line)-1] = '\0'; /* chop off newline */
           last_after_empty = mysavestring(line);
-          histpos = count - 1;
+          histpos = line_count - 1;  /* first line has line_count == 1, so histpos 0 */
           DPRINTF2(DEBUG_READLINE, "After empty line: histpos %d, line: <%s>", histpos, last_after_empty);
         }  
       }
@@ -705,8 +779,8 @@ my_read_history(const char *filename)
   fclose(out);
   clear_history();
   assert(!read_history(copyname));
-  if (!last_after_empty && count != histsize_before) /* If the number of lines (history entries)  has changed, and no empty .. */
-    histpos = count;                                 /* ..line is found we cannot keep the history position the same           */ 
+  if (!last_after_empty && line_count != histsize_before) /* If the number of lines (history entries)  has changed, and no empty .. */
+    histpos = line_count;                                 /* ..line is found we cannot keep the history position the same           */ 
               
   history_set_pos(histpos);      /* histpos can have changed, but only if an empty line was seen           */        
   assert(!unlink(filename));
@@ -732,11 +806,12 @@ dump_history(int UNUSED(count), int UNUSED(key))
 }       
 
 
+
 static int
 edit_history(int UNUSED(count), int UNUSED(key))
 {
   char *tmpfilename, *new_rl_line_buffer;
-  int tmpfile_fd, histpos;
+  int tmpfile_fd, histpos, empty_lines_before;
   struct termios saved_terminal_settings;
   assert (!tcgetattr(STDIN_FILENO, &saved_terminal_settings));
   tmpfile_fd = open_unique_tempfile(".history", &tmpfilename);  
@@ -745,7 +820,7 @@ edit_history(int UNUSED(count), int UNUSED(key))
   close(tmpfile_fd);
   histpos = where_history();
   munge_file_in_editor(tmpfilename, histpos + 1, rl_point + 1); 
-  new_rl_line_buffer = my_read_history(tmpfilename);
+  new_rl_line_buffer = my_read_history(tmpfilename, &empty_lines_before);
   assert(!tcsetattr(STDIN_FILENO, TCSANOW,  &saved_terminal_settings));
   
   if (new_rl_line_buffer) {
@@ -755,6 +830,10 @@ edit_history(int UNUSED(count), int UNUSED(key))
     clear_line();
     rl_on_new_line();
     rl_redisplay();
+    if (empty_lines_before > 1) {
+      rl_done = TRUE;
+      return_key = (char)'\n';
+    }   
   } else {
     cursor_hpos(rl_point);
   }

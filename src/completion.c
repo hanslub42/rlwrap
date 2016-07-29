@@ -1621,9 +1621,8 @@ my_completion_function(char *prefix, int state)
       DPRINTF1(DEBUG_ALL, "Filtered: %s", mangle_string_for_debug_log(filtered, 40));
 
       /* parse contents */
-      fragments = split_on_single_char(filtered,  '\t');
-      if (!fragments[0] || ! fragments[1] || !fragments[2]  ||  
-          strncmp(fragments[0], rl_line_buffer, length) ||  strncmp(fragments[1], prefix,length)) {
+      fragments = split_on_single_char(filtered,  '\t', 3);
+      if ( strncmp(fragments[0], rl_line_buffer, length) ||  strncmp(fragments[1], prefix,length)) {
 	  myerror(FATAL|NOERRNO, "filter has illegally messed with completion message\n"); /* it should ONLY have changed the completion word list  */
       }
 
