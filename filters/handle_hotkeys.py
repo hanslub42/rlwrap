@@ -13,6 +13,24 @@ else:
 
 import rlwrapfilter
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 filter = rlwrapfilter.RlwrapFilter()
 
 filter.help_text = "Usage: rlwrap [-options] -z handle_hotkeys.py <command>\n"\

@@ -397,7 +397,6 @@ sub die_with_error_message {
   my $myself = $0;
   $myself =~ s#^.*/([^.]+)$#$1#;
   write_message(TAG_ERROR, "$myself: $error_message");
-  print "zzzz\n";
   sleep 2;
   exit 1;
 }
@@ -576,24 +575,29 @@ the input line out of the history.
 
 =item $handler = $f -> hotkey_handler, $f -> hotkey_handler(\&handler)
 
-If the user presses a key that is bound to "rlwrap_hotkey" in B<.inputrc>
-the handler is called with three arguments: the hotkey, the prefix (i.e.
-the part of the current input line before the cursor), and the remaining part of
-the input line (postfix). It should return a list consisting of a possibly
-empty message (to be displayed in readline's echo area), the re-writen prefix and
-ditto postfix. Example:
-if the current input line is  "pea soup" (with the cursor on the
+If, while editing an input line, the user presses a key that is bound
+to "rlwrap_hotkey" in B<.inputrc>, the handler is called with five
+arguments: the hotkey, the prefix (i.e.  the part of the current input
+line before the cursor), the remaining part of the input line
+(postfix), the history as one string ("line 1\nline 2\n...line N", and
+the history position. It has to return a similar list, except that the
+first element will be printed in the "echo area" if it is changed from
+its original value.
+
+
+B<Example:> if the current input line is  "pea soup" (with the cursor on the
 space), and the user presses CTRL+P, which happens to be bound to "rlwrap-hotkey"
 in B<.inputrc>, the handler is called like this:
 
-    my_handler(16, "pea", " soup") # 16 = CTRL-P
+    my_handler("\0x10", "pea", " soup", "tomato soup\nasparagus..", 12) # 16 = CTRL-P
 
 If you prefer peanut soup, the handler should return
 
-    ("Mmmm!", "peanut", " soup")
+    ("Mmmm!", "peanut", " soup", "asparagus..", 11)
 
 after which the input line will be "peanut soup" (with the cursor
-again on the space) and the echo area will display "Mmmm!"
+again on the space), the echo area will display "Mmmm!", and any reference
+to inferior soups will have been purged from the history.
 
 
 =item $handler = $f -> input_handler, $f -> input_handler(\&handler)
@@ -792,6 +796,7 @@ The protocol uses the following tags (tags E<gt> 128 are out-of-band)
  TAG_HISTORY     2
  TAG_COMPLETION  3
  TAG_PROMPT      4
+ TAG_HOTKEY      5
 
  TAG_IGNORE                      251
  TAG_ADD_TO_COMPLETION_LIST      252

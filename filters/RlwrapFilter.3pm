@@ -129,7 +129,7 @@
 .\" ========================================================================
 .\"
 .IX Title "RlwrapFilter 3pm"
-.TH RlwrapFilter 3pm "2016-07-26" "perl v5.24.0" "User Contributed Perl Documentation"
+.TH RlwrapFilter 3pm "2016-07-28" "perl v5.24.0" "User Contributed Perl Documentation"
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
@@ -257,28 +257,32 @@ the input line out of the history.
 .ie n .IP "$handler = $f \-> hotkey_handler, $f \-> hotkey_handler(\e&handler)" 4
 .el .IP "\f(CW$handler\fR = \f(CW$f\fR \-> hotkey_handler, \f(CW$f\fR \-> hotkey_handler(\e&handler)" 4
 .IX Item "$handler = $f -> hotkey_handler, $f -> hotkey_handler(&handler)"
-If the user presses a key that is bound to \*(L"rlwrap_hotkey\*(R" in \fB.inputrc\fR
-the handler is called with three arguments: the hotkey, the prefix (i.e.
-the part of the current input line before the cursor), and the remaining part of
-the input line (postfix). It should return a list consisting of a possibly
-empty message (to be displayed in readline's echo area), the re-writen prefix and
-ditto postfix. Example:
-if the current input line is  \*(L"pea soup\*(R" (with the cursor on the
+If, while editing an input line, the user presses a key that is bound
+to \*(L"rlwrap_hotkey\*(R" in \fB.inputrc\fR, the handler is called with five
+arguments: the hotkey, the prefix (i.e.  the part of the current input
+line before the cursor), the remaining part of the input line
+(postfix), the history as one string (\*(L"line 1\enline 2\en...line N\*(R", and
+the history position. It has to return a similar list, except that the
+first element will be printed in the \*(L"echo area\*(R" if it is changed from
+its original value.
+.Sp
+\&\fBExample:\fR if the current input line is  \*(L"pea soup\*(R" (with the cursor on the
 space), and the user presses \s-1CTRL+P,\s0 which happens to be bound to \*(L"rlwrap-hotkey\*(R"
 in \fB.inputrc\fR, the handler is called like this:
 .Sp
 .Vb 1
-\&    my_handler(16, "pea", " soup") # 16 = CTRL\-P
+\&    my_handler("\e0x10", "pea", " soup", "tomato soup\enasparagus..", 12) # 16 = CTRL\-P
 .Ve
 .Sp
 If you prefer peanut soup, the handler should return
 .Sp
 .Vb 1
-\&    ("Mmmm!", "peanut", " soup")
+\&    ("Mmmm!", "peanut", " soup", "asparagus..", 11)
 .Ve
 .Sp
 after which the input line will be \*(L"peanut soup\*(R" (with the cursor
-again on the space) and the echo area will display \*(L"Mmmm!\*(R"
+again on the space), the echo area will display \*(L"Mmmm!\*(R", and any reference
+to inferior soups will have been purged from the history.
 .ie n .IP "$handler = $f \-> input_handler, $f \-> input_handler(\e&handler)" 4
 .el .IP "\f(CW$handler\fR = \f(CW$f\fR \-> input_handler, \f(CW$f\fR \-> input_handler(\e&handler)" 4
 .IX Item "$handler = $f -> input_handler, $f -> input_handler(&handler)"
@@ -463,12 +467,13 @@ method)
 .PP
 The protocol uses the following tags (tags > 128 are out-of-band)
 .PP
-.Vb 5
+.Vb 6
 \& TAG_INPUT       0
 \& TAG_OUTPUT      1
 \& TAG_HISTORY     2
 \& TAG_COMPLETION  3
 \& TAG_PROMPT      4
+\& TAG_HOTKEY      5
 \&
 \& TAG_IGNORE                      251
 \& TAG_ADD_TO_COMPLETION_LIST      252

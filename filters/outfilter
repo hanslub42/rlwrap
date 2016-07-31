@@ -6,13 +6,16 @@ use strict;
 my $filter = new RlwrapFilter;
 my $name = $filter->name;
 
-my $filter_command = join ' ', @ARGV;
-
 $filter->help_text("Usage: rlwrap -z '$name <filter-command>' <command>\n"
                    . "Filter <command> output through <filter-command>");
 
+
+my $filter_command = join ' ', @ARGV;
+die $filter -> help_text . "\n" if not $filter_command and $ENV{RLWRAP_COMMAND_PID};
+
 $filter->output_handler(sub {""});
 $filter->prompt_handler(\&prompt);
+
 $filter->run;
 
 sub prompt {

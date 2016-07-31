@@ -21,7 +21,7 @@ $filter -> run;
 
 sub munge_prompt {
   my ($prompt) = @_;
-  if ($prompt && $filter -> previous_tag == TAG_OUTPUT) {
+  if ($filter -> previous_tag == TAG_OUTPUT) {
     $N++;
     return "prompt $N > ";
   } else {
