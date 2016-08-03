@@ -629,6 +629,8 @@ direct_keypress(int UNUSED(count), int key)
 
 static char* entire_history_as_one_string(void) {
   HIST_ENTRY **the_list = history_list(), **entryp;
+  if (!the_list)
+    return mysavestring("");
   char *big_string = mymalloc(history_total_bytes() + history_length + 1);
   char * stringp =  big_string;
   for (entryp = the_list; *entryp; entryp++) {
