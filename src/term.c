@@ -33,11 +33,12 @@ to be especially needed on older machines                                       
 char term_eof;                  /* end_of_file char */
 char term_stop;                 /* stop (suspend) key */
 char *term_backspace;           /* backspace control seq  (or 0, if none defined in terminfo) */
-char *term_cursor_hpos;
+char *term_cursor_hpos;         /* control seq to position cursor st given position on current line */ 
 char *term_clear_screen;
 char *term_cursor_up;
 char *term_cursor_down;
 char *term_cursor_left;         /* only used for debugging (the SHOWCURSOR macro)                */
+char *term_cursor_right;        /* only used to emulate a missing term_cursor_hpos               */
 char *term_rmcup;               /* rmcup - char sequence to return from alternate screen         */
 char *term_rmkx;                /* rmkx - char sequence to return from keyboard application mode */
 /* int term_colors = -1;        number of colors ('colors' capability, only in terminfo)         */
@@ -146,7 +147,7 @@ init_terminal(void)
 
   /* If we cannot find stringcaps, even for FALLBACK_TERMINAL, complain */
   if (!we_have_stringcaps && ! (we_have_stringcaps = T_OK(tgetent(term_buf, FALLBACK_TERMINAL)))) 
-    myerror(WARNING|NOERRNO, "Even %s is not found in the terminfo database. Expect some problems...", FALLBACK_TERMINAL);
+    myerror(WARNING|NOERRNO, "Even %s is not found in the terminfo database. Expect some problems.", FALLBACK_TERMINAL);
 
   DPRINTF1(DEBUG_TERMIO, "using TERM = %s", term_name);  
   mysetenv("TERM", term_name);
@@ -161,6 +162,7 @@ init_terminal(void)
     term_clear_screen   = tigetstr_or_else_tgetstr("clear",  "cl");
     term_cursor_hpos    = tigetstr_or_else_tgetstr("hpa",    "ch"); 
     term_cursor_left    = tigetstr_or_else_tgetstr("cub1",   "le");
+    term_cursor_right   = tigetstr_or_else_tgetstr("cuf1",   "nd");
     term_cursor_up      = tigetstr_or_else_tgetstr("cuu1",   "up");
     term_cursor_down    = tigetstr_or_else_tgetstr("cud1",   "do");
 
@@ -174,7 +176,10 @@ init_terminal(void)
     DPRINTF1(DEBUG_TERMIO, "terminal colors: %d", term_colors); 
     */
                                         
-  } 
+  }
+
+  if (!(term_cursor_hpos || term_cursor_right) || !term_cursor_up || !term_cursor_down)
+    myerror(WARNING|NOERRNO, "Your terminal '%s' is not fully functional, expect some problems.", term_name);
   term_eof = saved_terminal_settings.c_cc[VEOF];
   term_stop = saved_terminal_settings.c_cc[VSTOP];
 
@@ -209,11 +214,18 @@ int
 cursor_hpos(int col)
 {
   char *instantiated;
-  assert(term_cursor_hpos != NULL);     /* caller has to make sure */
-  instantiated = tgoto(term_cursor_hpos, 0, col); /* tgoto with a command that takes one parameter: parameter goes to 2nd arg ("vertical position"). */
-  assert(instantiated);
-  DPRINTF2(DEBUG_TERMIO, "tgoto(term_cursor_hpos, 0, %d) = %s", col, mangle_string_for_debug_log(instantiated, 20));
-  tputs(instantiated, 1, my_putchar);
+  if (term_cursor_hpos) {
+    instantiated = tgoto(term_cursor_hpos, 0, col); /* tgoto with a command that takes one parameter: parameter goes to 2nd arg ("vertical position"). */
+    assert(instantiated);
+    DPRINTF2(DEBUG_TERMIO, "tgoto(term_cursor_hpos, 0, %d) = %s", col, mangle_string_for_debug_log(instantiated, 20));
+    tputs(instantiated, 1, my_putchar);
+  } else {
+    int i;
+    assert(term_cursor_right != NULL);
+    cr();
+    for (i = 0; i < col; i++)
+      tputs(term_cursor_right, 1, my_putchar);
+  }
   return TRUE;
 }
 
@@ -287,15 +299,15 @@ curs_left()
 void
 curs_up()
 {
-  /* assert(term_cursor_up != NULL);    caller has to make sure */
-  tputs(term_cursor_up, 1, my_putchar);
+  if (term_cursor_up)
+    tputs(term_cursor_up, 1, my_putchar);
 }
 
 void
 curs_down()
 {
-  assert(term_cursor_down != NULL);     /* caller has to make sure */
-  tputs(term_cursor_down, 1, my_putchar);
+  if (term_cursor_down)
+    tputs(term_cursor_down, 1, my_putchar);
 }
 
 int my_putchar(TPUTS_PUTC_ARGTYPE c)
@@ -328,7 +340,7 @@ static void test_termfunc(char *control_string, char *control_string_name, char*
      mysavestring("NULL"));
   printf("\n%s = %s\n", control_string_name, mangled_control_string);
   if (!control_string)
-    return;
+    printf("trying without suitable control string, fasten seatbelts and brace for impact... \n");
   my_putstr(start);
   sleep(1);
   termfunc();
