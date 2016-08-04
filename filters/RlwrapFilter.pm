@@ -599,6 +599,10 @@ after which the input line will be "peanut soup" (with the cursor
 again on the space), the echo area will display "Mmmm!", and any reference
 to inferior soups will have been purged from the history.
 
+If the returned input line ends with a newline B<rlwrap> will immediately
+accept the result.
+
+
 
 =item $handler = $f -> input_handler, $f -> input_handler(\&handler)
 

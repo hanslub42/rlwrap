@@ -88,11 +88,14 @@ sub date_in_echo_area {
   return ("($date) ", @boring);
 }
 
+
+my $instance = 0;
 sub edit_history {
   my ($doc, $prefix, $postfix, $history, $histpos) = @_;
   $doc and return "edit current history";
-  $histpos =~ /\d/ or die "$histpos is not a number - did you bind this key to 'rlwrap-hotkey-without-history'?";  
-  my $editfile = ($ENV{TMP} || $ENV{TEMP} || "/tmp") . "/history.$$.txt";
+  $histpos =~ /\d/ or die "$histpos is not a number - did you bind this key to 'rlwrap-hotkey-without-history'?";
+  $instance++;
+  my $editfile = ($ENV{TMP} || $ENV{TEMP} || "/tmp") . "/history.$$.$instance.txt";
   push @tempfiles, $editfile;
   my $lineno = $histpos + 1;
   my $colno = length($prefix) + 1;
@@ -103,6 +106,7 @@ sub edit_history {
   $editor =~ s/%C/$colno/;
   system("$editor $editfile");
   my @lines = read_file($editfile);
+  unlink $editfile;
   my (@new_history, $counter, $empty_counter, $last_counter, $last_empty_counter);
   foreach my $line (@lines) {
     $line =~ s/\t//g;
@@ -124,6 +128,7 @@ sub edit_history {
   if ($last_empty_counter) {
     $histpos = $last_counter;
     $prefix = $new_history[$histpos];
+    $prefix .= $last_empty_counter > 1 ? "\n" : "";
     $postfix = "";
   }
   return ("", $prefix, $postfix, (join "\n", @new_history), $histpos);

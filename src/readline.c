@@ -637,6 +637,7 @@ static char* entire_history_as_one_string(void) {
     stringp +=length;
     *stringp++ = '\n';
   }
+  *stringp = '\0';
   DPRINTF1(DEBUG_READLINE, "stringified %d bytes of history", (int) strlen(big_string));
   return big_string;
 }       
@@ -711,17 +712,30 @@ handle_hotkey2(int UNUSED(count), int hotkey, int ignore_history)
     free_splitlist(history_lines);
   }
   new_rl_line_buffer = add2strings(new_prefix, new_postfix);
+
+  if ( (length = strlen(new_rl_line_buffer)) > 0  &&  new_rl_line_buffer[length - 1] == '\n') {
+    new_rl_line_buffer[length - 1] = '\0';
+    rl_done = TRUE;
+    return_key = (char) '\n';
+    assert(strchr(new_rl_line_buffer, '\n') == NULL);
+  }
+
   rl_delete_text(0, strlen(rl_line_buffer));
   rl_point = 0;
   rl_insert_text(new_rl_line_buffer);
-  rl_point = strlen(new_prefix);
+  rl_point = strlen(new_rl_line_buffer);
+
   
   
   if (*message && *message != hotkey) {                          /* if message has been set (i.e. != hotkey) , and isn't empty: */ 
     message = append_and_free_old(mysavestring(message), " ");   /* put space (for readability) between the message and the input line .. */
     message_in_echo_area(message);                          /* .. then write it to echo area */
   }     
+
+  clear_line();
+  rl_on_new_line();
   rl_redisplay();
+ 
 
   free_splitlist(fragments);                                   /* this will free all the fragments (and the list itself) in one go  */
   free_multiple(prefix, postfix, filter_food, filtered, new_rl_line_buffer, history, histpos_as_string, FMEND);
