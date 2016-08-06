@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 
 """handle hotkeys"""
 
@@ -134,7 +134,7 @@ keymap = {
     "y" : yank_clipboard,
     "n" : edit_history,
     "r" : peco_history,
-    "t" : date_in_echo_area,
+    "t" : date_in_echo_area
 }
 
 ############################## helper functions #########################################################
@@ -146,16 +146,18 @@ def qw(s):
 
 def document_all_hotkeys():
     doclist = ''
+    dontcare = (None, None, None, None) # dummy arguments for getting the docstring
     for k in 'abcdefghijklmnopqrstuvwxyz':
         try:
             handler = keymap[k]
             if (handler):
-                doclist = doclist + "CTRL+{0}:   ".format(k) + handler(1) + "\n"
+                doclist = doclist + "CTRL+{0}:   ".format(k) + handler(1, *dontcare) + "\n"
         except:
+            
             pass
     inputrc = "{0}/.inputrc".format(os.environ['HOME'])
     doclist = doclist + "Currently bound hotkeys in .inputrc:\n"
-    doclist = doclist + safe_backtick(["/usr/bin/grep", "rlwrap-hotkey", inputrc])
+    doclist = doclist + safe_backtick(["grep", "rlwrap-hotkey", inputrc])
     return doclist
 
 
