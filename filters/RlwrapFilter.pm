@@ -21,12 +21,14 @@ $VERSION = '0.01';
 use Carp;
 
 # constants for every tag we know about
+use constant MAX_TAG                           => 255;
 use constant TAG_INPUT                         => 0;
 use constant TAG_OUTPUT                        => 1;
 use constant TAG_HISTORY                       => 2;
 use constant TAG_COMPLETION                    => 3;
 use constant TAG_PROMPT                        => 4;
 use constant TAG_HOTKEY                        => 5;
+use constant TAG_WHAT_ARE_YOUR_INTERESTS       => 127;
 use constant TAG_IGNORE                        => 251;
 use constant TAG_ADD_TO_COMPLETION_LIST        => 252;
 use constant TAG_REMOVE_FROM_COMPLETION_LIST   => 253;
@@ -141,7 +143,7 @@ sub run {
 	    @completions = split / /, $completions;
 	    @completions = &{$self -> completion_handler}($line, $prefix, @completions);
 	    $response = "$line\t$prefix\t". (join ' ', @completions) . " ";
-	  } else {
+          } else {
 	    $response = $message;
 	  }
 	} elsif ($tag == TAG_PROMPT) {
@@ -159,6 +161,8 @@ sub run {
 
 	  $response = when_defined $self -> prompt_handler, "$message";
 	  croak "prompts may not contain newlines!" if $response =~ /\n/;
+        } elsif ($tag == TAG_WHAT_ARE_YOUR_INTERESTS) {
+            $response = $self -> add_interests($message);
 	} else {
 	  $response = $message; # No error message, compatible with future rlwrap
 	                        # versions that may define new tag types
@@ -187,6 +191,27 @@ sub when_defined($@) {
     return $_;
   }
 }
+
+# WHen the filter starts, it tells rlwrap its interests as a string 'yyny..' (TAG_MAX chars, 1 for each tag)
+# when receiving a message 'nnynn...' the follwoing function changes 'n' to 'y' for those message types that the
+# filter handles,so that at the end of the pipeline the message reflects the interests of all filters in the
+# pipeline
+sub add_interests {
+  my ($self, $message) = @_;
+  my @interested = split //, $message;
+  for (my $tag = 0; $tag <= MAX_TAG; $tag++) {
+    next if @interested[$tag] eq 'y'; # a preceding filter in the pipeline has already shown interest
+    $interested[$tag] = 'y'
+      if ($tag == TAG_INPUT      and $self -> input_handler)
+      or ($tag == TAG_OUTPUT     and $self -> output_handler or $self -> echo_handler)
+      or ($tag == TAG_HISTORY    and $self -> history_handler)
+      or ($tag == TAG_COMPLETION and $self -> completion_handler)
+      or ($tag == TAG_PROMPT     and $self -> prompt_handler)
+      or ($tag == TAG_HOTKEY     and $self -> hotkey_handler);
+  }
+  return join '', @interested;
+}
+
 
 sub out_of_band {
   my($tag) = @_;
@@ -366,7 +391,7 @@ sub cloak_and_dagger {
 sub tag2name {
   my ($self, $tag) = @_;
   for my $name (qw(TAG_REMOVE_FROM_COMPLETION_LIST TAG_ADD_TO_COMPLETION_LIST TAG_INPUT TAG_PROMPT TAG_COMPLETION
-		   TAG_HOTKEY TAG_HISTORY TAG_OUTPUT_OUT_OF_BAND TAG_ERROR  TAG_IGNORE TAG_OUTPUT)) {
+		   TAG_HOTKEY TAG_HISTORY TAG_WHAT_ARE_YOUR_INTERESTS  TAG_OUTPUT_OUT_OF_BAND TAG_ERROR  TAG_IGNORE TAG_OUTPUT)) {
     return $name if (eval "$tag == $name");
   }
   croak "unknown tag $tag";
@@ -473,6 +498,8 @@ Since version 0.32, rlwrap can use filters to script almost every
 aspect of rlwrap's interaction with the user: changing the history,
 re-writing output and input, calling a pager or computing completion
 word lists from the current input.
+
+Filters can be combined in a pipeline using the special B<pipeline> filter.
 
 B<RlwrapFilter> makes it very simple to write rlwrap
 filters in perl. A filter only needs to instantiate a RlwrapFilter
@@ -802,6 +829,8 @@ The protocol uses the following tags (tags E<gt> 128 are out-of-band)
  TAG_PROMPT      4
  TAG_HOTKEY      5
 
+ TAG_WHAT_ARE_YOUR_INTERESTS     127
+
  TAG_IGNORE                      251
  TAG_ADD_TO_COMPLETION_LIST      252
  TAG_REMOVE_FROM_COMPLETION_LIST 253
@@ -810,9 +839,13 @@ The protocol uses the following tags (tags E<gt> 128 are out-of-band)
 
 
 To see how this works, you can eavesdrop on the protocol
-using the 'logger' filter.
+using the B<logger> filter.
 
 The constants TAG_INPUT, ... are exported by the RlwrapFilter.pm module.
+
+TAG_WHAT_ARE_YOUR_INTERESTS is only ever used internally, to prevent the exchange of messages that 
+won't be handled by the filter anyway. It will be seen by the general message handler, and therefore show 
+up (exactly once, at program start) in the output of e.g. the B<logger> filter.
 
 =head1 SIGNALS
 

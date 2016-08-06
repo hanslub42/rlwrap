@@ -443,12 +443,15 @@ extern int newline_came_last;
 
 /* in filter.c */
 
+#define MAX_TAG 255
 #define TAG_INPUT 0
 #define TAG_OUTPUT 1
 #define TAG_HISTORY 2
 #define TAG_COMPLETION 3
 #define TAG_PROMPT 4
 #define TAG_HOTKEY 5
+#define TAG_WHAT_ARE_YOUR_INTERESTS 127
+
 
 #define TAG_IGNORE 251
 #define TAG_ADD_TO_COMPLETION_LIST 252

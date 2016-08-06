@@ -60,6 +60,8 @@
 #include "rlwrap.h"
 
 
+
+
 static int filter_input_fd = -1;
 static int filter_output_fd = -1;
 pid_t filter_pid = 0;
@@ -172,13 +174,32 @@ char *filters_last_words() {
   return read_from_filter(TAG_OUTPUT);
 }       
     
-  
+int filter_is_interested_in(int tag) {
+  static char *interests = NULL;
+  if (tag == TAG_WHAT_ARE_YOUR_INTERESTS)
+    return TRUE;
+  if (!interests) {
+    char message[MAX_TAG + 2];
+    int i;
+    for (i=0; i <= MAX_TAG; i++)
+      message[i] = 'n';
+    message[i] = '\0';
+    interests = pass_through_filter(TAG_WHAT_ARE_YOUR_INTERESTS, message);
+    if (!strchr(interests, 'y'))    /* A completely uninterested filter ... */
+      for (i=0; i <= MAX_TAG; i++)  /* (e.g. logger, on its own) ... */
+        interests[i] = 'y';         /* gets all message types        */
+
+  }
+  return (interests[tag] == 'y');
+}
+ 
 
    
 char *pass_through_filter(int tag, const char *buffer) {
   char *filtered;
+  assert(!out_of_band(tag));
   DPRINTF3(DEBUG_FILTERING, "to filter (%s, %d bytes) %s", tag2description(tag), (int) strlen(buffer), mangle_string_for_debug_log(buffer, MANGLE_LENGTH)); 
-  if (filter_pid ==0)
+  if (filter_pid ==0 || !filter_is_interested_in(tag))
     return mysavestring(buffer);
   write_to_filter((expected_tag = tag), buffer);
   filtered = read_from_filter(tag);
@@ -281,6 +302,7 @@ static char* tag2description(int tag) {
   case TAG_COMPLETION:                 return "COMPLETION";
   case TAG_PROMPT:                     return "PROMPT";
   case TAG_HOTKEY:                     return "HOTKEY";
+  case TAG_WHAT_ARE_YOUR_INTERESTS:    return "WHAT_ARE_YOUR_INTERESTS";
   case TAG_IGNORE:                     return "TAG_IGNORE";
   case TAG_ADD_TO_COMPLETION_LIST:     return "ADD_TO_COMPLETION_LIST";
   case TAG_REMOVE_FROM_COMPLETION_LIST:return "REMOVE_FROM_COMPLETION_LIST";
