@@ -44,7 +44,6 @@ static void bindkey(int key, rl_command_func_t *function, const char *maplist);
 
 /* readline bindable functions: */
 static int munge_line_in_editor(int, int);
-static int edit_history(int,int);
 static int direct_keypress(int, int);
 static int handle_hotkey(int, int);
 static int please_update_alaf(int,int);
@@ -53,7 +52,6 @@ static int please_update_ce(int,int);
 /* only useful while debugging: */
 static int debug_ad_hoc(int,int);
 static int dump_all_keybindings(int,int);
-static int dump_history(int,int);
 
 void
 init_readline(char *UNUSED(prompt))
@@ -62,13 +60,11 @@ init_readline(char *UNUSED(prompt))
   rl_add_defun("rlwrap-accept-line", my_accept_line,-1);
   rl_add_defun("rlwrap-accept-line-and-forget", my_accept_line_and_forget,-1);
   rl_add_defun("rlwrap-call-editor", munge_line_in_editor, -1);
-  rl_add_defun("rlwrap-edit-history", edit_history, -1);
   rl_add_defun("rlwrap-direct-keypress", direct_keypress, -1);  
   rl_add_defun("rlwrap-hotkey", handle_hotkey, -1);
 
   /* only useful while debugging */
   rl_add_defun("rlwrap-dump-all-keybindings", dump_all_keybindings,-1);
-  rl_add_defun("rlwrap-dump-history", dump_history,-1);
   rl_add_defun("rlwrap-debug-ad-hoc", debug_ad_hoc, -1);
   
   /* the old rlwrap bindable function names with underscores are deprecated: */
@@ -756,103 +752,6 @@ UNUSED_FUNCTION(handle_hotkey_ignore_history(int count, int hotkey))
   return handle_hotkey2(count, hotkey, TRUE);
 }       
 
-
-/* copy <filename> to <filename.1>, skipping empty lines, 
-   call read_history on the copy, and unlink both files.
-   (a copy of) the line after the last empty line is returned (to 
-   become the new input line) or NULL, if there is none */
-static char*
-my_read_history(const char *filename, int *empty_lines_before)
-{
-  char *copyname, line[BUFFSIZE+1], *last_after_empty = NULL;
-  FILE *in, *out;
-  int histpos = where_history(), histsize_before = history_length,  line_count = 0, empty_line_count = FALSE;
-  assert((in = fopen(filename, "r")));
-  copyname = add2strings(filename, ".1"); /* @@@ is this unsafe? */
-  assert((out = fopen(copyname, "w")));
-
-  while((fgets(line, BUFFSIZE, in))) {
-      if(*line == '\n') {          /* empty line: remember next one */
-        empty_line_count++;
-      } else {
-        assert(fputs(line, out) >= 0);
-        line_count++;
-        if(empty_line_count > 0) {
-           if(empty_lines_before)
-            *empty_lines_before = empty_line_count;
-          empty_line_count = 0;
-          free(last_after_empty);
-          line[strlen(line)-1] = '\0'; /* chop off newline */
-          last_after_empty = mysavestring(line);
-          histpos = line_count - 1;  /* first line has line_count == 1, so histpos 0 */
-          DPRINTF2(DEBUG_READLINE, "After empty line: histpos %d, line: <%s>", histpos, last_after_empty);
-        }  
-      }
-  }
-  fclose(in);
-  fclose(out);
-  clear_history();
-  assert(!read_history(copyname));
-  if (!last_after_empty && line_count != histsize_before) /* If the number of lines (history entries)  has changed, and no empty .. */
-    histpos = line_count;                                 /* ..line is found we cannot keep the history position the same           */ 
-              
-  history_set_pos(histpos);      /* histpos can have changed, but only if an empty line was seen           */        
-  assert(!unlink(filename));
-  assert(!unlink(copyname));
-  free(copyname);
-  return last_after_empty;
-}
-
-/* Debugging aid: dump information about the current history state on stdout */
-static int
-dump_history(int UNUSED(count), int UNUSED(key))
-{
-  int i;
-  HIST_ENTRY **p;
-  printf("\n-------------- History breakdown ---------------------------\n");
-  printf("history_base: %d\nhistory_length: %d\nwhere_history: %d\n", history_base, history_length, where_history()); 
-  for (p = history_list(), i = 0; *p; p++, i++) {
-    printf("%03d: %s\n", i, (*p) -> line);
-  }
-  rl_on_new_line();
-  rl_redisplay();
-  return 0;
-}       
-
-
-
-static int
-edit_history(int UNUSED(count), int UNUSED(key))
-{
-  char *tmpfilename, *new_rl_line_buffer;
-  int tmpfile_fd, histpos, empty_lines_before;
-  struct termios saved_terminal_settings;
-  assert (!tcgetattr(STDIN_FILENO, &saved_terminal_settings));
-  tmpfile_fd = open_unique_tempfile(".history", &tmpfilename);  
-  /* we dont use tmpfile_fd, only the name */
-  assert(!write_history(tmpfilename)); 
-  close(tmpfile_fd);
-  histpos = where_history();
-  munge_file_in_editor(tmpfilename, histpos + 1, rl_point + 1); 
-  new_rl_line_buffer = my_read_history(tmpfilename, &empty_lines_before);
-  assert(!tcsetattr(STDIN_FILENO, TCSANOW,  &saved_terminal_settings));
-  
-  if (new_rl_line_buffer) {
-    rl_delete_text(0, strlen(rl_line_buffer));
-    rl_point = 0;
-    rl_insert_text(new_rl_line_buffer);
-    clear_line();
-    rl_on_new_line();
-    rl_redisplay();
-    if (empty_lines_before > 1) {
-      rl_done = TRUE;
-      return_key = (char)'\n';
-    }   
-  } else {
-    cursor_hpos(rl_point);
-  }
-  return 0;
-}
 
 void
 initialise_colour_codes(char *colour)
