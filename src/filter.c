@@ -176,17 +176,16 @@ char *filters_last_words() {
     
 int filter_is_interested_in(int tag) {
   static char *interests = NULL;
-  if (tag == TAG_WHAT_ARE_YOUR_INTERESTS)
-    return TRUE;
+  assert(tag <= MAX_INTERESTING_TAG);
   if (!interests) {
-    char message[MAX_TAG + 2];
+    char message[MAX_INTERESTING_TAG + 2];
     int i;
-    for (i=0; i <= MAX_TAG; i++)
+    for (i=0; i <= MAX_INTERESTING_TAG; i++)
       message[i] = 'n';
     message[i] = '\0';
     interests = pass_through_filter(TAG_WHAT_ARE_YOUR_INTERESTS, message);
     if (!strchr(interests, 'y'))    /* A completely uninterested filter ... */
-      for (i=0; i <= MAX_TAG; i++)  /* (e.g. logger, on its own) ... */
+      for (i=0; i <= MAX_INTERESTING_TAG; i++)  /* (e.g. logger, on its own) ... */
         interests[i] = 'y';         /* gets all message types        */
 
   }
@@ -199,7 +198,7 @@ char *pass_through_filter(int tag, const char *buffer) {
   char *filtered;
   assert(!out_of_band(tag));
   DPRINTF3(DEBUG_FILTERING, "to filter (%s, %d bytes) %s", tag2description(tag), (int) strlen(buffer), mangle_string_for_debug_log(buffer, MANGLE_LENGTH)); 
-  if (filter_pid ==0 || !filter_is_interested_in(tag))
+  if (filter_pid ==0 || (tag < MAX_INTERESTING_TAG && !filter_is_interested_in(tag)))
     return mysavestring(buffer);
   write_to_filter((expected_tag = tag), buffer);
   filtered = read_from_filter(tag);

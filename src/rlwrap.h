@@ -450,6 +450,8 @@ extern int newline_came_last;
 #define TAG_COMPLETION 3
 #define TAG_PROMPT 4
 #define TAG_HOTKEY 5
+#define MAX_INTERESTING_TAG 5 /* max tag for which the filter can have a handler */
+
 #define TAG_WHAT_ARE_YOUR_INTERESTS 127
 
 
