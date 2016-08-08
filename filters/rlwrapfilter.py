@@ -154,11 +154,13 @@ def write_patiently(fh, buffer):
     already_written = 0
     count = len(buffer)
     while(already_written < count):
-        nwritten = os.write(fh, buffer[already_written:])
-        if (nwritten <= 0):
-            send_error("error writing: {0}".format(str(buffer)))
-        already_written = already_written + nwritten
-
+        try:
+            nwritten = os.write(fh, buffer[already_written:])
+            if (nwritten <= 0):
+                send_error("error writing: {0}".format(str(buffer)))
+            already_written = already_written + nwritten
+        except BrokenPipeError: # ignore harmless error when rlwrap dies
+            pass
 
 def read_message():
     """
