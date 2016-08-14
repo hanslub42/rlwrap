@@ -180,6 +180,7 @@ int filter_is_interested_in(int tag) {
   if (!interests) {
     char message[MAX_INTERESTING_TAG + 2];
     int i;
+    mymicrosleep(500);
     for (i=0; i <= MAX_INTERESTING_TAG; i++)
       message[i] = 'n';
     message[i] = '\0';
@@ -197,9 +198,9 @@ int filter_is_interested_in(int tag) {
 char *pass_through_filter(int tag, const char *buffer) {
   char *filtered;
   assert(!out_of_band(tag));
-  DPRINTF3(DEBUG_FILTERING, "to filter (%s, %d bytes) %s", tag2description(tag), (int) strlen(buffer), mangle_string_for_debug_log(buffer, MANGLE_LENGTH)); 
-  if (filter_pid ==0 || (tag < MAX_INTERESTING_TAG && !filter_is_interested_in(tag)))
+  if (filter_pid ==0 || (tag <  MAX_INTERESTING_TAG && !filter_is_interested_in(tag)))
     return mysavestring(buffer);
+  DPRINTF3(DEBUG_FILTERING, "to filter (%s, %d bytes) %s", tag2description(tag), (int) strlen(buffer), mangle_string_for_debug_log(buffer, MANGLE_LENGTH)); 
   write_to_filter((expected_tag = tag), buffer);
   filtered = read_from_filter(tag);
   DPRINTF2(DEBUG_FILTERING, "from filter (%d bytes) %s", (int) strlen(filtered), mangle_string_for_debug_log(filtered, MANGLE_LENGTH));
@@ -212,10 +213,10 @@ char *pass_through_filter(int tag, const char *buffer) {
 static char *read_from_filter(int tag) {
   uint8_t  tag8;
   DEBUG_RANDOM_SLEEP;
-  assert (!out_of_band(tag));  
+  assert (!out_of_band(tag));
+  
   while (read_patiently2(filter_output_fd, &tag8, sizeof(uint8_t), 1000, "from filter"), out_of_band(tag8))
     handle_out_of_band(tag8, read_tagless());
-         
   if (tag8 != tag)
     myerror(FATAL|USE_ERRNO, "Tag mismatch, expected %s from filter, but got %s", tag2description(tag), tag2description(tag8));
   

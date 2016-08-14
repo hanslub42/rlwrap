@@ -54,6 +54,7 @@ TAG_HISTORY                     = 2
 TAG_COMPLETION                  = 3
 TAG_PROMPT                      = 4
 TAG_HOTKEY                      = 5
+TAG_WHAT_ARE_YOUR_INTERESTS     = 127
 TAG_IGNORE                      = 251
 TAG_ADD_TO_COMPLETION_LIST      = 252
 TAG_REMOVE_FROM_COMPLETION_LIST = 253
@@ -88,7 +89,7 @@ else:
 
 def when_defined(maybe_ref_to_sub, *args):
     """
-    when_defined(f, x, y, ...) returns f(x, y, ...) if f is defined, x otherwise
+`    when_defined(f, x, y, ...) returns f(x, y, ...) if f is defined, x otherwise
     """
     if (maybe_ref_to_sub is not None):
         try:
@@ -447,6 +448,22 @@ class RlwrapFilter:
         return response
 
 
+    def add_interests(self, message):
+        interested = list(message)
+        tag2handler = {TAG_OUTPUT      : self.output_handler,
+                       TAG_INPUT       : self.input_handler,
+                       TAG_HISTORY     : self.history_handler,
+                       TAG_COMPLETION  : self.completion_handler,
+                       TAG_PROMPT      : self.prompt_handler,
+                       TAG_HOTKEY      : self.hotkey_handler}
+
+        for tag in range(0, len(message)):
+            if interested[tag] == 'y':
+                continue   # a preceding filter in the pipeline has already shown interest
+            if tag2handler[tag] is not None:
+                interested[tag] = 'y'
+        return ''.join(interested)
+    
     def name2tag(self, name):
         """
         Convert a valid tag name like " TAG_PROMPT " to a tag (an integer)
@@ -542,6 +559,8 @@ class RlwrapFilter:
                 response = when_defined(self.prompt_handler, message)
                 if (re.match('\n', response)):
                     send_error('prompts may not contain newlines!')
+            elif (tag == TAG_WHAT_ARE_YOUR_INTERESTS):
+                response = self.add_interests(message)
             else:
                 # No error message, compatible with future rlwrap
                 # versions that may define new tag types

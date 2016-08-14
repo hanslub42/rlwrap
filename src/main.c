@@ -255,7 +255,7 @@ main_loop()
   last_minute_checks();
   pass_through_filter(TAG_OUTPUT,""); /* If something is wrong with filter, get the error NOW */
   set_echo(FALSE);		/* This will also put the terminal in CBREAK mode */
-	test_main(); 
+  test_main(); 
   
   /* ------------------------------  main loop  -------------------------------*/
   while (TRUE) {

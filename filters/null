@@ -5,9 +5,12 @@ use RlwrapFilter;
 use strict;
 
 
+
 my $filter = new RlwrapFilter;
+
 
 $filter -> help_text("Usage: rlwrap [-options] -z null <command>\n".
 		     "a filter that does nothing");
+
 
 $filter -> run;

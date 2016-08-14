@@ -114,10 +114,9 @@ sub run {
     if($ENV{RLWRAP_COMMAND_PID} == 0) { # when called as rlwrap -z <filter> (with no command) ..
       write_message(TAG_OUTPUT_OUT_OF_BAND, $self -> help_text . "\n"); # ... send help text
     }
-
+   
     while(1) {
 	my ($tag, $message) = read_message();
-
         $message = when_defined $self -> message_handler, "$message", $tag; # ignore return value
 	my $response;
 
@@ -168,6 +167,7 @@ sub run {
 	                        # versions that may define new tag types
 	}
 
+        # shouldn't the next "and" be an  "or"? @@@
 	unless (out_of_band($tag) and ($tag == TAG_PROMPT and $response eq REJECT_PROMPT)) {
           $self -> {previous_tag} = $tag;
           $self -> {previous_message} = $message;
@@ -199,8 +199,8 @@ sub when_defined($@) {
 sub add_interests {
   my ($self, $message) = @_;
   my @interested = split //, $message;
-  for (my $tag = 0; $tag <= MAX_TAG; $tag++) {
-    next if @interested[$tag] eq 'y'; # a preceding filter in the pipeline has already shown interest
+  for (my $tag = 0; $tag < @interested; $tag++) {
+    next if $interested[$tag] eq 'y'; # a preceding filter in the pipeline has already shown interest
     $interested[$tag] = 'y'
       if ($tag == TAG_INPUT      and $self -> input_handler)
       or ($tag == TAG_OUTPUT     and $self -> output_handler or $self -> echo_handler)
@@ -285,8 +285,9 @@ sub read_patiently {
   my $result;
   while($already_read < $count) {
     my $nread = sysread($fh, $result, $count-$already_read, $already_read);
-    if ($nread == 0) {
-      exit 0;
+    if ($nread == 0) { # rlwrap (or the rlwrapped command) has put down the
+                       # telephone - we're going to die anyway. Don't complain.
+      exit(0);
     } elsif ($nread < 0) {
       die_with_errormessage("error reading: $!");
     }
@@ -303,7 +304,7 @@ sub write_patiently {
   while($already_written < $count) {
     my $nwritten = syswrite($fh, $buffer, $count-$already_written, $already_written);
     if ($nwritten <= 0) {
-      die_with_errormessage("error writing: $!");
+      die_with_errormessage("error writing: $!\n");
     }
     $already_written += $nwritten;
   }
@@ -313,7 +314,6 @@ sub write_patiently {
 # read message (tag, length word and contents) from FILTER_IN
 sub read_message {
   return read_from_stdin() unless $we_are_running_under_rlwrap;
-
   my $tag = unpack("C", read_patiently(*FILTER_IN,1));
   my $length = unpack("L",read_patiently(*FILTER_IN,4));
   my $message = read_patiently(*FILTER_IN, $length);
