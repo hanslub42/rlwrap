@@ -339,6 +339,8 @@ sub read_from_stdin {
     print $prompt;
     ($tagname, $message) = (<STDIN> =~ /(\S+) (.*?)\r?\n/);
     exit unless $tagname;
+    $message =~ s/\\t/\t/g; # allow TABs to be input as '\t'
+    $message =~ s/\\n/\n/g; # the same for newlines
     $tag = name2tag(undef, $tagname); # call as function, not method
     $prompt = "again > ";
   }
@@ -533,7 +535,7 @@ from B<rlwrap>.  Messages consist of a tag indicating which handler
 should be called (e.g. TAG_INPUT, TAG_HISTORY) and the message
 text. Usually, a filter overrides only one or at most two methods.
 
-=head3 CALLING CONVENTIONS
+=head2 CALLING CONVENTIONS
 
 In many cases (e.g. TAG_INPUT, TAG_OUTPUT, TAG_PROMPT) the message
 text is a simple string. Their handlers are called with the message
@@ -552,7 +554,8 @@ completion, history, input, echo, output, prompt, ... etc ad
 infinitum. Rlwrap may always skip a handler when in direct mode; on
 the other hand, completion and output handlers may get called more
 than once in succession. If a handler is left undefined, the result is
-as if the message text were returned unaltered.
+as if the message text were returned unaltered (in fact, B<rlwrap> knows
+when this is the case and won't even bother to send the message)
 
 It is important to note that the filter, and hence all its handlers,
 are bypassed when I<command> is in direct mode, i.e. when it asks for
@@ -926,11 +929,17 @@ rlwrap), even if we set the RLWRAP_*_FD ourselves.
 Therefore, when run directly from the command line, a filter expects
 input messages on its standard input of the form
 
-TAG_PROMPT myprompt >
+  TAG_PROMPT myprompt >
 
-(i.a. a tag name, one space and a message followed by a newline) and it will respond in the
-same way on its standard output
+(i.a. a tag name, one space and a message followed by a newline. The
+message will not contain the final newline) and it will respond in the
+same way on its standard output. Of course, B<rlwrap> can help with the
+tedious typing of tag names:
 
+  rlwrap -f tagnames filter_to_be_debugged
+
+Because B<rlwrap> cannot put TABs and newlines in input lines, filters will
+convert '\t' and '\n' into TAB and newline when run directly from the command line.
 
 =head1 SEE ALSO
 

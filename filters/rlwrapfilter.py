@@ -200,6 +200,7 @@ def read_from_stdin():
         if not m:
             sys.exit()
         tagname, message = m.groups()
+        message.replace("\\t","\t").replace("\\n","\n")
         tag = name2tag(tagname)
     return tag, message
 

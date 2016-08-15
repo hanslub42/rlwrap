@@ -1,5 +1,12 @@
 0.43  Added Hisanobu Okuda's rlwrapfilter.py python3 module
-      and example filters
+      and example filters. Filters can now be written in python
+      as well as perl.
+
+      If a filter was used, rlwrap would pass all input, output,
+      history items, prompts, ... through the filter, even if it
+      wouldn't change them. Now, at startup, filters (even filter
+      pipelines) tell rlwrap which messages they handle, after which
+      rlwrap won't bother them with anything else.
 
       Added bindable readline command rlwrap-direct-keypress
       that bypasses readline editing and sends its keypress directly
