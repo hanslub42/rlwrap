@@ -69,7 +69,7 @@ REJECT_PROMPT = '_THIS_CANNOT_BE_A_PROMPT_'
 we_are_running_under_rlwrap = 'RLWRAP_COMMAND_PID' in os.environ
 
 # rlwrap version
-rlwrap_version = float(os.environ['RLWRAP_VERSION']) if 'RLWRAP_VERSION' in os.environ else 0.41
+rlwrap_version = float(os.environ.get('RLWRAP_VERSION', "0.41"))
 
 # open communication lines with rlwrap (or with the terminal when not running under rlwrap)
 if (we_are_running_under_rlwrap):
@@ -195,14 +195,27 @@ def read_from_stdin():
     tag = None
     prompt = None
     tagname = None
-    while (not tag):
-        m = re.match("(\S+) (.*?)\r?\n", sys.stdin.readline())
+    while (tag is None):
+        try:
+            m = re.match("(\S+) (.*?)\r?\n", sys.stdin.readline())
+        except KeyboardInterrupt:
+            sys.exit()
         if not m:
             sys.exit()
         tagname, message = m.groups()
         message.replace("\\t","\t").replace("\\n","\n")
         tag = name2tag(tagname)
     return tag, message
+
+def name2tag(name):
+        """
+        Convert a valid tag name like " TAG_PROMPT " to a tag (an integer)
+        """
+        try:
+            tag = eval(name)
+        except Exception as e:
+            raise SystemExit('unknown tagname {0}'.format(name))
+        return tag
 
 
 def tag2name(tag):
@@ -222,6 +235,7 @@ def tag2name(tag):
                  'TAG_OUTPUT']:
         if (eval('{0} == {1}'.format(str(tag), name))):
             return name
+
 
 
 
@@ -375,7 +389,7 @@ class RlwrapFilter:
         self.saved_output = ''
         self.cumulative_output = ''
         self.minimal_rlwrap_version = rlwrap_version
-        self.command_line = os.environ['RLWRAP_COMMAND_LINE'] if 'RLWRAP_COMMAND_LINE' in os.environ else None
+        self.command_line = os.environ.get('RLWRAP_COMMAND_LINE')
         self.running_under_rlwrap = 'RLWRAP_COMMAND_PID' in os.environ
         self.name = os.path.basename(sys.argv[0])
 
@@ -469,12 +483,7 @@ class RlwrapFilter:
         """
         Convert a valid tag name like " TAG_PROMPT " to a tag (an integer)
         """
-        try:
-            tag = eval(name)
-        except Exception as e:
-            raise SystemExit('unknown tagname {0}'.format(name))
-        return tag
-
+        return name2tag(name)
 
     def tag2name(self, tag):
         """
@@ -515,12 +524,12 @@ class RlwrapFilter:
         # $RLWRAP_COMMAND_PID can be undefined (e.g. when run interactively, or under rlwrap -z listing
         # or == "0" (when rlwrap is called without a command name, like in rlwrap -z filter.py)
         # In both cases: print help text
-        if 'RLWRAP_COMMAND_PID' not in os.environ or os.environ['RLWRAP_COMMAND_PID'] == "0":
+        if not os.environ.get('RLWRAP_COMMAND_PID'):
             write_message(TAG_OUTPUT_OUT_OF_BAND, self.help_text + '\n')
 
         while(True):
             tag, message = read_message()
-
+            
             message = when_defined(self.message_handler, message, tag) # ignore return value
 
             if (tag == TAG_INPUT):
@@ -551,7 +560,7 @@ class RlwrapFilter:
                     write_message(tag,REJECT_PROMPT);
                     # don't update <previous_tag> and don't reset <cumulative_input>
                     next
-                if (os.environ['RLWRAP_IMPATIENT'] and not re.match('\n$', self.cumulative_output)):
+                if (os.environ.get('RLWRAP_IMPATIENT') and not re.match('\n$', self.cumulative_output)):
                     # cumulative output contains prompt: chop it off!
                     # s/[^\n]*$// takes way too long on big strings,
                     # what is the optimal regex to do this?

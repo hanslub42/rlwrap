@@ -389,6 +389,21 @@ sub cloak_and_dagger {
 }
 
 
+# Commands return messages asynchronously and may time out
+# when invoked by multiple `cloak_and_dagger`. You may want to
+# drop their unused output at some later time:
+
+# rlwrap_filter.cloak_and_dagger($command1, $prompt, $timeout)
+# rlwrap_filter.cloak_and_dagger($command2, $prompt, $timeout) ...
+# sleep(1)
+# rlwrap_filter.vacuum_stale_message($prompt,  $timeout)
+
+sub vacuum_stale_message {
+  my ($self, $prompt, $timeout) = @_;
+  return read_until(*CMD_OUT, $prompt, $timeout);
+}
+
+    
 
 sub tag2name {
   my ($self, $tag) = @_;
