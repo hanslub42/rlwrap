@@ -5,7 +5,7 @@ EXTRA_DIST = BUGS COPYING TODO INSTALL README PLEA src/rlwrap.h src/redblack.h s
              src/completion.rb doc/rlwrap.man.in test/testclient test/testit\
              completions/testclient completions/coqtop\
              filters/README filters/RlwrapFilter.pm filters/RlwrapFilter.3pm filters/count_in_prompt filters/pipeto\
-             filters/logger filters/null filters/unbackspace filters/pipeline filters/ftp_filter filters/history_format\
+             filters/logger filters/null filters/unbackspace filters/pipeline filters/ftp_filter filters/handle_hotkeys filters/history_format\
              filters/simple_macro filters/template filters/scrub_prompt filters/paint_prompt filters/censor_passwords filters/listing\
              filters/paint_prompt.py filters/handle_hotkeys.py filters/logger.py filters/pipeto.py\
              filters/rlwrapfilter.py filters/null.py filters/censor_passwords.py\
@@ -18,7 +18,7 @@ SUBDIRS    = doc src filters
 
 nobase_pkgdata_DATA  = completions/testclient completions/coqtop\
 		       filters/README filters/RlwrapFilter.pm filters/RlwrapFilter.3pm filters/count_in_prompt filters/pipeto\
-                       filters/logger filters/null filters/unbackspace filters/pipeline filters/ftp_filter filters/history_format\
+                       filters/logger filters/null filters/unbackspace filters/pipeline filters/ftp_filter filters/handle_hotkeys filters/history_format\
                        filters/simple_macro filters/template filters/scrub_prompt filters/paint_prompt filters/censor_passwords filters/listing\
                        filters/paint_prompt.py filters/handle_hotkeys.py filters/logger.py filters/pipeto.py\
                        filters/rlwrapfilter.py filters/null.py filters/censor_passwords.py\
