@@ -1,18 +1,24 @@
 0.43  Added Hisanobu Okuda's rlwrapfilter.py python3 module
-      and example filters
+      and example filters. Filters can now be written in python
+      as well as perl.
+
+      If a filter was used, rlwrap would pass all input, output,
+      history items, prompts, ... through the filter, even if it
+      wouldn't change them. Now, at startup, filters (even filter
+      pipelines) tell rlwrap which messages they handle, after which
+      rlwrap won't bother them with anything else.
 
       Added bindable readline command rlwrap-direct-keypress
       that bypasses readline editing and sends its keypress directly
       to the rlwrapped command (like CTRL-G for the Erlang shell)
       
       Added bindable readline command rlwrap-hotkey that passes
-      the current input buffer to the filter (or filter pipeline)
-      specified with the '-z' option. This can be used e.g. to
-      insert the current selection at the cursor position
+      the current input buffer and history to the filter (or
+      filter pipeline) specified with the '-z' option. This can
+      be used e.g. to insert the current selection at the cursor
+      position, or to edit (re-write) the history.
 
-      Added bindable readline command rlwrap-edit-history that
-      opens the entire history in $RLWRAP_EDITOR, and reads it back
-      afterwards. This uncovered quite a few bugs and inconsistencies:
+       This uncovered quite a few bugs and inconsistencies:
          - My ncurses' termcap emulation misses some codes (like
            term_cursor_hpos) that its terminfo has. rlwrap now
            always searches terminfo before termcap.

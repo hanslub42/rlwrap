@@ -3,7 +3,23 @@
 use lib ($ENV{RLWRAP_FILTERDIR} or ".");
 use RlwrapFilter;
 use strict;
+use POSIX qw(:signal_h);
+use File::Slurp;
 
+
+
+# change the table below if you like, but don't forget to bind the corresponding keys  to 'rlwrap-hotkey' in your .inputrc
+
+my $keymap =
+{ "y" => \&yank_clipboard,
+  "n" => \&edit_history, 
+  "r" => \&peco_history, 
+  "t" => \&date_in_echo_area,
+};  
+
+my @tempfiles; # list of files to be cleaned on exit;
+
+############################################ The Filter #################################################
 
 my $filter = new RlwrapFilter;
 my $name = $filter -> name;
@@ -18,55 +34,128 @@ $filter -> hotkey_handler(\&hotkey);
 $filter -> run;
 
 
+# A hotkey handler is called with five parameters:
+#   1: the key (e.g. 14 for CTRL+M)
+#   2: the prefix, i.e. the input line up to (but not including) the cursor
+#   3: the postfix: the rest of the input line (without a concluding newline, of course)
+#   4: the whole history (all lines, oldest first, interspersed with newlines: "line 1\nline2\n ...line N")
+#   5: the history position at the moment of the hotkey press (oldest line = 0)
+#
+# If the hotkey was bound to "rlwrap-hotkey-without-history" the last two parameters will be empty and can be ignored
+# The return value is a similar list (where all values may be changed: the input line could be re-written,
+# the history revised, etc. The first parameter makes no sense as a return value: if it is != $key
+# it will pe put in the "echo area". If the key was bound to rlwrap-hotkey-without-history the last two elements of the 
+# returned list are ignored.
+#
+# If the postfix is returned with a concluding newline, the resulting input line is accepted immediately, otherwise
+# it is put in readlines input buffer again, with the cursor at the beginning of the returned postfix 
+#
+# Summary: ($echo, $prefix, $postfix, $history, $histpos) = handler($key, $prefix, $postfix, $history, $histpos)
+
+
+# generic hotkey handler, that dispatches on the value of $key (using the hash %$keymap defined at the top of this file
 sub hotkey {
-    my ($key, $prefix, $postfix) = @_;                                  # key = e.g.  "<CTRL-Y>" 
-    my $key_without_ctl = lc pack("c", unpack("c", $key) + 64);         # $key_without_ctl = "y"
-    my ($message, $prefix, $postfix) = eval("hotkey_$key_without_ctl('$prefix','$postfix')"); # call hotkey_y(..)
-    die "hotkey CTRL-<$key_without_ctl>: $@\n" if $@;                                                   # hotkey_y may be undefined
-    return ($message, $prefix, $postfix);
+    my ($key, @other_params) = @_;                                  # key = e.g.  "<CTRL-Y>" 
+    my $handler = $keymap -> {uncontrol($key)};
+    return ($key, @other_params) unless $handler; # a filter further downstream may want to handle this hotkey 
+    my @result = &$handler(0, @other_params);
+    return @result;
 }
 
 
-############################# individual hotkey handlers ###############################################
+############################# A few handlers ###############################################
+#
+# After dispatch (on the value of $key) by the hotkey() function the value of $key is not relevant anymore.
+# its place is now taken by a parameter $doc :
+#
+# ($echo, $prefix, $postfix, $history, $histpos) = myfunc(0,  $prefix, $postfix, $history, $histpos)
+# "docstring"                                    = myfunc(1, @not_interesting)
 
 
-sub hotkey_template {
-    my($prefix, $postfix, $doc) = @_;
-    $doc and return "some docstring";
-    # $prefix is input line before cursor, postfix the remainder
-    # do something useful with them, and then:
-    my $message = ""; # not yet implemented: message to be echo'ed in message area   
-    return ($message, $prefix, $postfix);
+
+sub yank_clipboard {
+  my ($doc, $prefix, $postfix, @boring) = @_;
+  $doc and return "insert from clipboard";
+  my $selection = safe_backtick(qw(xsel -o));
+  return ("", $prefix . $selection, $postfix, @boring);
 }
 
-sub hotkey_y {
-    my($prefix, $postfix, $doc) = @_;
-    $doc and return "insert from clipboard";
-    my $selection = safe_backtick(qw(xsel -o));
-    return ("", $prefix . $selection, $postfix);
+
+sub date_in_echo_area {
+  my ($doc, @boring) = @_;
+  $doc and return "show current time in echo area";
+  my $date = safe_backtick(qw(date +%H:%M));
+  return ("($date) ", @boring);
 }
 
 
-sub hotkey_t {
-    my($prefix, $postfix, $doc) = @_;
-    $doc and return "show current time in echo area";
-    my $date = safe_backtick(qw(date +%H:%M));
-    return ("($date) ", $prefix, $postfix);
-}
+my $instance = 0;
+sub edit_history {
+  my ($doc, $prefix, $postfix, $history, $histpos) = @_;
+  $doc and return "edit current history";
+  $histpos =~ /\d/ or die "$histpos is not a number - did you bind this key to 'rlwrap-hotkey-without-history'?";
+  $instance++;
+  my $editfile = ($ENV{TMP} || $ENV{TEMP} || "/tmp") . "/history.$$.$instance.txt";
+  push @tempfiles, $editfile;
+  my $lineno = $histpos + 1;
+  my $colno = length($prefix) + 1;
+  $history ||= " "; # write_file() crashes  if called on an empty string....
+  write_file($editfile , $history);
+  my $editor = $ENV{RLWRAP_EDITOR} || "vi +%L";
+  $editor =~ s/%L/$lineno/;
+  $editor =~ s/%C/$colno/;
+  system("$editor $editfile");
+  my @lines = read_file($editfile);
+  unlink $editfile;
+  my (@new_history, $counter, $empty_counter, $last_counter, $last_empty_counter);
+  foreach my $line (@lines) {
+    $line =~ s/\t//g;
+    $line =~ s/^\s+//;
+    $line =~ s/\s+$//;
+    if ($line) {
+      if ($empty_counter > 0) {
+        # remember position of last line after an empty line,
+        # and the number of empty lines:
+        ($last_counter, $last_empty_counter) = ($counter, $empty_counter); 
+      }
+      $empty_counter = 0;
+      $counter++; # We count 0-based, so increment only now
+      push @new_history, $line;
+    } else {
+      $empty_counter++;
+    }
+  }
+  if ($last_empty_counter) {
+    $histpos = $last_counter;
+    $prefix = $new_history[$histpos];
+    $prefix .= $last_empty_counter > 1 ? "\n" : "";
+    $postfix = "";
+  }
+  return ("", $prefix, $postfix, (join "\n", @new_history), $histpos);
+ }   
 
-sub hotkey_p {
-    my($prefix, $postfix, $doc) = @_;
-    $doc and return "uppercase entire input line";
-    return ("", uc $prefix, uc $postfix); 
-}   
+sub peco_history {
+    my ($doc, $prefix, $postfix, $history, $histpos) = @_;
+    $doc and return "edit current history";  
+    my $editfile = ($ENV{TMP} || $ENV{TEMP} || "/tmp") . "/history.$$.txt";
+    my $lineno = $histpos + 1;
+    my $colno = length($prefix) + 1;
+    $history ||= " "; #writefile crashes  if called on an empty string....
+    write_file($editfile , $history);
+    my $peco = "peco";
+    my $select_1 = `$peco --select-1 --query "$prefix" $editfile`;
+    chomp $select_1;
+    return ("", $select_1, $postfix, $history, $histpos);
+}
 
 ############################## helper functions #########################################################
 
 sub document_all_hotkeys {
     my $doclist;
     foreach my $k  ("a".."z") {
-        my $doc = eval("hotkey_$k('', '', 1)");
-        $doclist .= "    CTRL+$k:   $doc\n" unless $@;
+        if ((my $handler = $keymap -> {$k})) {
+            $doclist .= "CTRL+$k:   " . &$handler(1) . "\n";
+        }
     }
     my $inputrc = "$ENV{HOME}/.inputrc";
     $doclist .= "Currently bound hotkeys in $inputrc:\n";
@@ -89,3 +178,22 @@ sub safe_backtick {
 }
 
 
+# give back corresponding CTRL-key. E.g: control("m") = "\0x13"
+sub control {
+    my ($key) = @_;
+    $key = lc $key;
+    die "Key '$key' should be one of a ..z\n" unless $key =~ /[a..z]/; # is this too strict?
+    return pack("c", unpack("c", lc $key) - 64);
+}
+
+sub uncontrol {
+    my ($key) = @_;
+    return  lc pack("c", unpack("c", $key) + 64);
+}
+
+
+sub END {
+    foreach my $f (@tempfiles) {
+        -f $f and unlink $f;
+    }
+}

@@ -172,27 +172,83 @@ mydirname(const char *filename)
 
 
 
-/* mystrtok: saner version of strtok that doesn't overwrite its first argument */
+/* Better atoi() with error checking */
+int
+my_atoi(const char *nptr)
+{
+  int result;
+  char *endptr;
+  
+  errno = 0;
+  result = (int) strtol(nptr, &endptr, 10);
+  if (errno || endptr == nptr || *endptr)
+    myerror(FATAL|USE_ERRNO, "Could not make sense of <%s> as an integer", mangle_string_for_debug_log(nptr, 10));
+  return result;
+}       
+
+/* TODO: clean up the following mess. strtok() is cute, but madness. Write one function
+   char *tokenize(const char *string, const char *delimiters, bool allow_empty_strings), and make 
+   both split_with functions a special case of it. Drop mystrtok, count_str_occurrences and count_char_occurrences */ 
+
+
+  /* mystrtok: saner version of strtok that doesn't overwrite its first argument */
+  /* Scary strtok: "The  strtok()  function breaks a string into a sequence of zero or more nonempty tokens.  
+    On the first call to strtok(), the string to be parsed should be specified in str.  
+    In each subsequent call that should parse the same string, str must be NULL.
+  */
+
 
 char *
-mystrtok(const char *s, const char *delim) {
+mystrtok(const char *s, const char *delimiters) {
   static char *scratchpad = NULL;
-  if (s) {
-    if (scratchpad)
-      free(scratchpad);
+  if (s) { /* first call */
+    if (scratchpad) 
+      free(scratchpad); /* old news */
     scratchpad = mysavestring(s);
-  }    
-  return strtok(s ? scratchpad : NULL, delim);
+  }
+  return strtok(s ? scratchpad : NULL, delimiters);
 }       
+
+
+static int
+count_str_occurrences(const char *haystack, const char* needle)
+{
+  int count = 0, needle_length = strlen(needle);
+  assert(needle_length > 0);
+  const char *p = haystack;
+  while ((p = strstr(p, needle))) {
+      count++;
+      p += needle_length;
+  }
+  return count;
+}
+
+static int
+count_char_occurrences(const char *haystack, char c)
+{
+  int count;
+  char *needle = mysavestring(" ");
+  *needle = c;
+  count = count_str_occurrences(haystack, needle);
+  free(needle);
+  return count;
+}
+
+
+void test_haystack(const char *haystack, const char* needle) {
+  printf("<%s> contains <%s> %d times\n", haystack, needle, count_str_occurrences(haystack, needle));
+}       
+
+
 
 /* split_with("a bee    cee"," ") returns a pointer to an array {"a", "bee",  "cee", NULL} on the heap */
 
 char **
-split_with(const char *string, const char *delim) {
+split_with(const char *string, const char *delimiters) {
   const char *s;
   char *token, **pword;
-  char **list = mymalloc(1 + strlen(string) * sizeof(char **)); /* list can never be longer than string + 1 */ 
-  for (s = string, pword = list; (token = mystrtok(s, delim)); s = NULL) 
+  char **list = mymalloc((1 + strlen(string)) * sizeof(char **)); /* worst case: only delimiters  */ 
+  for (s = string, pword = list; (token = mystrtok(s, delimiters)); s = NULL) 
     *pword++ = mysavestring(token);
   *pword = NULL;
   return list;
@@ -210,10 +266,11 @@ unsplit_with(int n, char **strings, const char *delim) {
   return result;
 }
 
-/* split_with("a\t\tbla","\t") returns {"a" "bla", NULL}, but we want {"a", "", "bla", NULL} for filter completion.
-   We write a special version (can be freed with free_splitlist) */
-char **split_on_single_char(const char *string, char c) {
-  char **list = mymalloc((2 + strlen(string)) * sizeof(char **)); /* worst case: "ccc.." (n copies of c) yields n+1 empty strings + final NULL pointer */ 
+/* split_with("a\t\tbla", '\t') returns {"a" "bla", NULL}, but we want {"a", "", "bla", NULL} for filter completion.
+   We write a special version (can be freed with free_splitlist), that optionally checkst the number of components (if expected_count > 0) */
+char **split_on_single_char(const char *string, char c, int expected_count) {
+  /* the 1st +1 for the last element ("bla"), the 2nd +1 for the marker element (NULL) */
+  char **list = mymalloc((count_char_occurrences(string,c) + 1 + 1) * sizeof(char **));
   char *stringcopy = mysavestring(string);
   char *p, **pword, *current_word;
   
@@ -226,6 +283,9 @@ char **split_on_single_char(const char *string, char c) {
     }
   }
   *pword++ = mysavestring(current_word);
+  if (expected_count  && pword-list != expected_count) 
+    myerror(FATAL|NOERRNO, "splitting <%s> on single %s yields %d components, expected %d",
+            mangle_string_for_debug_log(string, 30), mangle_char_for_debug_log(c, 1), pword -  list, expected_count); 
   *pword = NULL;
   free(stringcopy);
   return list;

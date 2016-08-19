@@ -323,10 +323,12 @@ void  mirror_args(pid_t command_pid);
 #define USE_ERRNO 1
 #define NOERRNO   0
 
+/* constant to signify the end of a free_multiple() argument list (NULL would't work) */
+#define FMEND  ((void *) -1)
 
 void  myerror(int error_flags, const char *message, ...);
 void  *mymalloc(size_t size);
-void  myfree(void *ptr);
+void  free_multiple(void *ptr, ...);
 void  mysetsid(void);
 void  close_open_files_without_writing_buffers(void);
 size_t filesize(const char *filename);
@@ -334,6 +336,7 @@ void  open_logfile(const char *filename);
 void  write_logfile(const char *str);
 void  close_logfile(void);
 void  timestamp(char *buf, int size);
+unsigned long hash_multiple(int n, ...);
 int   killed_by(int status);
 void  change_working_directory(void);
 void  log_terminal_settings(struct termios *terminal_settings);
@@ -353,10 +356,11 @@ char *mystrstr(const char *haystack, const char *needle);
 char *mysavestring(const char *string);
 char *add3strings(const char *str1, const char *str2, const char *str3);
 #define add2strings(a,b)  add3strings(a,b,"")
+int my_atoi(const char *nptr);
 char *mystrtok(const char *s, const char *delim);
 char **split_with(const char *string, const char *delim);
 char *unsplit_with(int n, char ** strings, const char *delim);
-char **split_on_single_char(const char *string, char c);
+char **split_on_single_char(const char *string, char c, int expected_count);
 int scan_metacharacters(const char* string, const char *metacharacters);
 char **list4 (char *el0, char *el1, char *el2, char *el3);
 void free_splitlist (char **list);
@@ -439,12 +443,17 @@ extern int newline_came_last;
 
 /* in filter.c */
 
+#define MAX_TAG 255
 #define TAG_INPUT 0
 #define TAG_OUTPUT 1
 #define TAG_HISTORY 2
 #define TAG_COMPLETION 3
 #define TAG_PROMPT 4
 #define TAG_HOTKEY 5
+#define MAX_INTERESTING_TAG 5 /* max tag for which the filter can have a handler */
+
+#define TAG_WHAT_ARE_YOUR_INTERESTS 127
+
 
 #define TAG_IGNORE 251
 #define TAG_ADD_TO_COMPLETION_LIST 252

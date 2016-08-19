@@ -54,6 +54,7 @@ TAG_HISTORY                     = 2
 TAG_COMPLETION                  = 3
 TAG_PROMPT                      = 4
 TAG_HOTKEY                      = 5
+TAG_WHAT_ARE_YOUR_INTERESTS     = 127
 TAG_IGNORE                      = 251
 TAG_ADD_TO_COMPLETION_LIST      = 252
 TAG_REMOVE_FROM_COMPLETION_LIST = 253
@@ -68,7 +69,7 @@ REJECT_PROMPT = '_THIS_CANNOT_BE_A_PROMPT_'
 we_are_running_under_rlwrap = 'RLWRAP_COMMAND_PID' in os.environ
 
 # rlwrap version
-rlwrap_version = float(os.environ['RLWRAP_VERSION']) if 'RLWRAP_VERSION' in os.environ else 0.41
+rlwrap_version = float(os.environ.get('RLWRAP_VERSION', "0.41"))
 
 # open communication lines with rlwrap (or with the terminal when not running under rlwrap)
 if (we_are_running_under_rlwrap):
@@ -88,7 +89,7 @@ else:
 
 def when_defined(maybe_ref_to_sub, *args):
     """
-    when_defined(f, x, y, ...) returns f(x, y, ...) if f is defined, x otherwise
+`    when_defined(f, x, y, ...) returns f(x, y, ...) if f is defined, x otherwise
     """
     if (maybe_ref_to_sub is not None):
         try:
@@ -154,11 +155,13 @@ def write_patiently(fh, buffer):
     already_written = 0
     count = len(buffer)
     while(already_written < count):
-        nwritten = os.write(fh, buffer[already_written:])
-        if (nwritten <= 0):
-            send_error("error writing: {0}".format(str(buffer)))
-        already_written = already_written + nwritten
-
+        try:
+            nwritten = os.write(fh, buffer[already_written:])
+            if (nwritten <= 0):
+                send_error("error writing: {0}".format(str(buffer)))
+            already_written = already_written + nwritten
+        except BrokenPipeError: # ignore harmless error when rlwrap dies
+            pass
 
 def read_message():
     """
@@ -192,13 +195,27 @@ def read_from_stdin():
     tag = None
     prompt = None
     tagname = None
-    while (not tag):
-        m = re.match("(\S+) (.*?)\r?\n", sys.stdin.readline())
+    while (tag is None):
+        try:
+            m = re.match("(\S+) (.*?)\r?\n", sys.stdin.readline())
+        except KeyboardInterrupt:
+            sys.exit()
         if not m:
             sys.exit()
         tagname, message = m.groups()
+        message.replace("\\t","\t").replace("\\n","\n")
         tag = name2tag(tagname)
     return tag, message
+
+def name2tag(name):
+        """
+        Convert a valid tag name like " TAG_PROMPT " to a tag (an integer)
+        """
+        try:
+            tag = eval(name)
+        except Exception as e:
+            raise SystemExit('unknown tagname {0}'.format(name))
+        return tag
 
 
 def tag2name(tag):
@@ -218,6 +235,7 @@ def tag2name(tag):
                  'TAG_OUTPUT']:
         if (eval('{0} == {1}'.format(str(tag), name))):
             return name
+
 
 
 
@@ -371,7 +389,7 @@ class RlwrapFilter:
         self.saved_output = ''
         self.cumulative_output = ''
         self.minimal_rlwrap_version = rlwrap_version
-        self.command_line = os.environ['RLWRAP_COMMAND_LINE'] if 'RLWRAP_COMMAND_LINE' in os.environ else None
+        self.command_line = os.environ.get('RLWRAP_COMMAND_LINE')
         self.running_under_rlwrap = 'RLWRAP_COMMAND_PID' in os.environ
         self.name = os.path.basename(sys.argv[0])
 
@@ -445,16 +463,27 @@ class RlwrapFilter:
         return response
 
 
+    def add_interests(self, message):
+        interested = list(message)
+        tag2handler = {TAG_OUTPUT      : self.output_handler,
+                       TAG_INPUT       : self.input_handler,
+                       TAG_HISTORY     : self.history_handler,
+                       TAG_COMPLETION  : self.completion_handler,
+                       TAG_PROMPT      : self.prompt_handler,
+                       TAG_HOTKEY      : self.hotkey_handler}
+
+        for tag in range(0, len(message)):
+            if interested[tag] == 'y':
+                continue   # a preceding filter in the pipeline has already shown interest
+            if tag2handler[tag] is not None:
+                interested[tag] = 'y'
+        return ''.join(interested)
+    
     def name2tag(self, name):
         """
         Convert a valid tag name like " TAG_PROMPT " to a tag (an integer)
         """
-        try:
-            tag = eval(name)
-        except Exception as e:
-            raise SystemExit('unknown tagname {0}'.format(name))
-        return tag
-
+        return name2tag(name)
 
     def tag2name(self, tag):
         """
@@ -495,12 +524,12 @@ class RlwrapFilter:
         # $RLWRAP_COMMAND_PID can be undefined (e.g. when run interactively, or under rlwrap -z listing
         # or == "0" (when rlwrap is called without a command name, like in rlwrap -z filter.py)
         # In both cases: print help text
-        if 'RLWRAP_COMMAND_PID' not in os.environ or os.environ['RLWRAP_COMMAND_PID'] == "0":
+        if not os.environ.get('RLWRAP_COMMAND_PID'):
             write_message(TAG_OUTPUT_OUT_OF_BAND, self.help_text + '\n')
 
         while(True):
             tag, message = read_message()
-
+            
             message = when_defined(self.message_handler, message, tag) # ignore return value
 
             if (tag == TAG_INPUT):
@@ -520,9 +549,9 @@ class RlwrapFilter:
                     response = message
             elif (tag == TAG_HOTKEY):
                 if (self.hotkey_handler is not None):
-                    (hotkey, prefix, postfix) = message.split('\t')
-                    (message, new_prefix, new_postfix) = self.hotkey_handler(hotkey, prefix, postfix)
-                    response =  "{0}\t{1}\t{2}".format(message, new_prefix, new_postfix)
+                    params = message.split("\t")
+                    result = self.hotkey_handler(*params)
+                    response = "\t".join(result)
                 else:
                     response = message
             elif (tag == TAG_PROMPT):
@@ -531,7 +560,7 @@ class RlwrapFilter:
                     write_message(tag,REJECT_PROMPT);
                     # don't update <previous_tag> and don't reset <cumulative_input>
                     next
-                if (os.environ['RLWRAP_IMPATIENT'] and not re.match('\n$', self.cumulative_output)):
+                if (os.environ.get('RLWRAP_IMPATIENT') and not re.match('\n$', self.cumulative_output)):
                     # cumulative output contains prompt: chop it off!
                     # s/[^\n]*$// takes way too long on big strings,
                     # what is the optimal regex to do this?
@@ -540,6 +569,8 @@ class RlwrapFilter:
                 response = when_defined(self.prompt_handler, message)
                 if (re.match('\n', response)):
                     send_error('prompts may not contain newlines!')
+            elif (tag == TAG_WHAT_ARE_YOUR_INTERESTS):
+                response = self.add_interests(message)
             else:
                 # No error message, compatible with future rlwrap
                 # versions that may define new tag types

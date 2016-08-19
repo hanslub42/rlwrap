@@ -255,7 +255,7 @@ main_loop()
   last_minute_checks();
   pass_through_filter(TAG_OUTPUT,""); /* If something is wrong with filter, get the error NOW */
   set_echo(FALSE);		/* This will also put the terminal in CBREAK mode */
-	test_main(); 
+  test_main(); 
   
   /* ------------------------------  main loop  -------------------------------*/
   while (TRUE) {
@@ -747,7 +747,7 @@ read_options_and_command_name(int argc, char **argv)
       if (option_count > 1)
         myerror(FATAL|NOERRNO, "-d or --debug option has to be the *first* rlwrap option\n"
                                "in order to be able to follow the processing  of all subsequent options");
-      debug = check_optarg('d', remaining) ? atoi(optarg) : DEBUG_DEFAULT;
+      debug = check_optarg('d', remaining) ? my_atoi(optarg) : DEBUG_DEFAULT;
       debug_fp = fopen(DEBUG_FILENAME, "w");
       if (!debug_fp)
          myerror(FATAL|USE_ERRNO, "Couldn't open debug file %s", DEBUG_FILENAME);
@@ -758,7 +758,7 @@ read_options_and_command_name(int argc, char **argv)
       break;
 
     case 'D': 
-      history_duplicate_avoidance_policy=atoi(optarg);
+      history_duplicate_avoidance_policy=my_atoi(optarg);
       if (history_duplicate_avoidance_policy < 0 || history_duplicate_avoidance_policy > 2)
         myerror(FATAL|NOERRNO, "%s option with illegal value %d, should be 0, 1 or 2",
                 current_option('D', longindex), history_duplicate_avoidance_policy);
@@ -814,7 +814,7 @@ read_options_and_command_name(int argc, char **argv)
     case 'r': remember_for_completion = TRUE;	break;
     case 'R': renice = TRUE;	break;
     case 's':
-      histsize = atoi(optarg);
+      histsize = my_atoi(optarg);
       if (histsize < 0 || *optarg == '-') {
         write_histfile = 0;
         histsize = -histsize;
@@ -828,7 +828,7 @@ read_options_and_command_name(int argc, char **argv)
     case 'U': mirror_arguments = TRUE; break;
     case 'v': printf("rlwrap %s\n",  VERSION); exit(EXIT_SUCCESS);
     case 'w':
-      wait_before_prompt = atoi(optarg);
+      wait_before_prompt = my_atoi(optarg);
       if (wait_before_prompt < 0) {
         wait_before_prompt *= -1;
         impatient_prompt =  FALSE;
@@ -867,7 +867,7 @@ read_options_and_command_name(int argc, char **argv)
     }
   }
   if (opt_C) {
-    int countback = atoi(opt_C);	/* investigate whether -C option argument is numeric */
+    int countback = my_atoi(opt_C);	/* investigate whether -C option argument is numeric */
 
     if (countback > 0) {	/* e.g -C 1 or -C 12 */
       if (argc - countback < optind)	/* -C 666 */
@@ -1023,13 +1023,18 @@ cleanup_rlwrap_and_exit(int status)
 
 
 
+extern int test_haystack(const char *haystack, const char *needle);
 static void test_main() {
 #ifdef DEBUG
   if(debug & DEBUG_TEST_MAIN) {
     /* test, test */
-    test_unbackspace("abc","abc");
-    test_unbackspace("abc\bd","abd");
-    test_unbackspace("abc\r","abc");
+
+    test_haystack("rabarber","r");
+    test_haystack("","r");
+    test_haystack("rr rr rr rrr","rr");
+    /* test_haystack("bobobo",""); */
+    test_haystack("lalalalalal","la");
+
     test_unbackspace("abc\rd","dbc");
     test_unbackspace("abc\bd\re","ebd");
     test_unbackspace("abc\rde\rf","fec");

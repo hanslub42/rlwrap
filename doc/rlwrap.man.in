@@ -296,14 +296,7 @@ be sent directly to \fIcommand\fP,  even when \fBrlwrap\fP is not in direct mode
 .TP
 .B (Not currently bound)
 Any key can be bound to the \fBreadline\fP command \fIrlwrap-hotkey\fP. This key will then cause the current
-input line to be filtered (cf. \fBRlwrapFilter(3pm)\fP) through the current filter (hence be a no-op when
-there is no filter), which then can re-write the input line and move the cursor.
-After that, the user can still edit the resulting input.
-.TP
-.B (Not currently bound)
-Any key can be bound to the \fBreadline\fP command \fIrlwrap-edit-history\fP. This key will then
-call an external editor (see RLWRAP_EDITOR below) with the complete history. You can then edit, or remove any (or all)
-history entries. Inserting an empty line will put the next line  in the edit buffer after exiting the editor
+input line and the current history to be filtered (cf. \fBRlwrapFilter(3pm)\fP) through the current filter (hence be a no-op when there is no filter), which then can re-write the input line, move the cursor and update the history. After that, the user can still edit the resulting input.
 .PP
 The special keys were chosen for no other reason than that they  are not currently bound to any
 readline action. If you don't like them, (or your window manager swallows them) they (and the other 3 commands)

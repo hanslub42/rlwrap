@@ -60,6 +60,8 @@
 #include "rlwrap.h"
 
 
+
+
 static int filter_input_fd = -1;
 static int filter_output_fd = -1;
 pid_t filter_pid = 0;
@@ -172,14 +174,33 @@ char *filters_last_words() {
   return read_from_filter(TAG_OUTPUT);
 }       
     
-  
+int filter_is_interested_in(int tag) {
+  static char *interests = NULL;
+  assert(tag <= MAX_INTERESTING_TAG);
+  if (!interests) {
+    char message[MAX_INTERESTING_TAG + 2];
+    int i;
+    mymicrosleep(500);
+    for (i=0; i <= MAX_INTERESTING_TAG; i++)
+      message[i] = 'n';
+    message[i] = '\0';
+    interests = pass_through_filter(TAG_WHAT_ARE_YOUR_INTERESTS, message);
+    if (!strchr(interests, 'y'))    /* A completely uninterested filter ... */
+      for (i=0; i <= MAX_INTERESTING_TAG; i++)  /* (e.g. logger, on its own) ... */
+        interests[i] = 'y';         /* gets all message types        */
+
+  }
+  return (interests[tag] == 'y');
+}
+ 
 
    
 char *pass_through_filter(int tag, const char *buffer) {
   char *filtered;
-  DPRINTF3(DEBUG_FILTERING, "to filter (%s, %d bytes) %s", tag2description(tag), (int) strlen(buffer), mangle_string_for_debug_log(buffer, MANGLE_LENGTH)); 
-  if (filter_pid ==0)
+  assert(!out_of_band(tag));
+  if (filter_pid ==0 || (tag <  MAX_INTERESTING_TAG && !filter_is_interested_in(tag)))
     return mysavestring(buffer);
+  DPRINTF3(DEBUG_FILTERING, "to filter (%s, %d bytes) %s", tag2description(tag), (int) strlen(buffer), mangle_string_for_debug_log(buffer, MANGLE_LENGTH)); 
   write_to_filter((expected_tag = tag), buffer);
   filtered = read_from_filter(tag);
   DPRINTF2(DEBUG_FILTERING, "from filter (%d bytes) %s", (int) strlen(filtered), mangle_string_for_debug_log(filtered, MANGLE_LENGTH));
@@ -192,10 +213,10 @@ char *pass_through_filter(int tag, const char *buffer) {
 static char *read_from_filter(int tag) {
   uint8_t  tag8;
   DEBUG_RANDOM_SLEEP;
-  assert (!out_of_band(tag));  
+  assert (!out_of_band(tag));
+  
   while (read_patiently2(filter_output_fd, &tag8, sizeof(uint8_t), 1000, "from filter"), out_of_band(tag8))
     handle_out_of_band(tag8, read_tagless());
-         
   if (tag8 != tag)
     myerror(FATAL|USE_ERRNO, "Tag mismatch, expected %s from filter, but got %s", tag2description(tag), tag2description(tag8));
   
@@ -281,6 +302,7 @@ static char* tag2description(int tag) {
   case TAG_COMPLETION:                 return "COMPLETION";
   case TAG_PROMPT:                     return "PROMPT";
   case TAG_HOTKEY:                     return "HOTKEY";
+  case TAG_WHAT_ARE_YOUR_INTERESTS:    return "WHAT_ARE_YOUR_INTERESTS";
   case TAG_IGNORE:                     return "TAG_IGNORE";
   case TAG_ADD_TO_COMPLETION_LIST:     return "ADD_TO_COMPLETION_LIST";
   case TAG_REMOVE_FROM_COMPLETION_LIST:return "REMOVE_FROM_COMPLETION_LIST";

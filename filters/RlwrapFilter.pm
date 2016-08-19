@@ -21,12 +21,14 @@ $VERSION = '0.01';
 use Carp;
 
 # constants for every tag we know about
+use constant MAX_TAG                           => 255;
 use constant TAG_INPUT                         => 0;
 use constant TAG_OUTPUT                        => 1;
 use constant TAG_HISTORY                       => 2;
 use constant TAG_COMPLETION                    => 3;
 use constant TAG_PROMPT                        => 4;
 use constant TAG_HOTKEY                        => 5;
+use constant TAG_WHAT_ARE_YOUR_INTERESTS       => 127;
 use constant TAG_IGNORE                        => 251;
 use constant TAG_ADD_TO_COMPLETION_LIST        => 252;
 use constant TAG_REMOVE_FROM_COMPLETION_LIST   => 253;
@@ -112,10 +114,9 @@ sub run {
     if($ENV{RLWRAP_COMMAND_PID} == 0) { # when called as rlwrap -z <filter> (with no command) ..
       write_message(TAG_OUTPUT_OUT_OF_BAND, $self -> help_text . "\n"); # ... send help text
     }
-
+   
     while(1) {
 	my ($tag, $message) = read_message();
-
         $message = when_defined $self -> message_handler, "$message", $tag; # ignore return value
 	my $response;
 
@@ -127,9 +128,9 @@ sub run {
 	  $response = when_defined $self -> history_handler, "$message";
         } elsif ($tag == TAG_HOTKEY) {
           if ($self -> hotkey_handler) {
-            my ($hotkey, $prefix, $postfix) = split /\t/, $message;
-            my ($message, $new_prefix, $new_postfix) = &{$self -> hotkey_handler}($hotkey, $prefix, $postfix);
-            $response = "$message\t$new_prefix\t$new_postfix";
+            my @params = split /\t/, $message;
+            my @result = &{$self -> hotkey_handler}(@params);
+            $response = join("\t", @result);
           } else {
             $response = $message;
           }
@@ -141,7 +142,7 @@ sub run {
 	    @completions = split / /, $completions;
 	    @completions = &{$self -> completion_handler}($line, $prefix, @completions);
 	    $response = "$line\t$prefix\t". (join ' ', @completions) . " ";
-	  } else {
+          } else {
 	    $response = $message;
 	  }
 	} elsif ($tag == TAG_PROMPT) {
@@ -159,11 +160,14 @@ sub run {
 
 	  $response = when_defined $self -> prompt_handler, "$message";
 	  croak "prompts may not contain newlines!" if $response =~ /\n/;
+        } elsif ($tag == TAG_WHAT_ARE_YOUR_INTERESTS) {
+            $response = $self -> add_interests($message);
 	} else {
 	  $response = $message; # No error message, compatible with future rlwrap
 	                        # versions that may define new tag types
 	}
 
+        # shouldn't the next "and" be an  "or"? @@@
 	unless (out_of_band($tag) and ($tag == TAG_PROMPT and $response eq REJECT_PROMPT)) {
           $self -> {previous_tag} = $tag;
           $self -> {previous_message} = $message;
@@ -187,6 +191,27 @@ sub when_defined($@) {
     return $_;
   }
 }
+
+# WHen the filter starts, it tells rlwrap its interests as a string 'yyny..' (TAG_MAX chars, 1 for each tag)
+# when receiving a message 'nnynn...' the follwoing function changes 'n' to 'y' for those message types that the
+# filter handles,so that at the end of the pipeline the message reflects the interests of all filters in the
+# pipeline
+sub add_interests {
+  my ($self, $message) = @_;
+  my @interested = split //, $message;
+  for (my $tag = 0; $tag < @interested; $tag++) {
+    next if $interested[$tag] eq 'y'; # a preceding filter in the pipeline has already shown interest
+    $interested[$tag] = 'y'
+      if ($tag == TAG_INPUT      and $self -> input_handler)
+      or ($tag == TAG_OUTPUT     and $self -> output_handler or $self -> echo_handler)
+      or ($tag == TAG_HISTORY    and $self -> history_handler)
+      or ($tag == TAG_COMPLETION and $self -> completion_handler)
+      or ($tag == TAG_PROMPT     and $self -> prompt_handler)
+      or ($tag == TAG_HOTKEY     and $self -> hotkey_handler);
+  }
+  return join '', @interested;
+}
+
 
 sub out_of_band {
   my($tag) = @_;
@@ -260,8 +285,9 @@ sub read_patiently {
   my $result;
   while($already_read < $count) {
     my $nread = sysread($fh, $result, $count-$already_read, $already_read);
-    if ($nread == 0) {
-      exit 0;
+    if ($nread == 0) { # rlwrap (or the rlwrapped command) has put down the
+                       # telephone - we're going to die anyway. Don't complain.
+      exit(0);
     } elsif ($nread < 0) {
       die_with_errormessage("error reading: $!");
     }
@@ -278,7 +304,7 @@ sub write_patiently {
   while($already_written < $count) {
     my $nwritten = syswrite($fh, $buffer, $count-$already_written, $already_written);
     if ($nwritten <= 0) {
-      die_with_errormessage("error writing: $!");
+      die_with_errormessage("error writing: $!\n");
     }
     $already_written += $nwritten;
   }
@@ -288,7 +314,6 @@ sub write_patiently {
 # read message (tag, length word and contents) from FILTER_IN
 sub read_message {
   return read_from_stdin() unless $we_are_running_under_rlwrap;
-
   my $tag = unpack("C", read_patiently(*FILTER_IN,1));
   my $length = unpack("L",read_patiently(*FILTER_IN,4));
   my $message = read_patiently(*FILTER_IN, $length);
@@ -314,6 +339,8 @@ sub read_from_stdin {
     print $prompt;
     ($tagname, $message) = (<STDIN> =~ /(\S+) (.*?)\r?\n/);
     exit unless $tagname;
+    $message =~ s/\\t/\t/g; # allow TABs to be input as '\t'
+    $message =~ s/\\n/\n/g; # the same for newlines
     $tag = name2tag(undef, $tagname); # call as function, not method
     $prompt = "again > ";
   }
@@ -362,11 +389,26 @@ sub cloak_and_dagger {
 }
 
 
+# Commands return messages asynchronously and may time out
+# when invoked by multiple `cloak_and_dagger`. You may want to
+# drop their unused output at some later time:
+
+# rlwrap_filter.cloak_and_dagger($command1, $prompt, $timeout)
+# rlwrap_filter.cloak_and_dagger($command2, $prompt, $timeout) ...
+# sleep(1)
+# rlwrap_filter.vacuum_stale_message($prompt,  $timeout)
+
+sub vacuum_stale_message {
+  my ($self, $prompt, $timeout) = @_;
+  return read_until(*CMD_OUT, $prompt, $timeout);
+}
+
+    
 
 sub tag2name {
   my ($self, $tag) = @_;
   for my $name (qw(TAG_REMOVE_FROM_COMPLETION_LIST TAG_ADD_TO_COMPLETION_LIST TAG_INPUT TAG_PROMPT TAG_COMPLETION
-		   TAG_HOTKEY TAG_HISTORY TAG_OUTPUT_OUT_OF_BAND TAG_ERROR  TAG_IGNORE TAG_OUTPUT)) {
+		   TAG_HOTKEY TAG_HISTORY TAG_WHAT_ARE_YOUR_INTERESTS  TAG_OUTPUT_OUT_OF_BAND TAG_ERROR  TAG_IGNORE TAG_OUTPUT)) {
     return $name if (eval "$tag == $name");
   }
   croak "unknown tag $tag";
@@ -474,6 +516,8 @@ aspect of rlwrap's interaction with the user: changing the history,
 re-writing output and input, calling a pager or computing completion
 word lists from the current input.
 
+Filters can be combined in a pipeline using the special B<pipeline> filter.
+
 B<RlwrapFilter> makes it very simple to write rlwrap
 filters in perl. A filter only needs to instantiate a RlwrapFilter
 object, change a few of its default handlers and then call its 'run'
@@ -506,7 +550,7 @@ from B<rlwrap>.  Messages consist of a tag indicating which handler
 should be called (e.g. TAG_INPUT, TAG_HISTORY) and the message
 text. Usually, a filter overrides only one or at most two methods.
 
-=head3 CALLING CONVENTIONS
+=head2 CALLING CONVENTIONS
 
 In many cases (e.g. TAG_INPUT, TAG_OUTPUT, TAG_PROMPT) the message
 text is a simple string. Their handlers are called with the message
@@ -525,7 +569,8 @@ completion, history, input, echo, output, prompt, ... etc ad
 infinitum. Rlwrap may always skip a handler when in direct mode; on
 the other hand, completion and output handlers may get called more
 than once in succession. If a handler is left undefined, the result is
-as if the message text were returned unaltered.
+as if the message text were returned unaltered (in fact, B<rlwrap> knows
+when this is the case and won't even bother to send the message)
 
 It is important to note that the filter, and hence all its handlers,
 are bypassed when I<command> is in direct mode, i.e. when it asks for
@@ -575,24 +620,33 @@ the input line out of the history.
 
 =item $handler = $f -> hotkey_handler, $f -> hotkey_handler(\&handler)
 
-If the user presses a key that is bound to "rlwrap_hotkey" in B<.inputrc>
-the handler is called with three arguments: the hotkey, the prefix (i.e.
-the part of the current input line before the cursor), and the remaining part of
-the input line (postfix). It should return a list consisting of a possibly
-empty message (to be displayed in readline's echo area), the re-writen prefix and
-ditto postfix. Example:
-if the current input line is  "pea soup" (with the cursor on the
+If, while editing an input line, the user presses a key that is bound
+to "rlwrap_hotkey" in B<.inputrc>, the handler is called with five
+arguments: the hotkey, the prefix (i.e.  the part of the current input
+line before the cursor), the remaining part of the input line
+(postfix), the history as one string ("line 1\nline 2\n...line N", and
+the history position. It has to return a similar list, except that the
+first element will be printed in the "echo area" if it is changed from
+its original value.
+
+
+B<Example:> if the current input line is  "pea soup" (with the cursor on the
 space), and the user presses CTRL+P, which happens to be bound to "rlwrap-hotkey"
 in B<.inputrc>, the handler is called like this:
 
-    my_handler(16, "pea", " soup") # 16 = CTRL-P
+    my_handler("\0x10", "pea", " soup", "tomato soup\nasparagus..", 12) # 16 = CTRL-P
 
 If you prefer peanut soup, the handler should return
 
-    ("Mmmm!", "peanut", " soup")
+    ("Mmmm!", "peanut", " soup", "asparagus..", 11)
 
 after which the input line will be "peanut soup" (with the cursor
-again on the space) and the echo area will display "Mmmm!"
+again on the space), the echo area will display "Mmmm!", and any reference
+to inferior soups will have been purged from the history.
+
+If the returned input line ends with a newline B<rlwrap> will immediately
+accept the result.
+
 
 
 =item $handler = $f -> input_handler, $f -> input_handler(\&handler)
@@ -791,6 +845,9 @@ The protocol uses the following tags (tags E<gt> 128 are out-of-band)
  TAG_HISTORY     2
  TAG_COMPLETION  3
  TAG_PROMPT      4
+ TAG_HOTKEY      5
+
+ TAG_WHAT_ARE_YOUR_INTERESTS     127
 
  TAG_IGNORE                      251
  TAG_ADD_TO_COMPLETION_LIST      252
@@ -800,9 +857,13 @@ The protocol uses the following tags (tags E<gt> 128 are out-of-band)
 
 
 To see how this works, you can eavesdrop on the protocol
-using the 'logger' filter.
+using the B<logger> filter.
 
 The constants TAG_INPUT, ... are exported by the RlwrapFilter.pm module.
+
+TAG_WHAT_ARE_YOUR_INTERESTS is only ever used internally, to prevent the exchange of messages that 
+won't be handled by the filter anyway. It will be seen by the general message handler, and therefore show 
+up (exactly once, at program start) in the output of e.g. the B<logger> filter.
 
 =head1 SIGNALS
 
@@ -883,11 +944,17 @@ rlwrap), even if we set the RLWRAP_*_FD ourselves.
 Therefore, when run directly from the command line, a filter expects
 input messages on its standard input of the form
 
-TAG_PROMPT myprompt >
+  TAG_PROMPT myprompt >
 
-(i.a. a tag name, one space and a message followed by a newline) and it will respond in the
-same way on its standard output
+(i.a. a tag name, one space and a message followed by a newline. The
+message will not contain the final newline) and it will respond in the
+same way on its standard output. Of course, B<rlwrap> can help with the
+tedious typing of tag names:
 
+  rlwrap -f tagnames filter_to_be_debugged
+
+Because B<rlwrap> cannot put TABs and newlines in input lines, filters will
+convert '\t' and '\n' into TAB and newline when run directly from the command line.
 
 =head1 SEE ALSO
 
