@@ -15,6 +15,7 @@ my $keymap =
   "n" => \&edit_history, 
   "r" => \&peco_history, 
   "t" => \&date_in_echo_area,
+  "i" => \&peco_history
 };  
 
 my @tempfiles; # list of files to be cleaned on exit;

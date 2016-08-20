@@ -4,6 +4,7 @@ require 5.006;
 
 use strict;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK $AUTOLOAD);
+use MIME::Base64;
 
 sub when_defined($@);
 my $previous_tag = -1;
@@ -129,7 +130,15 @@ sub run {
         } elsif ($tag == TAG_HOTKEY) {
           if ($self -> hotkey_handler) {
             my @params = split /\t/, $message;
+            @params[0] = decode_base64(@params[0]); # hotkey
+            @params[1] = decode_base64(@params[1]); # prefix
+            @params[2] = decode_base64(@params[2]); # postfix
+            @params[3] = decode_base64(@params[3]); # history
             my @result = &{$self -> hotkey_handler}(@params);
+            @result[0] = encode_base64(@result[0]); # message
+            @result[1] = encode_base64(@result[1]); # new prefix
+            @result[2] = encode_base64(@result[2]); # new postfix
+            @result[3] = encode_base64(@result[3]); # new history
             $response = join("\t", @result);
           } else {
             $response = $message;

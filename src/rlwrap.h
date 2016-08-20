@@ -385,6 +385,9 @@ char *get_last_screenline(char *long_line, int termwidth);
 char *lowercase(const char *str);
 char *colour_name_to_ansi_code(const char *colour_name);
 int match_regexp(const char *string, const char *regexp, int case_insensitive);
+#define NOT_A_BASE64_CHAR 0x100
+char * base64_encode(char *str);
+char * base64_decode(char *str);
 
 
 /* in pty.c: */

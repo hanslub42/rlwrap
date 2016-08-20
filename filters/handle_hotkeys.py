@@ -134,6 +134,7 @@ keymap = {
     "y" : yank_clipboard,
     "n" : edit_history,
     "r" : peco_history,
+    "i" : peco_history, # tab
     "t" : date_in_echo_area
 }
 
@@ -163,9 +164,8 @@ def document_all_hotkeys():
 
 def safe_backtick(command_args):
     with subprocess.Popen(command_args, stdout=subprocess.PIPE, universal_newlines=True) as p:
-        #result = map(lambda b: b.decode("utf-8"), p.stdout.readlines())
         (result, error) = p.communicate()
-    return ''.join(result).rstrip()
+    return result.rstrip()
 
 
 # give back corresponding CTRL-key. E.g: control("m") = "\0x13"
