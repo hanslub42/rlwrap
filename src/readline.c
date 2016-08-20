@@ -658,14 +658,11 @@ handle_hotkey2(int UNUSED(count), int hotkey, int ignore_history)
   char *filter_food, *filtered, **fragments,  *new_rl_line_buffer;
   int length, new_histpos;
   unsigned long int hash;
+  char photkey[2] = {hotkey, '\0'};
 
   static const unsigned int MAX_HISTPOS_DIGITS = 6; /* one million history items should suffice */
 
   DPRINTF1(DEBUG_READLINE, "hotkey press: %s", mangle_char_for_debug_log(hotkey, TRUE));
-
-  if (hotkey == '\t') /* this would go horribly wrong with all the splitting on '\t' going on.... @@@ or pass key as a string e.g. "009" */
-    myerror(FATAL | NOERRNO, "Sorry, you cannot use TAB as an hotkey in rlwrap");
-
 
   prefix = mysavestring(rl_line_buffer);
   prefix[rl_point] = '\0';                                     /* chop off just before cursor */
@@ -681,10 +678,15 @@ handle_hotkey2(int UNUSED(count), int hotkey, int ignore_history)
     hash = hash_multiple(2, history, histpos_as_string);
   }     
 
+  char * base64_hotkey  = base64_encode(photkey);
+  char * base64_prefix  = base64_encode(prefix);
+  char * base64_postfix = base64_encode(postfix);
+  char * base64_history = base64_encode(history);
   /* filter_food = key + tab + prefix + tab + postfix + tab + history + tab + histpos  + '\0' */
-  length = strlen(rl_line_buffer) + strlen(history) + MAX_HISTPOS_DIGITS + 5; 
-  filter_food = mymalloc(length);   
-  sprintf(filter_food, "%c\t%s\t%s\t%s\t%s", hotkey, prefix, postfix, history, histpos_as_string); /* this is the format that the filter expects */
+  length = strlen(base64_hotkey) + strlen(base64_prefix) + strlen(base64_postfix) + strlen(base64_history) + MAX_HISTPOS_DIGITS + 4 /* tab x 4 */ + 1 /* '\0' */;
+  filter_food = mymalloc(length);
+  sprintf(filter_food, "%s\t%s\t%s\t%s\t%s", base64_hotkey, base64_prefix, base64_postfix, base64_history, histpos_as_string); /* this is the format that the filter expects */
+  free_multiple(base64_hotkey, base64_prefix, base64_postfix, base64_history, FMEND);
 
   /* let the filter filter ...! */
   filtered= pass_through_filter(TAG_HOTKEY, filter_food);
@@ -693,10 +695,10 @@ handle_hotkey2(int UNUSED(count), int hotkey, int ignore_history)
   
   /* OK, we now have to read back everything. There should be exactly 5 TAB-separated components*/
   fragments = split_on_single_char(filtered, '\t', 5);
-  message               = fragments[0];
-  new_prefix            = fragments[1];
-  new_postfix           = fragments[2];
-  new_history           = fragments[3];
+  message               = base64_decode(fragments[0]);
+  new_prefix            = base64_decode(fragments[1]);
+  new_postfix           = base64_decode(fragments[2]);
+  new_history           = base64_decode(fragments[3]);
   new_histpos_as_string = fragments[4];
 
   if (!ignore_history && hash_multiple(2, new_history, new_histpos_as_string) != hash) { /* history has been rewritten */
@@ -734,9 +736,8 @@ handle_hotkey2(int UNUSED(count), int hotkey, int ignore_history)
   rl_on_new_line();
   rl_redisplay();
  
-
   free_splitlist(fragments);                                   /* this will free all the fragments (and the list itself) in one go  */
-  free_multiple(prefix, postfix, filter_food, filtered, new_rl_line_buffer, history, histpos_as_string, FMEND);
+  free_multiple(message, prefix, postfix, filter_food, filtered, new_rl_line_buffer, history, histpos_as_string, new_prefix, new_postfix, new_history, FMEND);
   return 0;
 }
 

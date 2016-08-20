@@ -47,6 +47,7 @@ import traceback
 import binascii
 import collections
 import numbers
+import base64
 
 TAG_INPUT                       = 0
 TAG_OUTPUT                      = 1
@@ -315,6 +316,14 @@ def test_intercept():
     raise Exception('test exception = = = = = .........')
 
 
+def base64_decode(string):
+    return str(base64.b64decode(bytes(string, sys.stdin.encoding)), sys.stdin.encoding)
+
+
+def base64_encode(string):
+    return str(base64.b64encode(bytes(string, sys.stdin.encoding)), sys.stdin.encoding)
+
+
 class RlwrapFilterError(Exception):
     """
     A custom exception for rlwrap
@@ -550,7 +559,15 @@ class RlwrapFilter:
             elif (tag == TAG_HOTKEY):
                 if (self.hotkey_handler is not None):
                     params = message.split("\t")
-                    result = self.hotkey_handler(*params)
+                    params[0] = base64_decode(params[0]) # hotkey
+                    params[1] = base64_decode(params[1]) # prefix
+                    params[2] = base64_decode(params[2]) # postfix
+                    params[3] = base64_decode(params[3]) # history
+                    result = list(self.hotkey_handler(*params))
+                    result[0] = base64_encode(result[0]) # message
+                    result[1] = base64_encode(result[1]) # new prefix
+                    result[2] = base64_encode(result[2]) # new postfix
+                    result[3] = base64_encode(result[3]) # new history
                     response = "\t".join(result)
                 else:
                     response = message
