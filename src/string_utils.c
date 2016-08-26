@@ -896,3 +896,14 @@ int match_regexp (const char *string, const char *regexp, int case_insensitive) 
   
   return result;        
 }
+
+
+/* returns TRUE if string is numeric, otherwise FALSE */
+int isnumeric(char *string){
+  char *pstr = string;
+
+  while (*pstr != '\0')
+    if (!isdigit(*pstr++)) return FALSE;
+
+  return TRUE;
+}
