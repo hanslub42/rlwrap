@@ -661,7 +661,7 @@ handle_hotkey2(int UNUSED(count), int hotkey, int ignore_history)
 
   static const unsigned int MAX_HISTPOS_DIGITS = 6; /* one million history items should suffice */
 
-  DPRINTF1(DEBUG_READLINE, "hotkey press: %s", mangle_char_for_debug_log(hotkey, TRUE));
+  DPRINTF2(DEBUG_READLINE, "hotkey press: %x (%s)", hotkey, mangle_string_for_debug_log(rl_executing_keyseq, MANGLE_LENGTH));
 
   if (hotkey == '\t') /* this would go horribly wrong with all the splitting on '\t' going on.... @@@ or pass key as a string e.g. "009" */
     myerror(FATAL | NOERRNO, "Sorry, you cannot use TAB as an hotkey in rlwrap");
@@ -684,7 +684,7 @@ handle_hotkey2(int UNUSED(count), int hotkey, int ignore_history)
   /* filter_food = key + tab + prefix + tab + postfix + tab + history + tab + histpos  + '\0' */
   length = strlen(rl_line_buffer) + strlen(history) + MAX_HISTPOS_DIGITS + 5; 
   filter_food = mymalloc(length);   
-  sprintf(filter_food, "%c\t%s\t%s\t%s\t%s", hotkey, prefix, postfix, history, histpos_as_string); /* this is the format that the filter expects */
+  sprintf(filter_food, "%s\t%s\t%s\t%s\t%s", rl_executing_keyseq, prefix, postfix, history, histpos_as_string); /* this is the format that the filter expects */
 
   /* let the filter filter ...! */
   filtered= pass_through_filter(TAG_HOTKEY, filter_food);

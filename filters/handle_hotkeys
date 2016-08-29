@@ -4,17 +4,17 @@ use lib ($ENV{RLWRAP_FILTERDIR} or ".");
 use RlwrapFilter;
 use strict;
 use POSIX qw(:signal_h);
-use File::Slurp;
 
 
 
 # change the table below if you like, but don't forget to bind the corresponding keys  to 'rlwrap-hotkey' in your .inputrc
 
 my $keymap =
-{ "y" => \&yank_clipboard,
-  "n" => \&edit_history, 
-  "r" => \&peco_history, 
-  "t" => \&date_in_echo_area,
+{ '\C-y'       => \&yank_clipboard,
+  '\C-n'       => \&edit_history, 
+  '\C-r'       => \&peco_history, 
+  '\C-t'       => \&date_in_echo_area,
+  '\M-\C-m'    => \&date_in_echo_area # test a multi-byte hotkey (ESC-ENTER)
 };  
 
 my @tempfiles; # list of files to be cleaned on exit;
@@ -22,6 +22,13 @@ my @tempfiles; # list of files to be cleaned on exit;
 ############################################ The Filter #################################################
 
 my $filter = new RlwrapFilter;
+
+# populate a hash %$handlers, with the actual hotkeys (not their readline key notation like '\M\C-m') as keys:
+my $handlers;
+foreach my $keyseq (keys %$keymap) {
+    $handlers -> {translate_from_readline_keynotation($keyseq)} = $keymap -> {$keyseq};
+}
+
 my $name = $filter -> name;
 
 $filter -> help_text("Usage: rlwrap -z $name <command>\n".
@@ -35,29 +42,29 @@ $filter -> run;
 
 
 # A hotkey handler is called with five parameters:
-#   1: the key (e.g. 14 for CTRL+M)
+#   1: the key sequence that triggered rlwrap-handle-hotkey
 #   2: the prefix, i.e. the input line up to (but not including) the cursor
 #   3: the postfix: the rest of the input line (without a concluding newline, of course)
 #   4: the whole history (all lines, oldest first, interspersed with newlines: "line 1\nline2\n ...line N")
-#   5: the history position at the moment of the hotkey press (oldest line = 0)
+#   5: the history position (as a line number) at the moment of the hotkey press (oldest line = 0)
 #
 # If the hotkey was bound to "rlwrap-hotkey-without-history" the last two parameters will be empty and can be ignored
-# The return value is a similar list (where all values may be changed: the input line could be re-written,
-# the history revised, etc. The first parameter makes no sense as a return value: if it is != $key
-# it will pe put in the "echo area". If the key was bound to rlwrap-hotkey-without-history the last two elements of the 
-# returned list are ignored.
+# The return value is a similar list (where all values may be changed: the input line could be re-written, the history
+# revised, etc. The first parameter makes no sense as a return value: if it is empty, or changed from its original
+# value, its contents will pe put in the "echo area". If the key sequence was bound to rlwrap-hotkey-without-history the
+# history is not passed to the handler, and the last two elements of the returned list are ignored.
 #
 # If the postfix is returned with a concluding newline, the resulting input line is accepted immediately, otherwise
-# it is put in readlines input buffer again, with the cursor at the beginning of the returned postfix 
+# it is put in readline's input buffer again, with the cursor at the beginning of the returned postfix 
 #
 # Summary: ($echo, $prefix, $postfix, $history, $histpos) = handler($key, $prefix, $postfix, $history, $histpos)
 
 
 # generic hotkey handler, that dispatches on the value of $key (using the hash %$keymap defined at the top of this file
 sub hotkey {
-    my ($key, @other_params) = @_;                                  # key = e.g.  "<CTRL-Y>" 
-    my $handler = $keymap -> {uncontrol($key)};
-    return ($key, @other_params) unless $handler; # a filter further downstream may want to handle this hotkey 
+    my ($keyseq, @other_params) = @_;                                  # key = e.g.  "<CTRL-Y>" 
+    my $handler = $handlers -> {$keyseq};
+    return ($keyseq, @other_params) unless $handler; # a filter further downstream may want to handle this hotkey 
     my @result = &$handler(0, @other_params);
     return @result;
 }
@@ -92,7 +99,7 @@ sub date_in_echo_area {
 my $instance = 0;
 sub edit_history {
   my ($doc, $prefix, $postfix, $history, $histpos) = @_;
-  $doc and return "edit current history";
+  $doc and return "edit and/or choose from  current history";
   $histpos =~ /\d/ or die "$histpos is not a number - did you bind this key to 'rlwrap-hotkey-without-history'?";
   $instance++;
   my $editfile = ($ENV{TMP} || $ENV{TEMP} || "/tmp") . "/history.$$.$instance.txt";
@@ -136,7 +143,7 @@ sub edit_history {
 
 sub peco_history {
     my ($doc, $prefix, $postfix, $history, $histpos) = @_;
-    $doc and return "edit current history";  
+    $doc and return "use peco to choose from history entries that match current input before cursor";  
     my $editfile = ($ENV{TMP} || $ENV{TEMP} || "/tmp") . "/history.$$.txt";
     my $lineno = $histpos + 1;
     my $colno = length($prefix) + 1;
@@ -151,11 +158,10 @@ sub peco_history {
 ############################## helper functions #########################################################
 
 sub document_all_hotkeys {
+
     my $doclist;
-    foreach my $k  ("a".."z") {
-        if ((my $handler = $keymap -> {$k})) {
-            $doclist .= "CTRL+$k:   " . &$handler(1) . "\n";
-        }
+    foreach my $keyseq  (sort keys %$keymap) {
+        $doclist .= "$keyseq:   " . &{$keymap -> {$keyseq}}(1) . "\n";
     }
     my $inputrc = "$ENV{HOME}/.inputrc";
     $doclist .= "Currently bound hotkeys in $inputrc:\n";
@@ -178,17 +184,40 @@ sub safe_backtick {
 }
 
 
-# give back corresponding CTRL-key. E.g: control("m") = "\0x13"
-sub control {
-    my ($key) = @_;
-    $key = lc $key;
-    die "Key '$key' should be one of a ..z\n" unless $key =~ /[a..z]/; # is this too strict?
-    return pack("c", unpack("c", lc $key) - 64);
+
+# Translate from Readline "\C-x" notation to corresponding key. E.g. translate_from_readline_keynotation("\C-m") = '\0x13'
+sub translate_from_readline_keynotation {
+    my ($keyseq) = @_;
+    $keyseq =~ s/\\C-(.)/translate_control($1)/ge;
+    $keyseq =~ s/\\M-/\e/g; # @@@ this allows nonsense like "\C-\M-"
+    return $keyseq;
 }
 
-sub uncontrol {
-    my ($key) = @_;
-    return  lc pack("c", unpack("c", $key) + 64);
+# translate_control("m") == translate_control("M") ==  '\0x13' etc. 
+sub translate_control { 
+    my ($ctrlkey) = @_;
+    $ctrlkey =  uc $ctrlkey; # Don't discriminate between \C-M and \C-m
+    return pack("c", unpack("c", $ctrlkey) - 64);
+}
+
+
+# Use home-grown {read,write}_file rather than depending on File::Slurp
+sub read_file {
+    my($file) = @_;
+    open IN, "$file" or die "Cannot read $file: $!\n";
+    my @result;
+    while(<IN>) {
+        push @result, $_;
+    }
+    close IN;
+    return @result;
+}
+
+sub write_file {
+    my ($file, $content) = @_;
+    open OUT, ">$file" or die "Cannot write $file:$!\n";
+    print OUT $content;
+    close OUT;
 }
 
 
@@ -197,3 +226,4 @@ sub END {
         -f $f and unlink $f;
     }
 }
+

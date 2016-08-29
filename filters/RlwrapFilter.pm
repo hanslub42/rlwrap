@@ -114,7 +114,7 @@ sub run {
     if($ENV{RLWRAP_COMMAND_PID} == 0) { # when called as rlwrap -z <filter> (with no command) ..
       write_message(TAG_OUTPUT_OUT_OF_BAND, $self -> help_text . "\n"); # ... send help text
     }
-   
+
     while(1) {
 	my ($tag, $message) = read_message();
         $message = when_defined $self -> message_handler, "$message", $tag; # ignore return value
@@ -403,7 +403,7 @@ sub vacuum_stale_message {
   return read_until(*CMD_OUT, $prompt, $timeout);
 }
 
-    
+
 
 sub tag2name {
   my ($self, $tag) = @_;
@@ -861,8 +861,8 @@ using the B<logger> filter.
 
 The constants TAG_INPUT, ... are exported by the RlwrapFilter.pm module.
 
-TAG_WHAT_ARE_YOUR_INTERESTS is only ever used internally, to prevent the exchange of messages that 
-won't be handled by the filter anyway. It will be seen by the general message handler, and therefore show 
+TAG_WHAT_ARE_YOUR_INTERESTS is only ever used internally, to prevent the exchange of messages that
+won't be handled by the filter anyway. It will be seen by the general message handler, and therefore show
 up (exactly once, at program start) in the output of e.g. the B<logger> filter.
 
 =head1 SIGNALS
