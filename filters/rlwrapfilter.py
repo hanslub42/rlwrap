@@ -224,6 +224,7 @@ def tag2name(tag):
     """
     for name in ['TAG_REMOVE_FROM_COMPLETION_LIST',
                  'TAG_ADD_TO_COMPLETION_LIST',
+                 'TAG_WHAT_ARE_YOUR_INTERESTS',
                  'TAG_INPUT',
                  'TAG_PROMPT',
                  'TAG_COMPLETION',
