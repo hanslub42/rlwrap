@@ -867,7 +867,8 @@ read_options_and_command_name(int argc, char **argv)
     }
   }
   if (opt_C) {
-    int countback = my_atoi(opt_C);	/* investigate whether -C option argument is numeric */
+    int countback = 0;
+    if (isnumeric(opt_C)) countback = my_atoi(opt_C);	/* investigate whether -C option argument is numeric */
 
     if (countback > 0) {	/* e.g -C 1 or -C 12 */
       if (argc - countback < optind)	/* -C 666 */
