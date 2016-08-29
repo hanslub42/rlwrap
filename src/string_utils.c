@@ -898,10 +898,11 @@ int match_regexp (const char *string, const char *regexp, int case_insensitive) 
 }
 
 
-/* returns TRUE if string is numeric, otherwise FALSE */
+/* returns TRUE if string is numeric (i.e. positive or negative integer), otherwise FALSE */
 int isnumeric(char *string){
   char *pstr = string;
-
+  if (*pstr == '-')  /* allow negative numbers */
+    pstr++; 
   while (*pstr != '\0')
     if (!isdigit(*pstr++)) return FALSE;
 
