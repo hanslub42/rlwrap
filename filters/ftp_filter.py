@@ -152,7 +152,7 @@ if __name__ == '__main__':
         "(demo filter to show the use of the cloak_and_dagger method)"])
     filter.prompt_handler = prompt_handler
     filter.completion_handler = complete_handler
-    filter.cloak_and_dagger_verbose = 0 # set to 1 to spy on cloak_and_dagger dialogue
+    filter.cloak_and_dagger_verbose = False # set to True to spy on cloak_and_dagger dialogue
     
     
     if (not 'RLWRAP_COMMAND_PID' in os.environ) or re.match(r'^ftp', os.environ['RLWRAP_COMMAND_LINE']):

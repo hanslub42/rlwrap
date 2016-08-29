@@ -437,7 +437,7 @@ class RlwrapFilter:
         have a private chat with the rlwrapped command. This relies very much om the assumption that command stops. 
         talking, and only listens, when it has displayed the prompt
         """
-        write_patiently(bytearray(question + "\n", sys.stdin.encoding))
+        write_patiently(CMD_IN, bytearray(question + "\n", sys.stdin.encoding))
         if (self.cloak_and_dagger_verbose):
             self.send_output_oob("cloak_and_dagger question: {0}\n".format(question))
         response = read_until(CMD_OUT, prompt, timeout)
