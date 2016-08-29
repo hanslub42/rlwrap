@@ -297,6 +297,9 @@ be sent directly to \fIcommand\fP,  even when \fBrlwrap\fP is not in direct mode
 .B (Not currently bound)
 Any key can be bound to the \fBreadline\fP command \fIrlwrap-hotkey\fP. This key will then cause the current
 input line and the current history to be filtered (cf. \fBRlwrapFilter(3pm)\fP) through the current filter (hence be a no-op when there is no filter), which then can re-write the input line, move the cursor and update the history. After that, the user can still edit the resulting input.
+.TP
+.B (Not currently bound)
+\fIrlwrap-hotkey-omit-history\fP acts like  \fIrlwrap-hotkey\fP, but the history is not passed to the filter. This is more efficient if the filter wouldn't do anything useful with the history anyway.
 .PP
 The special keys were chosen for no other reason than that they  are not currently bound to any
 readline action. If you don't like them, (or your window manager swallows them) they (and the other 3 commands)
@@ -307,9 +310,9 @@ following in your \fB~/.inputrc\fP:
    "\eM\-\eC\-m": rlwrap\-accept\-line\-and\-forget         # ESC\-ENTER to accept but keep out of history
    "\eC\-xe":   rlwrap\-call\-editor                    # CTRL\-x e to edit (multi-line) input in editor of your choice 
     $if erl                                         # (only) for the Erlang shell:
-       "\eC\-g": rlwrap\-direct\-keypress               # pass CTRL\-g directly to enter user switch command
+       "\eC\-g": rlwrap\-direct\-keypress               # pass CTRL\-g directly to enter 'user switch' command
     $endif
-    "\eC\-y": rlwrap\-hotkey                           # CTRL\-y to filter input line (and e.g. insert X selection) 
+    "\eC\-y": rlwrap\-hotkey\-omit\-history              # CTRL\-y to filter input line (and e.g. insert X selection) 
 .fi
 .PP
 cf. the \fBreadline(3)\fP manpage. (NB: take care to not use keys that are already caught by the terminal driver, like CTRL+S, as \fBrlwrap\fP will never see those)
@@ -378,7 +381,7 @@ even after a crash.
 home directory if this variable is not set. This will quickly become messy if you use \fBrlwrap\fP for many different commands. 
 .TP
 $RLWRAP_HOME/\fIcommand\fP_history, ~/.\fIcommand\fP_history
-History for \fIcommand\fP 
+History for \fIcommand\fP (remember that \fIcommand\fP may be overriden by the \fB\-\-command\-name\fP (or \fB\-C\fP) option)  
 .TP
 $RLWRAP_HOME/\fIcommand\fP_completions, ~/.\fIcommand\fP_completions
 Per\-user completion word list for \fIcommand\fP. \fBrlwrap\fP never
