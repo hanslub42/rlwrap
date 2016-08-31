@@ -663,7 +663,7 @@ handle_hotkey2(int UNUSED(count), int hotkey, int ignore_history)
 
   static const unsigned int MAX_HISTPOS_DIGITS = 6; /* one million history items should suffice */
 
-  DPRINTF2(DEBUG_READLINE, "hotkey press: %x (%s)", hotkey, mangle_string_for_debug_log(rl_executing_keyseq, MANGLE_LENGTH));
+  DPRINTF3(DEBUG_READLINE, "hotkey press (ignore_history == %d): %x (%s)", ignore_history, hotkey, mangle_string_for_debug_log(rl_executing_keyseq, MANGLE_LENGTH));
 
   if (hotkey == '\t') /* this would go horribly wrong with all the splitting on '\t' going on.... @@@ or pass key as a string e.g. "009" */
     myerror(FATAL | NOERRNO, "Sorry, you cannot use TAB as an hotkey in rlwrap");
@@ -690,8 +690,6 @@ handle_hotkey2(int UNUSED(count), int hotkey, int ignore_history)
 
   /* let the filter filter ...! */
   filtered= pass_through_filter(TAG_HOTKEY, filter_food);
-  DPRINTF2(DEBUG_FILTERING, "filtering input and  history  because of hotkey press. In: <%s> Out: <%s>",
-           mangle_string_for_debug_log(filter_food, MANGLE_LENGTH), mangle_string_for_debug_log(filtered, MANGLE_LENGTH + 10));
   
   /* OK, we now have to read back everything. There should be exactly 5 TAB-separated components*/
   fragments = split_on_single_char(filtered, '\t', 5);
@@ -703,7 +701,7 @@ handle_hotkey2(int UNUSED(count), int hotkey, int ignore_history)
 
   if (!ignore_history && hash_multiple(2, new_history, new_histpos_as_string) != hash) { /* history has been rewritten */
     char **linep, **history_lines = split_on_single_char(new_history, '\n', 0);
-    DPRINTF3(DEBUG_AD_HOC, "hash=%lu, new_history is %d bytes long, histpos <%s>", hash, (int) strlen(new_history), new_histpos_as_string);
+    DPRINTF3(DEBUG_READLINE, "hash=%lx, new_history is %d bytes long, histpos <%s>", hash, (int) strlen(new_history), new_histpos_as_string);
     clear_history();
     for (linep = history_lines; *linep; linep++) 
       add_history(*linep);
