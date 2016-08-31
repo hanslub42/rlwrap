@@ -299,7 +299,7 @@ Any key can be bound to the \fBreadline\fP command \fIrlwrap-hotkey\fP. This key
 input line and the current history to be filtered (cf. \fBRlwrapFilter(3pm)\fP) through the current filter (hence be a no-op when there is no filter), which then can re-write the input line, move the cursor and update the history. After that, the user can still edit the resulting input.
 .TP
 .B (Not currently bound)
-\fIrlwrap-hotkey-omit-history\fP acts like  \fIrlwrap-hotkey\fP, but the history is not passed to the filter. This is more efficient if the filter wouldn't do anything useful with the history anyway.
+\fIrlwrap-hotkey-ignore-history\fP acts like  \fIrlwrap-hotkey\fP, but the history (which can be quite large) is not passed to the filter. This is more efficient if the filter wouldn't do anything useful with the history anyway.
 .PP
 The special keys were chosen for no other reason than that they  are not currently bound to any
 readline action. If you don't like them, (or your window manager swallows them) they (and the other 3 commands)

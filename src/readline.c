@@ -46,6 +46,7 @@ static void bindkey(int key, rl_command_func_t *function, const char *maplist);
 static int munge_line_in_editor(int, int);
 static int direct_keypress(int, int);
 static int handle_hotkey(int, int);
+static int handle_hotkey_ignore_history(int, int);
 static int please_update_alaf(int,int);
 static int please_update_ce(int,int);
 
@@ -62,6 +63,7 @@ init_readline(char *UNUSED(prompt))
   rl_add_defun("rlwrap-call-editor", munge_line_in_editor, -1);
   rl_add_defun("rlwrap-direct-keypress", direct_keypress, -1);  
   rl_add_defun("rlwrap-hotkey", handle_hotkey, -1);
+  rl_add_defun("rlwrap-hotkey-ignore-history", handle_hotkey_ignore_history, -1);
 
   /* only useful while debugging */
   rl_add_defun("rlwrap-dump-all-keybindings", dump_all_keybindings,-1);
@@ -749,7 +751,7 @@ handle_hotkey(int count, int hotkey)
 
 
 static int
-UNUSED_FUNCTION(handle_hotkey_ignore_history(int count, int hotkey))
+handle_hotkey_ignore_history(int count, int hotkey)
 {
   return handle_hotkey2(count, hotkey, TRUE);
 }       
