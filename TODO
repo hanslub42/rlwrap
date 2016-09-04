@@ -3,16 +3,14 @@ TODO:
 
 SHORT-TERM:
 
-- fix the BUGS (cf BUGS)
 - improve handling of SIGSTP and SIGWINCH when using filters that launch pagers or editors 
-- write a RlwrapFilter.py
 
 - find analogues of /proc/$command_pid/wchan on other unices
 
 - create $RLWRAP_DIR if it doesn't exist
-- fix cross-compilation
 
 LONG-TERM:
+
 
 
 
