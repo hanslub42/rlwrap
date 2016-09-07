@@ -655,7 +655,7 @@ debug_ad_hoc(int UNUSED(count), int UNUSED(hotkey))
 static int
 handle_hotkey2(int UNUSED(count), int hotkey, int ignore_history)
 {
-  char *prefix, *postfix, *history,  *histpos_as_string;
+  char *prefix, *postfix, *history,  *histpos_as_string, *executing_keyseq;
   char *new_prefix, *new_postfix, *new_history, *new_histpos_as_string, *message; 
   char *filter_food, *filtered, **fragments,  *new_rl_line_buffer;
   int length, new_histpos;
@@ -663,7 +663,16 @@ handle_hotkey2(int UNUSED(count), int hotkey, int ignore_history)
 
   static const unsigned int MAX_HISTPOS_DIGITS = 6; /* one million history items should suffice */
 
-  DPRINTF3(DEBUG_READLINE, "hotkey press (ignore_history == %d): %x (%s)", ignore_history, hotkey, mangle_string_for_debug_log(rl_executing_keyseq, MANGLE_LENGTH));
+  
+#ifdef HAVE_RL_EXECUTING_KEYSEQ /* i.e. if readline version is >= 6.3 */
+  executing_keyseq = mysavestring(rl_executing_keyseq);
+#else
+  executing_keyseq = mysavestring("?");
+  *executing_keyseq = hotkey; /* The filter will only get the *last* byte of the key sequence that triggered rl_handle_hotkey */ 
+#endif
+
+    
+  DPRINTF3(DEBUG_READLINE, "hotkey press (ignore_history == %d): %x (%s)", ignore_history, hotkey, mangle_string_for_debug_log(executing_keyseq, MANGLE_LENGTH));
 
   if (hotkey == '\t') /* this would go horribly wrong with all the splitting on '\t' going on.... @@@ or pass key as a string e.g. "009" */
     myerror(FATAL | NOERRNO, "Sorry, you cannot use TAB as an hotkey in rlwrap");
@@ -686,7 +695,7 @@ handle_hotkey2(int UNUSED(count), int hotkey, int ignore_history)
   /* filter_food = key + tab + prefix + tab + postfix + tab + history + tab + histpos  + '\0' */
   length = strlen(rl_line_buffer) + strlen(history) + MAX_HISTPOS_DIGITS + 5; 
   filter_food = mymalloc(length);   
-  sprintf(filter_food, "%s\t%s\t%s\t%s\t%s", rl_executing_keyseq, prefix, postfix, history, histpos_as_string); /* this is the format that the filter expects */
+  sprintf(filter_food, "%s\t%s\t%s\t%s\t%s", executing_keyseq, prefix, postfix, history, histpos_as_string); /* this is the format that the filter expects */
 
   /* let the filter filter ...! */
   filtered= pass_through_filter(TAG_HOTKEY, filter_food);
@@ -736,7 +745,7 @@ handle_hotkey2(int UNUSED(count), int hotkey, int ignore_history)
  
 
   free_splitlist(fragments);                                   /* this will free all the fragments (and the list itself) in one go  */
-  free_multiple(prefix, postfix, filter_food, filtered, new_rl_line_buffer, history, histpos_as_string, FMEND);
+  free_multiple(prefix, postfix, filter_food, executing_keyseq, filtered, new_rl_line_buffer, history, histpos_as_string, FMEND);
   return 0;
 }
 

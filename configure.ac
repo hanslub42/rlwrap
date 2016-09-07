@@ -346,6 +346,12 @@ AC_MSG_RESULT(yes)
 
 
 
+AC_MSG_CHECKING(whether your readline knows about rl_executing_keyseq)
+AC_EGREP_HEADER([rl_executing_keyseq],[readline/readline.h], [
+                 AC_DEFINE(HAVE_RL_EXECUTING_KEYSEQ, 1 ,[Define to 1 if your readline lib has rl_readline_version])])
+AC_MSG_RESULT(yes)
+
+
 # check for existence of myself under $opt_proc_mountpoint/$$/cwd If the user specified --disable-proc-mountpoint we'll still do these tests
 # but they wil fail unless /no is a procfs mountpoint ;-)
 
