@@ -674,10 +674,6 @@ handle_hotkey2(int UNUSED(count), int hotkey, int ignore_history)
     
   DPRINTF3(DEBUG_READLINE, "hotkey press (ignore_history == %d): %x (%s)", ignore_history, hotkey, mangle_string_for_debug_log(executing_keyseq, MANGLE_LENGTH));
 
-  if (hotkey == '\t') /* this would go horribly wrong with all the splitting on '\t' going on.... @@@ or pass key as a string e.g. "009" */
-    myerror(FATAL | NOERRNO, "Sorry, you cannot use TAB as an hotkey in rlwrap");
-
-
   prefix = mysavestring(rl_line_buffer);
   prefix[rl_point] = '\0';                                     /* chop off just before cursor */
   postfix = mysavestring(rl_line_buffer + rl_point);
@@ -692,16 +688,14 @@ handle_hotkey2(int UNUSED(count), int hotkey, int ignore_history)
     hash = hash_multiple(2, history, histpos_as_string);
   }     
 
-  /* filter_food = key + tab + prefix + tab + postfix + tab + history + tab + histpos  + '\0' */
-  length = strlen(rl_line_buffer) + strlen(history) + MAX_HISTPOS_DIGITS + 5; 
-  filter_food = mymalloc(length);   
-  sprintf(filter_food, "%s\t%s\t%s\t%s\t%s", executing_keyseq, prefix, postfix, history, histpos_as_string); /* this is the format that the filter expects */
+  /* filter_food = <keyseq_length><keyseq><prefix_length><prefix><postfix_length><postfix><history_length><history><histpos_length><histpos> + '\0' */
+  filter_food = merge_fields(executing_keyseq, prefix, postfix, history, histpos_as_string, END_FIELD); /* this is the format that the filter expects */
 
   /* let the filter filter ...! */
   filtered= pass_through_filter(TAG_HOTKEY, filter_food);
   
   /* OK, we now have to read back everything. There should be exactly 5 TAB-separated components*/
-  fragments = split_on_single_char(filtered, '\t', 5);
+  fragments = split_filter_message(filtered);
   message               = fragments[0];
   new_prefix            = fragments[1];
   new_postfix           = fragments[2];
