@@ -133,6 +133,7 @@ def peco_history(doc, prefix, postfix, history, histpos):
 keymap = {
     "y" : yank_clipboard,
     "n" : edit_history,
+    "i" : peco_history,
     "r" : peco_history,
     "t" : date_in_echo_area
 }

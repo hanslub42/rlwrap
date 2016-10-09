@@ -908,3 +908,120 @@ int isnumeric(char *string){
 
   return TRUE;
 }
+
+
+#define MAX_FIELDS 10 // max number of fields
+#define DIGITS_NUMBER 8 // number of digits of length of field
+#define MAX_FIELD_LENGTH (~((-1)<<(DIGITS_NUMBER * 4 -1)) -1)
+#define MY_HEX_FORMAT(n) "%0" MY_ITOA(n) "x"
+#define MY_ITOA(n) #n
+
+/*
+merge string fields (field1, field2, ...) into single string message of:
+
+    <field_length1> <field1> <field_length 2> <field2> ...
+
+where <field_length> is a zero-padded <DIGITS_NUMBER>-digits hex-decimal textual
+representation of a field's length, eg "00123abc".
+The last argument should be a special one, END_FIELD, to declare where the argumets end.
+*/
+char *
+merge_fields(char *field, ...)
+{
+  char *fields[MAX_FIELDS]; // array of fields
+  int lengths[MAX_FIELDS]; // array of length of fields
+  int nfields = 0; // number of fields
+  char *message; // to store merged fields
+  int message_length=0; // length of message
+
+  // store vargs of fields and thier lengths into arrays and calculate length of message
+  va_list vargs;
+  va_start(vargs, field);
+  char *varg = field;
+  for(int i=0; !(varg == END_FIELD); i++) {
+    if (i>MAX_FIELDS)
+      myerror(FATAL|NOERRNO, "number of fields must be less than %d", MAX_FIELDS);
+    fields[i] = varg;
+    lengths[i] = strlen(varg);
+    if (lengths[i]>=MAX_FIELD_LENGTH)
+      myerror(FATAL|NOERRNO, "length of field must be less than %d", MAX_FIELD_LENGTH);
+    nfields++;
+    message_length += DIGITS_NUMBER + lengths[i];
+    varg = va_arg(vargs, char*);
+  }
+  va_end(vargs);
+
+  // put them all into message
+  message = mymalloc(sizeof(char) * (message_length + 1));
+  char *pmessage = message;
+  for(int i=0; i<nfields; i++) {
+    // string representation of length of field in hex
+    char hex_string[DIGITS_NUMBER+1];
+    sprintf(hex_string, MY_HEX_FORMAT(DIGITS_NUMBER), lengths[i]);
+    mystrlcpy(pmessage, hex_string, DIGITS_NUMBER+1);
+    pmessage += DIGITS_NUMBER;    // strlen(hex_string) == DIGITS_NUMBER
+
+    mystrlcpy(pmessage, fields[i], lengths[i]+1);
+    pmessage += lengths[i];
+  }
+  return message;
+}
+
+/* fussy strtol with error checking */
+long
+mystrtol(const char *nptr, int base)
+{
+  char *endptr;
+  errno = 0;
+
+  long result = strtol(nptr, &endptr, base);
+
+  if (*endptr != '\0')
+    myerror(FATAL|NOERRNO, "invalid representation %s", nptr);
+  if (errno != 0)
+    myerror(FATAL|USE_ERRNO, "strtol error");
+
+  return result;
+}
+
+
+/*
+split a message of a string:
+
+    <field_length1> <field1> <field_length 2> <field2>...
+
+into:
+
+    [<field1>, <field2>, ...]
+*/
+char **
+split_filter_message(char *message)
+{
+  char *pmessage = message;
+  int message_length = strlen(message);
+  char hex_string[DIGITS_NUMBER + 1]; // store string representation of field length
+
+  char **list = mymalloc(sizeof(char*) * (MAX_FIELDS + 1));
+  char **plist = list;
+  int nfields = 0;
+
+  while(!(*pmessage == '\0')) {
+    // cut out a length from the head of the message
+    mystrlcpy(hex_string, pmessage, DIGITS_NUMBER+1);
+    long length = mystrtol(hex_string, 16);
+    pmessage += DIGITS_NUMBER;
+
+    // cut out a field from the head of the message
+    char *field = mymalloc(sizeof(char) * (length+1));
+    mystrlcpy(field, pmessage, length+1);
+    *plist++ = field;
+    pmessage += length;
+
+    if (pmessage > message + message_length)
+      myerror(FATAL|NOERRNO, "malformed message; %s", mangle_string_for_debug_log(message, 64));
+    if (nfields++ > MAX_FIELDS)
+      myerror(FATAL|NOERRNO, "Too many fields in a message");
+  }
+  *plist = 0;
+  return list;
+}
