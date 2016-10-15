@@ -651,6 +651,7 @@ usage(int status)
   print_option('p', "prompt-colour", "colour", TRUE, NULL);
   print_option('P', "pre-given","input", FALSE, NULL);
   print_option('q', "quote-characters", "chars", FALSE, NULL);
+  print_option('Q', "q-mode", NULL, FALSE, NULL);
   print_option('r', "remember", NULL, FALSE, NULL);
   print_option('R', "renice", NULL, FALSE, NULL);
   print_option('s', "histsize", "N", FALSE,"(negative: readonly)");
