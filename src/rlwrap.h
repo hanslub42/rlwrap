@@ -233,7 +233,6 @@ extern int accepted_lines;
 extern char *filter_command;
 extern int polling;
 extern int Q_mode;
-extern char* q_resize_cmd;
 
 void cleanup_rlwrap_and_exit(int status);
 void put_in_output_queue(char *stuff);

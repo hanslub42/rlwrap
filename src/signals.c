@@ -314,7 +314,7 @@ adapt_tty_winsize(int from_fd, int to_fd)
     }
 
     if (Q_mode) {
-      fprintf(fdopen(to_fd, "w"), q_resize_cmd);
+      fprintf(fdopen(to_fd, "w"), "\\c %d %d\n", winsize.ws_col, winsize.ws_row);
     }
     
     return (!always_readline || dont_wrap_command_waits()); /* pass the signal on (except when always_readline is set and command is not waiting) */

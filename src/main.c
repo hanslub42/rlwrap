@@ -75,7 +75,6 @@ int we_just_got_a_signal_or_EOF = FALSE;  /* When we got a signal or EOF, and th
 					     as a response to user input - i.e. preserve a cooked prompt and just print the new output after it */
 int rlwrap_already_prompted = FALSE;
 int accepted_lines =  0; /* number of lines accepted (used for one-shot rlwrap) */
-char* q_resize_cmd="system \"c \", first system[\"stty size\"]\n";
 
 /* private variables */
 static char *history_filename = NULL;
@@ -95,7 +94,6 @@ static void fork_child(char *command_name, char **argv);
 static char *read_options_and_command_name(int argc, char **argv);
 static void main_loop(void);
 static void test_main(void);
-
 
 
 /* options */
