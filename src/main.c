@@ -49,7 +49,7 @@ int polling = FALSE;                         /* -W option: always give select() 
 int impatient_prompt = TRUE;                 /* show raw prompt as soon as possible, even before we cook it. may result in "flashy" prompt */
 char *substitute_prompt = NULL;              /* -S option: substitute our own prompt for <command>s */
 char *filter_command = NULL;                 /* -z option: pipe prompts, input, output, history and completion requests through an external filter */
-
+int Q_mode = FALSE;                          /* -Q option: inject resizing command when used with q */
 
 /* variables for global bookkeeping */
 int master_pty_fd;		     /* master pty (rlwrap uses this to communicate with client) */
@@ -75,7 +75,7 @@ int we_just_got_a_signal_or_EOF = FALSE;  /* When we got a signal or EOF, and th
 					     as a response to user input - i.e. preserve a cooked prompt and just print the new output after it */
 int rlwrap_already_prompted = FALSE;
 int accepted_lines =  0; /* number of lines accepted (used for one-shot rlwrap) */
-
+char* q_resize_cmd="system \"c \", first system[\"stty size\"]\n";
 
 /* private variables */
 static char *history_filename = NULL;
@@ -88,6 +88,7 @@ static int  last_opt = -1;
 static char *client_term_name = NULL; /* we'll set TERM to this before exec'ing client command */
 static int feed_history_into_completion_list = FALSE;
 
+
 /* private functions */
 static void init_rlwrap(char *command_line);
 static void fork_child(char *command_name, char **argv);
@@ -99,11 +100,11 @@ static void test_main(void);
 
 /* options */
 #ifdef GETOPT_GROKS_OPTIONAL_ARGS
-static char optstring[] = "+:a::Ab:cC:d::D:e:f:F:g:hH:iIl:nNM:m::oO:p::P:q:rRs:S:t:TUvw:Wz:";
+static char optstring[] = "+:a::Ab:cC:d::D:e:f:F:g:hH:iIl:nNM:m::oO:p::P:q:rRs:S:t:TUvw:Wz:Q";
 /* +: is not really documented. configure checks wheteher it works as expected
    if not, GETOPT_GROKS_OPTIONAL_ARGS is undefined. @@@ */
 #else
-static char optstring[] = "+:a:Ab:cC:d:D:e:f:F:g:hH:iIl:nNM:m:oO:p:P:q:rRs:S:t:TUvw:Wz:";	
+static char optstring[] = "+:a:Ab:cC:d:D:e:f:F:g:hH:iIl:nNM:m:oO:p:P:q:rRs:S:t:TUvw:Wz:Q";	
 #endif
 
 #ifdef HAVE_GETOPT_LONG
@@ -144,6 +145,7 @@ static struct option longopts[] = {
   {"wait-before-prompt",        required_argument,      NULL, 'w'},    
   {"polling",                   no_argument,            NULL, 'W'},
   {"filter",                    required_argument,      NULL, 'z'}, 
+  {"q-mode",                    no_argument,            NULL, 'Q'},
   {0, 0, 0, 0}
 };
 #endif
@@ -845,6 +847,9 @@ read_options_and_command_name(int argc, char **argv)
       myerror(FATAL|NOERRNO, "option %s requires an argument \ntry '%s --help' for more information",
          argv[optind-1], full_program_name);
 
+    case 'Q':
+      Q_mode = TRUE;
+      break;
     default:
       usage(EXIT_FAILURE);
     }

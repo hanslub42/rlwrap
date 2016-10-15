@@ -312,6 +312,10 @@ adapt_tty_winsize(int from_fd, int to_fd)
       rl_redisplay();
       
     }
+
+    if (Q_mode) {
+      fprintf(fdopen(to_fd, "w"), q_resize_cmd);
+    }
     
     return (!always_readline || dont_wrap_command_waits()); /* pass the signal on (except when always_readline is set and command is not waiting) */
   } else {                      /* window size has not changed */
