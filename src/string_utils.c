@@ -995,7 +995,7 @@ into:
     [<field1>, <field2>, ...]
 */
 char **
-split_filter_message(char *message)
+split_filter_message(char *message, int *counter)
 {
   char *pmessage = message;
   int message_length = strlen(message);
@@ -1022,6 +1022,8 @@ split_filter_message(char *message)
     if (nfields++ > MAX_FIELDS)
       myerror(FATAL|NOERRNO, "Too many fields in a message");
   }
+  if (counter)
+    *counter =  nfields;
   *plist = 0;
   return list;
 }

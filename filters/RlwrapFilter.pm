@@ -138,8 +138,8 @@ sub run {
 	  my ($line, $prefix, $completions, @completions);
 	  if ($self -> completion_handler) {
 	    $message =~ s/[ ]+$//; # eat final space
-	    ($line, $prefix, $completions) = split /\t/, $message;
-	    @completions = split / /, $completions;
+	    ($line, $prefix, $completions) = split /\t/, $message; # @@@TODO: use split_rlwrap_message() also here
+	    @completions = split / /, $completions;                # like in: ($line, $prefix, @completions) = split_rlwrap_message($message)
 	    @completions = &{$self -> completion_handler}($line, $prefix, @completions);
 	    $response = "$line\t$prefix\t". (join ' ', @completions) . " ";
           } else {
@@ -482,6 +482,7 @@ sub name {
 }
 
 use constant DIGIT_NUMBER=>8;
+
 
 sub split_rlwrap_message {
   my ($message) = @_;

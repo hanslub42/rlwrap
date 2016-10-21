@@ -388,7 +388,7 @@ int match_regexp(const char *string, const char *regexp, int case_insensitive);
 int isnumeric(char *string);
 #define END_FIELD (char*)NULL // marker object to terminate vargs
 char *merge_fields(char *field, ...);
-char **split_filter_message(char *message);
+char **split_filter_message(char *message, int *count);
 
 /* in pty.c: */
 pid_t my_pty_fork(int *, const struct termios *, const struct winsize *);

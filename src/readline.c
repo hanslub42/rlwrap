@@ -658,7 +658,7 @@ handle_hotkey2(int UNUSED(count), int hotkey, int ignore_history)
   char *prefix, *postfix, *history,  *histpos_as_string, *executing_keyseq;
   char *new_prefix, *new_postfix, *new_history, *new_histpos_as_string, *message; 
   char *filter_food, *filtered, **fragments,  *new_rl_line_buffer;
-  int length, new_histpos;
+  int nfilter_fields, length, new_histpos;
   unsigned long int hash;
 
   static const unsigned int MAX_HISTPOS_DIGITS = 6; /* one million history items should suffice */
@@ -694,9 +694,10 @@ handle_hotkey2(int UNUSED(count), int hotkey, int ignore_history)
   /* let the filter filter ...! */
   filtered= pass_through_filter(TAG_HOTKEY, filter_food);
   
-  /* OK, we now have to read back everything. There should be exactly 5 TAB-separated components*/
-  fragments = split_filter_message(filtered);
-  message               = fragments[0];
+  /* OK, we now have to read back everything. After splitting the message, here should be exactly 5 components*/
+  fragments = split_filter_message(filtered, &nfilter_fields);
+  assert(nfilter_fields == 5); 
+  message               = fragments[0]; 
   new_prefix            = fragments[1];
   new_postfix           = fragments[2];
   new_history           = fragments[3];
