@@ -23,9 +23,9 @@ Synopsis
 
 Description
 -------------------
-This is an [RlwrapFilter](http://utopia.knoware.nl/~hlub/uck/rlwrap/RlwrapFilter.html)
+This is an [RlwrapFilter](https://github.com/hanslub42/rlwrap/wiki/RlwrapFilter.pm-manpage)
 clone written in Python. The focus is on providing the same API's
-and usage of the original Perl version [RlwrapFilter](http://utopia.knoware.nl/~hlub/uck/rlwrap/RlwrapFilter.html)
+and usage of the original Perl version [RlwrapFilter](https://github.com/hanslub42/rlwrap/wiki/RlwrapFilter.pm-manpage)
 as possible.
 
 
@@ -177,4 +177,4 @@ $ sudo python3 ./setup.py install
 
 Acknowledgement
 -------------------
-Many thanks to [Hans Lub](http://utopia.knoware.nl/~hlub/rlwrap/) for creating [the great tool](https://github.com/hanslub42/rlwrap).
+Many thanks to [Hans Lub](https://github.com/hanslub42) for creating [the great tool](https://github.com/hanslub42/rlwrap).
