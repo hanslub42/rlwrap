@@ -87,7 +87,7 @@ history and completion files, and to initialise readline (as specified in
 backwards from the end of the argument list
 .TP
 .OL \-D \-\-history\-no\-dupes \fIn\fP
-How agressively to weed out duplicate entries from the input history.
+How aggressively to weed out duplicate entries from the input history.
 If \fIn\fP = \fB0\fP, all inputs are kept in the history list, if
 \fIn\fP = \fB1\fP (this is the default) consecutive duplicates are dropped
 from the list, while \fIn\fP = \fB2\fP will make \fBrlwrap\fP drop all
@@ -269,7 +269,7 @@ want to re\-write ("cook") prompts. \fBrlwrap\fP solves this (almost)
 by waiting a little, to see if there is more to come. "A little" is 40
 msec by default, but this can be changed with the \fB\-w\fP option.
 Normally \fBrlwrap\fP writes the suspected prompt as soon as it is
-received, replacing it with a "cooked" version afer the wait
+received, replacing it with a "cooked" version after the wait
 time. This is called "impatient" mode. If you don't like the flashing
 effect (which can become annoying when you "cook" the prompt heavily) you
 can put \fBrlwrap\fP in "patient mode" by  specifying a negative value with \fB\-w\fP (e.g. \-w \-40). Rlwrap 
