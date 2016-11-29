@@ -506,7 +506,7 @@ RlwrapFilter - Perl class for B<rlwrap> filters
 
 =head1 DESCRIPTION
 
-B<rlwrap> (1) (L<http://utopia.knoware.nl/~hlub/uck/rlwrap>) is a tiny
+B<rlwrap> (1) (L<https://github.com/hanslub42/rlwrap>) is a tiny
 utility that sits between the user and any console command, in order
 to bestow readline capabilities (line editing, history recall) to
 commands that don't have them.

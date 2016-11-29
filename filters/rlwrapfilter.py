@@ -14,12 +14,12 @@ Python 3 library for [rlwrap](https://github.com/hanslub42/rlwrap) filters
     filter.history_handler = lambda x: re.sub(r'(identified\s+by\s+)(\S+)', r'\\1xXxXxXxX', x)
     filter.run()
 
-This is an [RlwrapFilter](http://utopia.knoware.nl/~hlub/uck/rlwrap/RlwrapFilter.html)
+This is an [RlwrapFilter](https://github.com/hanslub42/rlwrap/wiki/RlwrapFilter.pm-manpage)
 clone written in Python 3. The focus is on providing the same API's
-and usage of the Perl version of [RlwrapFilter](http://utopia.knoware.nl/~hlub/uck/rlwrap/RlwrapFilter.html)
+and usage of the Perl version of [RlwrapFilter](https://github.com/hanslub42/rlwrap/wiki/RlwrapFilter.pm-manpage)
 as possible.
 
-[rlwrap](http://utopia.knoware.nl/~hlub/uck/rlwrap) is a tiny
+[rlwrap](https://github.com/hanslub42/rlwrap) is a tiny
 utility that sits between the user and any console command, in order
 to bestow readline capabilities (line editing, history recall) to
 commands that don't have them.

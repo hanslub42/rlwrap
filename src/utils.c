@@ -693,7 +693,7 @@ usage(int status)
   fprintf(stderr,
           "\n"
           "bug reports, suggestions, updates:\n"
-          "http://utopia.knoware.nl/~hlub/uck/rlwrap/\n");
+          "https://github.com/hanslub42/rlwrap\n");
 
   exit(status);
 }           
