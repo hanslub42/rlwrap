@@ -73,7 +73,7 @@ documented in readline's info or manpages; it should be on by default.
 Filters are "plug-in" scripts that give you complete control
 over rlwrap's input and output, history and completion. They are 
 somewhat experimental, and their implementation and the example
-filters still are of slightly dubious ('alpha') qualiity.
+filters still are of slightly dubious ('alpha') quality.
 
 * AUTHOR
 Hans Lub, hanslub42@gmail.com
