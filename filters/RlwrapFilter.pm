@@ -128,9 +128,9 @@ sub run {
 	  $response = when_defined $self -> history_handler, "$message";
         } elsif ($tag == TAG_HOTKEY) {
           if ($self -> hotkey_handler) {
-            my @params = split /\t/, $message;
+            my @params = split_rlwrap_message($message);
             my @result = &{$self -> hotkey_handler}(@params);
-            $response = join("\t", @result);
+            $response = merge_fields(@result);
           } else {
             $response = $message;
           }
@@ -479,6 +479,32 @@ sub name {
   my ($name) = ($0 =~ m#([^/]+)$#);
   $name ||= $0;
   return $name;
+}
+
+use constant DIGIT_NUMBER=>8;
+
+sub split_rlwrap_message {
+  my ($message) = @_;
+  my @fields = ();
+
+  while(length($message) != 0){
+    my $lenstr = substr($message, 0, DIGIT_NUMBER, "");
+    my $len = hex($lenstr);
+    my $field = substr($message, 0, $len, "");
+    push(@fields, $field);
+  }
+  return @fields;
+}
+
+sub merge_fields {
+  my (@fields) = @_;
+  my $message = "";
+
+  foreach my $field (@fields) {
+    my $lenstr = sprintf("%0" . DIGIT_NUMBER . "x", length($field));
+    $message = $message . $lenstr . $field;
+  }
+  return $message;
 }
 
 

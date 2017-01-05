@@ -316,6 +316,32 @@ def test_intercept():
     raise Exception('test exception = = = = = .........')
 
 
+DIGIT_NUMBER=8
+
+def split_rlwrap_message(message):
+    bmessage = bytes(message, sys.stdin.encoding)
+    fields = []
+
+    while(len(bmessage) != 0):
+        blen = bmessage[:DIGIT_NUMBER]
+        bmessage = bmessage[DIGIT_NUMBER:]
+        length = int(str(blen, sys.stdin.encoding), base=16)
+        bfield = bmessage[:length]
+        bmessage = bmessage[length:]
+        fields.append(str(bfield, sys.stdin.encoding))
+    return fields
+
+
+def merge_fields(fields):
+    message = ""
+
+    for field in fields:
+        length = len(bytes(field, sys.stdin.encoding))
+        lenstr = format(length, '0' + str(DIGIT_NUMBER) + 'x')
+        message = message + lenstr + field
+    return message
+
+
 class RlwrapFilterError(Exception):
     """
     A custom exception for rlwrap
@@ -550,9 +576,9 @@ class RlwrapFilter:
                     response = message
             elif (tag == TAG_HOTKEY):
                 if (self.hotkey_handler is not None):
-                    params = message.split("\t")
+                    params = split_rlwrap_message(message)
                     result = self.hotkey_handler(*params)
-                    response = "\t".join(result)
+                    response = merge_fields(result)
                 else:
                     response = message
             elif (tag == TAG_PROMPT):

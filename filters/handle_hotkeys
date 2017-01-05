@@ -12,6 +12,7 @@ use POSIX qw(:signal_h);
 my $keymap =
 { '\C-y'       => \&yank_clipboard,
   '\C-n'       => \&edit_history, 
+  '\C-i'       => \&peco_history, 
   '\C-r'       => \&peco_history, 
   '\C-t'       => \&date_in_echo_area,
   '\M-\C-m'    => \&date_in_echo_area # test a multi-byte hotkey (ESC-ENTER)
