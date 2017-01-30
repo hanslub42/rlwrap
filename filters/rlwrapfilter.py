@@ -14,12 +14,12 @@ Python 3 library for [rlwrap](https://github.com/hanslub42/rlwrap) filters
     filter.history_handler = lambda x: re.sub(r'(identified\s+by\s+)(\S+)', r'\\1xXxXxXxX', x)
     filter.run()
 
-This is an [RlwrapFilter](http://utopia.knoware.nl/~hlub/uck/rlwrap/RlwrapFilter.html)
+This is an [RlwrapFilter](https://github.com/hanslub42/rlwrap/wiki/RlwrapFilter.pm-manpage)
 clone written in Python 3. The focus is on providing the same API's
-and usage of the Perl version of [RlwrapFilter](http://utopia.knoware.nl/~hlub/uck/rlwrap/RlwrapFilter.html)
+and usage of the Perl version of [RlwrapFilter](https://github.com/hanslub42/rlwrap/wiki/RlwrapFilter.pm-manpage)
 as possible.
 
-[rlwrap](http://utopia.knoware.nl/~hlub/uck/rlwrap) is a tiny
+[rlwrap](https://github.com/hanslub42/rlwrap) is a tiny
 utility that sits between the user and any console command, in order
 to bestow readline capabilities (line editing, history recall) to
 commands that don't have them.
@@ -106,7 +106,8 @@ def out_of_band(tag):
     return tag > 128
 
 
-def read_until(fh, stoptext, timeout):
+def read_until(fh, stoptext, timeout,
+               prompt_search_from=0, prompt_search_to=None):
     """
     read chunks from pty pointed to by fh until either inactive for timeout or stoptext is seen at end-of-chunk
     """
@@ -119,7 +120,8 @@ def read_until(fh, stoptext, timeout):
             return res
         res = res + chunk
         # multi-line mode so that "^" matches a head of each line
-        if re.search(stoptext, res, re.MULTILINE):
+        slice = res[prompt_search_from:prompt_search_to]
+        if re.search(stoptext, slice, re.MULTILINE):
             return res
 
 
@@ -458,7 +460,8 @@ class RlwrapFilter:
         write_message(TAG_REMOVE_FROM_COMPLETION_LIST, ' '.join(args))
 
 
-    def cloak_and_dagger(self, question, prompt, timeout):
+    def cloak_and_dagger(self, question, prompt, timeout,
+                         prompt_search_from=0, prompt_search_to=None):
         """
         have a private chat with the rlwrapped command. This relies very much om the assumption that command stops. 
         talking, and only listens, when it has displayed the prompt
@@ -466,7 +469,9 @@ class RlwrapFilter:
         write_patiently(CMD_IN, bytearray(question + "\n", sys.stdin.encoding))
         if (self.cloak_and_dagger_verbose):
             self.send_output_oob("cloak_and_dagger question: {0}\n".format(question))
-        response = read_until(CMD_OUT, prompt, timeout)
+        response = read_until(CMD_OUT, prompt, timeout,
+                              prompt_search_from=prompt_search_from,
+                              prompt_search_to=prompt_search_to)
         response = re.sub('^.*?\n', '', response) # chop off echoed question;
         response = re.sub('{0}$'.format(prompt), '', response) # chop off prompt;
         if (self.cloak_and_dagger_verbose):
