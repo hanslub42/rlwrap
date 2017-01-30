@@ -911,61 +911,72 @@ int isnumeric(char *string){
 
 
 #define MAX_FIELDS 10 // max number of fields
-#define DIGITS_NUMBER 8 // number of digits of length of field
+#define DIGITS_NUMBER 8  // number of digits of length of field
 #define MAX_FIELD_LENGTH (~((-1)<<(DIGITS_NUMBER * 4 -1)) -1)
 #define MY_HEX_FORMAT(n) "%0" MY_ITOA(n) "x"
 #define MY_ITOA(n) #n
+
+
+/*
+merge NULL-terminated array fields = {field1, field2, ..., NULL} into single string message of:
+
+    <field_length1> <field1> <field_length 2> <field2> ...
+
+where <field_length> is a zero-padded <DIGITS_NUMBER>-digits hex-decimal textual
+representation of a field's length, eg "00123abc".
+*/
+
+
+char *
+merge_field_array(char **fields)
+{
+  char *message = mysavestring(""); // to store merged fields
+  char hex_string[DIGITS_NUMBER+1];
+  int i, length;
+  
+  for(i = 0; fields[i]; i++) {
+    length = strlen(fields[i]);
+    if ( length > MAX_FIELD_LENGTH)
+      myerror(FATAL|NOERRNO, "merge_field_array: field #%d (\"%s...\") has length %d, it should be less than %d (at most %d hex digits)",
+              i, mangle_string_for_debug_log(fields[i], 10), length,  MAX_FIELD_LENGTH, DIGITS_NUMBER);
+
+    // determine string representation of length of field in hex:
+    sprintf(hex_string, MY_HEX_FORMAT(DIGITS_NUMBER), length );
+    message = append_and_free_old(message, hex_string);
+    message = append_and_free_old(message, fields[i]);
+   }
+  return message;
+}
+
 
 /*
 merge string fields (field1, field2, ...) into single string message of:
 
     <field_length1> <field1> <field_length 2> <field2> ...
 
-where <field_length> is a zero-padded <DIGITS_NUMBER>-digits hex-decimal textual
-representation of a field's length, eg "00123abc".
-The last argument should be a special one, END_FIELD, to declare where the argumets end.
+The last argument should be a special one, END_FIELD, to declare where the arguments end.
 */
 char *
 merge_fields(char *field, ...)
 {
-  char *fields[MAX_FIELDS]; // array of fields
-  int lengths[MAX_FIELDS]; // array of length of fields
-  int nfields = 0; // number of fields
-  char *message; // to store merged fields
-  int message_length=0; // length of message
-
-  // store vargs of fields and thier lengths into arrays and calculate length of message
-  va_list vargs;
-  va_start(vargs, field);
+  // copy arguments to fields array, and append a final NULL pointer:
+  char *fields[MAX_FIELDS + 1];
   char *varg = field;
-  for(int i=0; !(varg == END_FIELD); i++) {
-    if (i>MAX_FIELDS)
-      myerror(FATAL|NOERRNO, "number of fields must be less than %d", MAX_FIELDS);
+  int i, nfields = 0;
+  va_list vargs;
+  
+  va_start(vargs, field);
+  for(i=0; !(varg == END_FIELD); i++) {
+    assert (i <= MAX_FIELDS);
     fields[i] = varg;
-    lengths[i] = strlen(varg);
-    if (lengths[i]>=MAX_FIELD_LENGTH)
-      myerror(FATAL|NOERRNO, "length of field must be less than %d", MAX_FIELD_LENGTH);
-    nfields++;
-    message_length += DIGITS_NUMBER + lengths[i];
     varg = va_arg(vargs, char*);
+    nfields++;
   }
   va_end(vargs);
-
-  // put them all into message
-  message = mymalloc(sizeof(char) * (message_length + 1));
-  char *pmessage = message;
-  for(int i=0; i<nfields; i++) {
-    // string representation of length of field in hex
-    char hex_string[DIGITS_NUMBER+1];
-    sprintf(hex_string, MY_HEX_FORMAT(DIGITS_NUMBER), lengths[i]);
-    mystrlcpy(pmessage, hex_string, DIGITS_NUMBER+1);
-    pmessage += DIGITS_NUMBER;    // strlen(hex_string) == DIGITS_NUMBER
-
-    mystrlcpy(pmessage, fields[i], lengths[i]+1);
-    pmessage += lengths[i];
-  }
-  return message;
+  fields[nfields] = NULL;
+  return merge_field_array(fields);
 }
+
 
 /* fussy strtol with error checking */
 long
@@ -1018,7 +1029,7 @@ split_filter_message(char *message, int *counter)
     pmessage += length;
 
     if (pmessage > message + message_length)
-      myerror(FATAL|NOERRNO, "malformed message; %s", mangle_string_for_debug_log(message, 64));
+      myerror(FATAL|NOERRNO, "malformed message; %s", mangle_string_for_debug_log(message, 256));
     if (nfields++ > MAX_FIELDS)
       myerror(FATAL|NOERRNO, "Too many fields in a message");
   }

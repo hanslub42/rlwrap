@@ -481,7 +481,7 @@ sub name {
   return $name;
 }
 
-use constant DIGIT_NUMBER=>8;
+use constant DIGIT_NUMBER => 8; # This has to be the same number as DIGITS_NUMBER  in src/string_utils.c:914
 
 
 sub split_rlwrap_message {
