@@ -572,11 +572,10 @@ class RlwrapFilter:
                 response = when_defined(self.history_handler, message)
             elif (tag == TAG_COMPLETION):
                 if (self.completion_handler is not None):
-                    message = re.sub('[ ]+$', '', message) # eat final space
-                    (line, prefix, completions) = message.split('\t')
-                    completions = completions.split(' ')
+                    params = split_rlwrap_message(message)
+                    (line, prefix, completions) = (params[0], params[1], params[2:])
                     completions = self.completion_handler(line, prefix, completions)
-                    response = "{0}\t{1}\t".format(line, prefix) + ' '.join(completions) + ' '
+                    response = merge_fields([line]+[prefix]+completions)
                 else:
                     response = message
             elif (tag == TAG_HOTKEY):

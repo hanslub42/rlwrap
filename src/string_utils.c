@@ -909,73 +909,11 @@ int isnumeric(char *string){
   return TRUE;
 }
 
-
-#define MAX_FIELDS 10 // max number of fields
+/* #define MAX_FIELDS 10 // max number of fields */
 #define DIGITS_NUMBER 8  // number of digits of length of field
 #define MAX_FIELD_LENGTH (~((-1)<<(DIGITS_NUMBER * 4 -1)) -1)
 #define MY_HEX_FORMAT(n) "%0" MY_ITOA(n) "x"
 #define MY_ITOA(n) #n
-
-
-/*
-merge NULL-terminated array fields = {field1, field2, ..., NULL} into single string message of:
-
-    <field_length1> <field1> <field_length 2> <field2> ...
-
-where <field_length> is a zero-padded <DIGITS_NUMBER>-digits hex-decimal textual
-representation of a field's length, eg "00123abc".
-*/
-
-
-char *
-merge_field_array(char **fields)
-{
-  char *message = mysavestring(""); // to store merged fields
-  char hex_string[DIGITS_NUMBER+1];
-  int i, length;
-  
-  for(i = 0; fields[i]; i++) {
-    length = strlen(fields[i]);
-    if ( length > MAX_FIELD_LENGTH)
-      myerror(FATAL|NOERRNO, "merge_field_array: field #%d (\"%s...\") has length %d, it should be less than %d (at most %d hex digits)",
-              i, mangle_string_for_debug_log(fields[i], 10), length,  MAX_FIELD_LENGTH, DIGITS_NUMBER);
-
-    // determine string representation of length of field in hex:
-    sprintf(hex_string, MY_HEX_FORMAT(DIGITS_NUMBER), length );
-    message = append_and_free_old(message, hex_string);
-    message = append_and_free_old(message, fields[i]);
-   }
-  return message;
-}
-
-
-/*
-merge string fields (field1, field2, ...) into single string message of:
-
-    <field_length1> <field1> <field_length 2> <field2> ...
-
-The last argument should be a special one, END_FIELD, to declare where the arguments end.
-*/
-char *
-merge_fields(char *field, ...)
-{
-  // copy arguments to fields array, and append a final NULL pointer:
-  char *fields[MAX_FIELDS + 1];
-  char *varg = field;
-  int i, nfields = 0;
-  va_list vargs;
-  
-  va_start(vargs, field);
-  for(i=0; !(varg == END_FIELD); i++) {
-    assert (i <= MAX_FIELDS);
-    fields[i] = varg;
-    varg = va_arg(vargs, char*);
-    nfields++;
-  }
-  va_end(vargs);
-  fields[nfields] = NULL;
-  return merge_field_array(fields);
-}
 
 
 /* fussy strtol with error checking */
@@ -996,6 +934,79 @@ mystrtol(const char *nptr, int base)
 }
 
 
+
+
+/* Encode a length as a string on the heap */
+static char *
+encode_field_length(int length)
+{
+  char *encoded_length = mymalloc(DIGITS_NUMBER+1);
+  sprintf(encoded_length, MY_HEX_FORMAT(DIGITS_NUMBER), length);
+  return encoded_length;
+}       
+
+
+/* decode first length field in a message of form "<length 1> <message 1> <length 2> ...." and advance pointer *ppmessage to the start of <message 1> */
+static int
+decode_field_length(char** ppmessage)
+{
+  char hex_string[DIGITS_NUMBER+1];
+  if (! **ppmessage) return -1;
+  mystrlcpy(hex_string, *ppmessage, DIGITS_NUMBER+1);
+  long length = mystrtol(hex_string, 16);
+  *ppmessage += DIGITS_NUMBER;
+  return length;
+}       
+  
+
+/* Test an invariant: */
+void
+test_field_length_encoding()
+{
+  int testval = 1423722;
+  char *encoded = encode_field_length(testval);
+  assert( decode_field_length(&encoded) == testval &&  (*encoded == '\0'));
+}
+
+/* Append <field_length> <field> to message and return the result (after freeing the original message)
+<field_length> is a string representation of <field>s length
+message can be empty, or, equivalently, NULL.
+*/
+char *
+append_field_and_free_old(char *message, const char *field)
+{
+  int length = strlen(field);
+  char *encoded_length;
+  if (length > MAX_FIELD_LENGTH)
+    myerror(FATAL|NOERRNO, "message field\"%s...\" has length %d, it should be less than %d",
+            mangle_string_for_debug_log(field, 10), length,  MAX_FIELD_LENGTH);
+  encoded_length =  encode_field_length(length);
+  message = append_and_free_old(message, encoded_length);
+  message = append_and_free_old(message, field);
+  free(encoded_length);
+  return message;
+}
+
+
+
+char *
+merge_fields(char *field, ...)
+{  
+  char *varg = field;
+  char *message = NULL;
+  va_list vargs;
+  
+  va_start(vargs, field);
+  while (varg != END_FIELD) {
+    message = append_field_and_free_old(message, varg);
+    varg = va_arg(vargs, char*);
+  }
+  va_end(vargs);
+  return message;
+}
+
+
+
 /*
 split a message of a string:
 
@@ -1005,33 +1016,33 @@ into:
 
     [<field1>, <field2>, ...]
 */
+
+
 char **
 split_filter_message(char *message, int *counter)
 {
   char *pmessage = message;
   int message_length = strlen(message);
-  char hex_string[DIGITS_NUMBER + 1]; // store string representation of field length
 
-  char **list = mymalloc(sizeof(char*) * (MAX_FIELDS + 1));
+  static int smallest_message_size = 0;
+  if (smallest_message_size == 0)
+    smallest_message_size = strlen(append_field_and_free_old(NULL, "")); /* this assumes that the empty message is the smallest possible */
+  
+  char **list = mymalloc(sizeof(char*) * (1 + strlen(message)/smallest_message_size )); /* worst case: "0000000000000000000000" */
   char **plist = list;
   int nfields = 0;
 
   while(!(*pmessage == '\0')) {
-    // cut out a length from the head of the message
-    mystrlcpy(hex_string, pmessage, DIGITS_NUMBER+1);
-    long length = mystrtol(hex_string, 16);
-    pmessage += DIGITS_NUMBER;
+    long length = decode_field_length(&pmessage);
 
     // cut out a field from the head of the message
     char *field = mymalloc(sizeof(char) * (length+1));
     mystrlcpy(field, pmessage, length+1);
     *plist++ = field;
     pmessage += length;
-
+    nfields++;
     if (pmessage > message + message_length)
       myerror(FATAL|NOERRNO, "malformed message; %s", mangle_string_for_debug_log(message, 256));
-    if (nfields++ > MAX_FIELDS)
-      myerror(FATAL|NOERRNO, "Too many fields in a message");
   }
   if (counter)
     *counter =  nfields;

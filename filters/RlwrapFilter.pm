@@ -118,7 +118,7 @@ sub run {
     while(1) {
 	my ($tag, $message) = read_message();
         $message = when_defined $self -> message_handler, "$message", $tag; # ignore return value
-	my $response;
+	my $response = $message; # a response that is identical to the message signals: don't do anything
 
 	if ($tag == TAG_INPUT) {
 	  $response = when_defined $self -> input_handler, "$message";
@@ -126,32 +126,21 @@ sub run {
 	  $response = $self -> handle_output($message);
 	} elsif ($tag == TAG_HISTORY) {
 	  $response = when_defined $self -> history_handler, "$message";
-        } elsif ($tag == TAG_HOTKEY) {
-          if ($self -> hotkey_handler) {
+        } elsif ($tag == TAG_HOTKEY and $self -> hotkey_handler) {
             my @params = split_rlwrap_message($message);
             my @result = &{$self -> hotkey_handler}(@params);
             $response = merge_fields(@result);
-          } else {
-            $response = $message;
-          }
-	} elsif ($tag == TAG_COMPLETION) {
-	  my ($line, $prefix, $completions, @completions);
-	  if ($self -> completion_handler) {
-	    $message =~ s/[ ]+$//; # eat final space
-	    ($line, $prefix, $completions) = split /\t/, $message; # @@@TODO: use split_rlwrap_message() also here
-	    @completions = split / /, $completions;                # like in: ($line, $prefix, @completions) = split_rlwrap_message($message)
-	    @completions = &{$self -> completion_handler}($line, $prefix, @completions);
-	    $response = "$line\t$prefix\t". (join ' ', @completions) . " ";
-          } else {
-	    $response = $message;
-	  }
+	} elsif ($tag == TAG_COMPLETION and $self -> completion_handler) {
+          my ($line, $prefix, @completions) = split_rlwrap_message($message);
+          @completions = &{$self -> completion_handler}($line, $prefix, @completions);
+	  $response = merge_fields($line, $prefix, @completions); # The handler only returns a (revised) list of completions. We add the (original) $line and $prefix
 	} elsif ($tag == TAG_PROMPT) {
 	  if ($message eq REJECT_PROMPT or
 	      ($self -> {prompts_are_never_empty} and $message eq "")) {
-			write_message($tag,REJECT_PROMPT);
+			write_message($tag, REJECT_PROMPT);
 			# don't update <previous_tag> and don't reset <cumulative_input>
 			next;
-		}
+                      }
 
           if ($ENV{RLWRAP_IMPATIENT} and  $self->{cumulative_output} !~ /\n$/) { # cumulative output contains prompt: chop it off!
             $self->{cumulative_output} =~ s/(?<![^\n])[^\n]*$//                  # s/[^\n]*$// takes way too long on big strings,
@@ -161,11 +150,9 @@ sub run {
 	  $response = when_defined $self -> prompt_handler, "$message";
 	  croak "prompts may not contain newlines!" if $response =~ /\n/;
         } elsif ($tag == TAG_WHAT_ARE_YOUR_INTERESTS) {
-            $response = $self -> add_interests($message);
-	} else {
-	  $response = $message; # No error message, compatible with future rlwrap
-	                        # versions that may define new tag types
-	}
+          $response = $self -> add_interests($message);
+        }
+
 
         # shouldn't the next "and" be an  "or"? @@@
 	unless (out_of_band($tag) and ($tag == TAG_PROMPT and $response eq REJECT_PROMPT)) {

@@ -1029,7 +1029,6 @@ static void test_main() {
 #ifdef DEBUG
   if(debug & DEBUG_TEST_MAIN) {
     /* test, test */
-
     test_haystack("rabarber","r");
     test_haystack("","r");
     test_haystack("rr rr rr rrr","rr");

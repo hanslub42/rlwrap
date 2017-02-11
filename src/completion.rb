@@ -188,6 +188,7 @@ feed_file_into_completion_list(const char *completions_file)
 #define FILTER_COMPLETIONS 8
 #define COMPLETE_PARANORMALLY 16 /* read user's thoughts */
 
+                                                         
 
 int
 get_completion_type()
@@ -263,53 +264,44 @@ my_completion_function(char *prefix, int state)
       }
     }
 
-    scratch_list = rbopenlist(scratch_tree); /* OK, we now have our list with completions. We may have to filter it: */
-    
-    if (completion_type & FILTER_COMPLETIONS) {
-      /* build message (filter_food) consisting of: input line, TAB, prefix, TAB, completion_1 SPACE completion_2 .... */
-      char *word, *filtered, **words, **plist, **fragments;
+    scratch_list = rbopenlist(scratch_tree); /* OK, we now have our list with completions. We may have to filter it ... */
+    if (completion_type & FILTER_COMPLETIONS) {  
+      char *filter_food = NULL;
+      char *filtered, **filtered_components, **plist;
+      int count;
+
+      /* build the "filter food" (input for the filter) as a field list
+         <rl_line_buffer><prefix><completion1><completion2>....                    */
+      filter_food = append_field_and_free_old(filter_food, rl_line_buffer);
+      filter_food = append_field_and_free_old(filter_food, prefix); 
+      while((completion = rbreadlist(scratch_list))) 
+        filter_food = append_field_and_free_old(filter_food, completion);
       
-      int length = strlen(rl_line_buffer) + strlen(prefix) + 3;
-      char *filter_food = mymalloc(length);
-      
-      assert(strchr(rl_line_buffer,'\n') == NULL);
-      
-      
-      sprintf(filter_food, "%s\t%s\t", rl_line_buffer, prefix);
-      while((completion = rbreadlist(scratch_list))) {  
-        filter_food = append_and_free_old(filter_food, completion);
-        filter_food = append_and_free_old(filter_food, " ");
-	  
-      }
-      /* feed message to filter */
       filtered = pass_through_filter(TAG_COMPLETION, filter_food);
       free(filter_food);
-      rbcloselist(scratch_list);  /* throw away old list, and */
+      rbcloselist(scratch_list);  
       DPRINTF1(DEBUG_ALL, "Filtered: %s", mangle_string_for_debug_log(filtered, 40));
 
-      /* parse contents */
-      fragments = split_on_single_char(filtered,  '\t', 3);
-      if ( strncmp(fragments[0], rl_line_buffer, length) ||  strncmp(fragments[1], prefix,length)) {
+      filtered_components = split_filter_message(filtered, &count);
+      free(filtered);
+      
+      if ( count <2 || strcmp(filtered_components[0], rl_line_buffer) ||  strcmp(filtered_components[1], prefix)) 
 	  myerror(FATAL|NOERRNO, "filter has illegally messed with completion message\n"); /* it should ONLY have changed the completion word list  */
-      }
+    
 
       my_rbdestroy(scratch_tree); /* burn the old scratch tree (but leave the completion tree alone)  */
       scratch_tree = rbinit();    /* now grow a new one */
-      words = split_with(fragments[2], " ");
-      for(plist = words;(word = *plist); plist++) {
-	if (!*word)
-	  continue; /* empty space at beginning or end of the word list results in an empty word. skip it now */	
-	rbsearch(mysavestring(word), scratch_tree); /* add the filtered completions to the new scratch tree */
-	DPRINTF1(DEBUG_COMPLETION, "Adding %s to completion list ", word); 
-      }
-      free_splitlist(words);
-      free_splitlist(fragments);
-      free(filtered);
-      scratch_list = rbopenlist(scratch_tree);      /* flatten the tree into a new list */	  
-    }
 
-  
-    DPRINTF1(DEBUG_COMPLETION, "scratch list: %s", rbtree_to_string(scratch_tree, 6));  
+      for(plist = filtered_components + 2; *plist; plist++) {
+        if (!**plist)
+          continue; /* empty space at beginning or end of the word list results in an empty word, ignore those now */	
+        rbsearch(mysavestring(*plist), scratch_tree); /* add the filtered completions to the new scratch tree */
+        DPRINTF1(DEBUG_COMPLETION, "Adding %s to completion list ", *plist); 
+      }
+      free_splitlist(filtered_components);
+      scratch_list = rbopenlist(scratch_tree);      /* flatten the tree into a new list */	    
+      DPRINTF1(DEBUG_COMPLETION, "scratch list: %s", rbtree_to_string(scratch_tree, 6));
+    } /* if (completion_type & FILTER_COMPLETIONS) */
   } /* if state ==  0 */
 
   /* we get here each time the user presses TAB to cycle through the list */
@@ -320,11 +312,11 @@ my_completion_function(char *prefix, int state)
     char *copy_for_readline = malloc_foreign(strlen(completion)+1);
     strcpy(copy_for_readline, completion);
     
-  /* This doesn ... (comment disappeared) */   
+  
     rl_filename_completion_desired = rl_filename_quoting_desired = (stat(completion, &buf) ? FALSE : TRUE); 
 
     DPRINTF1(DEBUG_COMPLETION, "Returning completion to readline: <%s>", copy_for_readline);
-    return copy_for_readline;	/* we cannot just return it as  readline will free it (and make rlwrap explode) */
+    return copy_for_readline;	/* we cannot just return the original as  readline will free it (and make rlwrap explode) */
   } else {
     return NULL;
   }
