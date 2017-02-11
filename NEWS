@@ -26,6 +26,12 @@
            resulting in muddled and unclear (although correct) code.
          - rlwrap --history-size -0 would clobber the history file
            (as per the manual - that has been updated as well)
+         - rlwrap's ad hoc way of sending lists of strings to filters
+           by interspersing them with TABS or spaces is becoming
+           unwieldy, it has been replaced by a standard encoding
+           <length1><string1><length2><string2>.... (where the
+           <lengths> are fixed length hexadecimal numbers (this is a
+           contribution by Hisanobu Okuda)
       
       Playing back a readline macro consisting of more than one line
       would crash with SIGSEGV
