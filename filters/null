@@ -12,7 +12,4 @@ my $filter = new RlwrapFilter;
 $filter -> help_text("Usage: rlwrap [-options] -z null <command>\n".
 		     "a filter that does nothing");
 
-print "$ENV{RLWRAP_COMMAND_LINE}\n";
-
-
 $filter -> run;

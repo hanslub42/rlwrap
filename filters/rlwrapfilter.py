@@ -575,7 +575,7 @@ class RlwrapFilter:
                     params = split_rlwrap_message(message)
                     (line, prefix, completions) = (params[0], params[1], params[2:])
                     completions = self.completion_handler(line, prefix, completions)
-                    response = merge_fields([line]+[prefix]+completions)
+                    response = merge_fields([line, prefix] + completions)
                 else:
                     response = message
             elif (tag == TAG_HOTKEY):
