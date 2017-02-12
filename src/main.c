@@ -166,7 +166,7 @@ main(int argc, char **argv)
   command_name = read_options_and_command_name(argc, argv);
 
   /* by now, optind points to slave <command>, and &argv[optind] is <command>'s argv. Remember slave command line: */
-  command_line = unsplit_with(argc - optind, argv, " ");
+  command_line = unsplit_with(argc - optind, argv + optind, " ");
 
   /* if stdin is not a tty, just execute <command>: */ 
   if (!isatty(STDIN_FILENO) && execvp(argv[optind], &argv[optind]) < 0)
