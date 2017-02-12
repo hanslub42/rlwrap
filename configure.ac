@@ -333,29 +333,35 @@ Please re-configure with ./configure LDFLAGS='-L/path/to/the/real/readline/lib/'
 ]]))
 
 
+# AC_EGREP_RL_HEADER_AND_CHECK_FUNC(function_or_variable, [code using function_or_variable],  HAVE_FUNCTION_OR_VARIABLE)
+# This macro looks for <function_or_variable>, both as a declaration in header.h, and as a symbol in $LIBS  
+# ------------------------------------------------------------------------------------------
+AC_DEFUN([AC_EGREP_RL_HEADER_AND_CHECK_FUNC],
+         [ AC_MSG_CHECKING([whether your readline headers and library know about $1])
+           AC_EGREP_HEADER($1, [readline/readline.h], in_header=1, in_header=0)
+           AC_TRY_LINK([ #include <stdio.h>
+                         #include "readline/readline.h" ],
+                         [$2], in_lib=1, in_lib=0)
+           if test x$in_lib = x0 -a x$in_header = x1 ; then
+              AC_MSG_WARN([$1 is found in readline.h, but not in your libreadline. This is probably a misconfiguration!])
+           fi
+           if test x$in_lib = x1 -a x$in_header = x1 ; then
+              AC_DEFINE($3, 1 ,[Define to 1 if your readline lib has $1])
+           fi
+           AC_MSG_RESULT(yes)
+           ])
 
-AC_MSG_CHECKING(whether your readline knows about rl_variable_value)
-AC_EGREP_HEADER([rl_variable_value],[readline/readline.h], [
-                 AC_DEFINE(HAVE_RL_VARIABLE_VALUE, 1 ,[Define to 1 if your readline lib has rl_variable_value()])])
-AC_MSG_RESULT(yes)
 
-AC_MSG_CHECKING(whether your readline knows about rl_readline_version)
-AC_EGREP_HEADER([rl_readline_version],[readline/readline.h], [
-                 AC_DEFINE(HAVE_RL_READLINE_VERSION, 1 ,[Define to 1 if your readline lib has rl_readline_version])])
-AC_MSG_RESULT(yes)
+AC_EGREP_RL_HEADER_AND_CHECK_FUNC([rl_variable_value], [rl_variable_value("blah")], [HAVE_RL_VARIABLE_VALUE]) 
 
+AC_EGREP_RL_HEADER_AND_CHECK_FUNC([rl_readline_version],[printf("%d",rl_readline_version)], [HAVE_RL_READLINE_VERSION]) 
 
-
-AC_MSG_CHECKING(whether your readline knows about rl_executing_keyseq)
-AC_EGREP_HEADER([rl_executing_keyseq],[readline/readline.h], [
-                 AC_DEFINE(HAVE_RL_EXECUTING_KEYSEQ, 1 ,[Define to 1 if your readline lib has rl_executing_keyseq])])
-AC_MSG_RESULT(yes)
-
+AC_EGREP_RL_HEADER_AND_CHECK_FUNC([rl_executing_keyseq],[printf("%s", rl_executing_keyseq)], [HAVE_RL_EXECUTING_KEYSEQ]) 
 
 # check for existence of myself under $opt_proc_mountpoint/$$/cwd If the user specified --disable-proc-mountpoint we'll still do these tests
 # but they wil fail unless /no is a procfs mountpoint ;-)
 
-AC_MSG_CHECKING("Will rlwrap find command's working directory under ${opt_proc_mountpoint}/<commands pid>/cwd? let's see...")
+echo "Will rlwrap find command's working directory under ${opt_proc_mountpoint}/<commands pid>/cwd? let's see..."
 if test $cross_compiling = "yes"; then
    AC_DEFINE(HAVE_PROC_PID_CWD, 0, [Define to 1 if <opt_proc_mountpoint>/<pid>/cwd is a link to working directory of process <pid>])
    AC_SUBST(HAVE_PROC_PID_CWD,[no])
@@ -367,7 +373,7 @@ else
                  AC_SUBST(HAVE_PROC_PID_CWD,[yes])
               ],[AC_SUBST(HAVE_PROC_PID_CWD,[no])])
 fi
-AC_MSG_RESULT([$HAVE_PROC_PID_CWD])
+#AC_MSG_RESULT([$HAVE_PROC_PID_CWD])
 
 
 AC_DEFINE_UNQUOTED(PROC_MOUNTPOINT, "[$opt_proc_mountpoint]", [Define to location of Linux-style procfs mountpoint if provided and valid])
