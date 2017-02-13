@@ -49,6 +49,11 @@ AC_ARG_ENABLE(debug,
     AC_HELP_STRING([--enable-debug], [enable debugging [[default=NO]]]),
     opt_debug=$enableval)
 
+AC_ARG_ENABLE(pedantic-ansi,
+    AC_HELP_STRING([--enable-pedantic-ansi], [compile with -ansi and -pedantic [[default=NO]]]),
+    opt_pedantic_ansi=$enableval)
+
+
 AC_ARG_ENABLE(homegrown-redisplay,
     AC_HELP_STRING([--enable-homegrown-redisplay], [try this only if rlwrap messes up the prompt [[default=NO]]]),
     opt_homegrown_redisplay=$enableval)
@@ -67,10 +72,13 @@ AC_ARG_ENABLE(proc-mountpoint,
 if test $opt_debug = yes; then
     AC_DEFINE(DEBUG,1 ,Define to 1 to get debugging info)
     test -z "$CFLAGS" || AC_MSG_WARN([Because CFLAGS is set, configure will not add -g and -Wall to them - do it yourself if necessary])
-    test -z "$CFLAGS" && AC_SUBST(CFLAGS,"-ansi  -O0 -g -Wimplicit-function-declaration -Wimplicit -pedantic -Wextra -Wall") # compile for debugging, and  give plenty of warnings
-
-
+    test -z "$CFLAGS" && AC_SUBST(CFLAGS,"-O0 -g -Wall") # compile for debugging, and  give plenty of warnings
 fi
+
+if test $opt_pedantic_ansi = yes; then
+    AC_SUBST(CFLAGS,"$CFLAGS -ansi -Wimplicit-function-declaration -Wimplicit -pedantic -Wextra")
+fi
+
 
 AC_USE_SYSTEM_EXTENSIONS
 
