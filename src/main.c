@@ -53,9 +53,6 @@ char *filter_command = NULL;                 /* -z option: pipe prompts, input, 
 
 /* variables for global bookkeeping */
 int master_pty_fd;		     /* master pty (rlwrap uses this to communicate with client) */
-int slave_pty_sensing_fd;		     /* slave pty (client uses this to communicate with rlwrap,
-				      * we keep it open after forking in order to keep track of
-				      * client's terminal settings */
 FILE *debug_fp = NULL;  	     /* filehandle of debugging log */
 char *program_name, *command_name;   /* "rlwrap" (or whatever has been symlinked to rlwrap)  and (base-)name of command */
 char *rlwrap_command_line = "";      /* rlwrap command line (rlwrap -options command <command_args> */

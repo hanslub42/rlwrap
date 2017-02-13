@@ -27,8 +27,10 @@
 /*local vars */
 static int always_echo = FALSE;
 
-/* global var */
-int slave_pty_sensing_fd = -1;
+/* global vars */
+int slave_pty_sensing_fd = -1;       /* slave pty: client uses this to communicate with rlwrap,
+				      * we keep it open after forking in order to keep track of
+				      * client's terminal settings */
 static char *sensing_pty = "uninitialized"; 
 
 pid_t
