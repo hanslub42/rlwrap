@@ -386,7 +386,7 @@ char *lowercase(const char *str);
 char *colour_name_to_ansi_code(const char *colour_name);
 int match_regexp(const char *string, const char *regexp, int case_insensitive);
 int isnumeric(char *string);
-#define END_FIELD (char*)NULL // marker object to terminate vargs
+#define END_FIELD (char*)NULL /* marker object to terminate vargs */
 char *append_field_and_free_old(char *message, const char *field);
 char *merge_fields(char *field, ...);
 char **split_filter_message(char *message, int *count);

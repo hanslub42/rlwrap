@@ -214,8 +214,9 @@ static int
 count_str_occurrences(const char *haystack, const char* needle)
 {
   int count = 0, needle_length = strlen(needle);
-  assert(needle_length > 0);
   const char *p = haystack;
+  
+  assert(needle_length > 0);
   while ((p = strstr(p, needle))) {
       count++;
       p += needle_length;
@@ -909,8 +910,7 @@ int isnumeric(char *string){
   return TRUE;
 }
 
-/* #define MAX_FIELDS 10 // max number of fields */
-#define DIGITS_NUMBER 8  // number of digits of length of field
+#define DIGITS_NUMBER 8  /* number of digits of length of field */
 #define MAX_FIELD_LENGTH (~((-1)<<(DIGITS_NUMBER * 4 -1)) -1)
 #define MY_HEX_FORMAT(n) "%0" MY_ITOA(n) "x"
 #define MY_ITOA(n) #n
@@ -921,10 +921,10 @@ long
 mystrtol(const char *nptr, int base)
 {
   char *endptr;
+  long result;
+
   errno = 0;
-
-  long result = strtol(nptr, &endptr, base);
-
+  result = strtol(nptr, &endptr, base);
   if (*endptr != '\0')
     myerror(FATAL|NOERRNO, "invalid representation %s", nptr);
   if (errno != 0)
@@ -946,14 +946,16 @@ encode_field_length(int length)
 }       
 
 
-/* decode first length field in a message of form "<length 1> <message 1> <length 2> ...." and advance pointer *ppmessage to the start of <message 1> */
+/* decode first length field in a message of form "<length 1> <message 1> <length 2> ...." 
+   and advance pointer *ppmessage to the start of <message 1> */
 static int
 decode_field_length(char** ppmessage)
 {
   char hex_string[DIGITS_NUMBER+1];
-  if (! **ppmessage) return -1;
+  long length;
+  
   mystrlcpy(hex_string, *ppmessage, DIGITS_NUMBER+1);
-  long length = mystrtol(hex_string, 16);
+  length = mystrtol(hex_string, 16);
   *ppmessage += DIGITS_NUMBER;
   return length;
 }       
@@ -1023,19 +1025,21 @@ split_filter_message(char *message, int *counter)
 {
   char *pmessage = message;
   int message_length = strlen(message);
+  char **list, **plist;
+  int nfields = 0;
 
+  
   static int smallest_message_size = 0;
   if (smallest_message_size == 0)
     smallest_message_size = strlen(append_field_and_free_old(NULL, "")); /* this assumes that the empty message is the smallest possible */
   
-  char **list = mymalloc(sizeof(char*) * (1 + strlen(message)/smallest_message_size )); /* worst case: "0000000000000000000000" */
-  char **plist = list;
-  int nfields = 0;
+  plist = list = mymalloc(sizeof(char*) * (1 + strlen(message)/smallest_message_size )); /* worst case: "0000000000000000000000" */
+  nfields = 0;
 
   while(!(*pmessage == '\0')) {
     long length = decode_field_length(&pmessage);
 
-    // cut out a field from the head of the message
+    /* cut out a field from the head of the message: */
     char *field = mymalloc(sizeof(char) * (length+1));
     mystrlcpy(field, pmessage, length+1);
     *plist++ = field;

@@ -67,7 +67,7 @@ AC_ARG_ENABLE(proc-mountpoint,
 if test $opt_debug = yes; then
     AC_DEFINE(DEBUG,1 ,Define to 1 to get debugging info)
     test -z "$CFLAGS" || AC_MSG_WARN([Because CFLAGS is set, configure will not add -g and -Wall to them - do it yourself if necessary])
-    test -z "$CFLAGS" && AC_SUBST(CFLAGS,"-O0 -g -Wimplicit-function-declaration -Wimplicit -pedantic -Wextra -Wall") # compile for debugging, and  give plenty of warnings
+    test -z "$CFLAGS" && AC_SUBST(CFLAGS,"-std=c90  -O0 -g -Wimplicit-function-declaration -Wimplicit -pedantic -Wextra -Wall") # compile for debugging, and  give plenty of warnings
 
 
 fi

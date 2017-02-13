@@ -765,10 +765,9 @@ static char *stored_cmdline_filename;
 
 
 
-void mirror_args_init(char**argv) {
-  int i;
+void mirror_args_init(char**argv) {  
 #ifdef ENABLE_MIRROR_ARGS
-
+  int i;
   rlwrap_command_argv = argv;
   stored_cmdline_filename = mymalloc(MAXPATHLEN);
   *stored_cmdline_filename = '\0';  

@@ -627,10 +627,12 @@ direct_keypress(int UNUSED(count), int key)
 
 static char* entire_history_as_one_string(void) {
   HIST_ENTRY **the_list = history_list(), **entryp;
+  char *big_string = mymalloc(history_total_bytes() + history_length + 1);
+  char *stringp =  big_string;
+
   if (!the_list) /* i.e. if there is no history */
     return mysavestring("");
-  char *big_string = mymalloc(history_total_bytes() + history_length + 1);
-  char * stringp =  big_string;
+
   for (entryp = the_list; *entryp; entryp++) {
     int length = strlen((*entryp)->line);
     strncpy(stringp, (*entryp)->line, length); /* copy line, without closing NULL byte; */
