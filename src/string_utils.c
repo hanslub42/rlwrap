@@ -1028,11 +1028,12 @@ split_filter_message(char *message, int *counter)
   char **list, **plist;
   int nfields = 0;
 
-  
   static int smallest_message_size = 0;
+  
   if (smallest_message_size == 0)
     smallest_message_size = strlen(append_field_and_free_old(NULL, "")); /* this assumes that the empty message is the smallest possible */
-  
+
+  assert(smallest_message_size > 0);
   plist = list = mymalloc(sizeof(char*) * (1 + strlen(message)/smallest_message_size )); /* worst case: "0000000000000000000000" */
   nfields = 0;
 
