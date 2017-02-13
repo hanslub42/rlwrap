@@ -100,7 +100,8 @@ sub date_in_echo_area {
 my $instance = 0;
 sub edit_history {
   my ($doc, $prefix, $postfix, $history, $histpos) = @_;
-  $doc and return "edit and/or choose from  current history";
+  my $editor = $ENV{RLWRAP_EDITOR} || "vi +%L";  
+  $doc and return "edit current history with '$editor' - add empty line (lines) to select (accept) the following line";
   $histpos =~ /\d/ or die "$histpos is not a number - did you bind this key to 'rlwrap-hotkey-without-history'?";
   $instance++;
   my $editfile = ($ENV{TMP} || $ENV{TEMP} || "/tmp") . "/history.$$.$instance.txt";
@@ -109,7 +110,6 @@ sub edit_history {
   my $colno = length($prefix) + 1;
   $history ||= " "; # write_file() crashes  if called on an empty string....
   write_file($editfile , $history);
-  my $editor = $ENV{RLWRAP_EDITOR} || "vi +%L";
   $editor =~ s/%L/$lineno/;
   $editor =~ s/%C/$colno/;
   system("$editor $editfile");
