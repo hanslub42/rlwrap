@@ -53,6 +53,9 @@
 
       configure.ac now works even when cross-compiling (skipping some
       tests, but providing sensible defaults)
+
+      --enable-pedantic-ansi is a new configure option separate from
+      --enable-debug (it used to be implied by --enable-debug)
       
 0.42  Added --mirror-arguments (-U) option 
 
