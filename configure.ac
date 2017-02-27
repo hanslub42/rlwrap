@@ -69,13 +69,13 @@ AC_ARG_ENABLE(proc-mountpoint,
      opt_proc_mountpoint=$enableval) 
 
 
-if test $opt_debug = yes ; then
+if test x$opt_debug = xyes ; then
     AC_DEFINE(DEBUG,1 ,Define to 1 to get debugging info)
     test -z "$CFLAGS" || AC_MSG_WARN([Because CFLAGS is set, configure will not add -g and -Wall to them - do it yourself if necessary])
     test -z "$CFLAGS" && AC_SUBST(CFLAGS,"-O0 -g -Wall") # compile for debugging, and  give plenty of warnings
 fi
 
-if test $opt_pedantic_ansi = yes ; then
+if test x$opt_pedantic_ansi = xyes ; then
     AC_SUBST(CFLAGS,"$CFLAGS -ansi -Wimplicit-function-declaration -Wimplicit -pedantic -Wextra")
 fi
 
@@ -84,7 +84,7 @@ fi
 
 AC_USE_SYSTEM_EXTENSIONS
 
-test $opt_homegrown_redisplay = yes && AC_DEFINE(HOMEGROWN_REDISPLAY,1 ,[Define to 1 to use homegrown_redisplay()])
+test x$opt_homegrown_redisplay = xyes && AC_DEFINE(HOMEGROWN_REDISPLAY,1 ,[Define to 1 to use homegrown_redisplay()])
 
 
 AC_CONFIG_FILES([Makefile filters/Makefile doc/Makefile src/Makefile doc/rlwrap.man]) 
@@ -384,14 +384,14 @@ if test $opt_spy_on_readline = yes  -a $found_rl_horiz = no ; then
   opt_spy_on_readline=no
 fi
 
-test $opt_spy_on_readline = yes && AC_DEFINE(SPY_ON_READLINE,1 ,Define to 1 to use private _rl_horizontal_scroll_mode)
+test x$opt_spy_on_readline = xyes && AC_DEFINE(SPY_ON_READLINE,1 ,Define to 1 to use private _rl_horizontal_scroll_mode)
 
 
 # check for existence of myself under $opt_proc_mountpoint/$$/cwd If the user specified --disable-proc-mountpoint we'll still do these tests
 # but they wil fail unless /no is a procfs mountpoint ;-)
 
 echo "Will rlwrap find command's working directory under ${opt_proc_mountpoint}/<commands pid>/cwd? let's see..."
-if test $cross_compiling = "yes"; then
+if test x$cross_compiling = xyes; then
    AC_DEFINE(HAVE_PROC_PID_CWD, 0, [Define to 1 if <opt_proc_mountpoint>/<pid>/cwd is a link to working directory of process <pid>])
    AC_SUBST(HAVE_PROC_PID_CWD,[no])
    echo
@@ -444,7 +444,7 @@ else
 fi
 AC_MSG_RESULT($result)
 
-if test $cross_compiling = yes; then
+if test x$cross_compiling = xyes; then
   cat <<EOF
 
 
