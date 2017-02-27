@@ -185,9 +185,9 @@ extern int _rl_horizontal_scroll_mode;
 #  define redisplay_multiple_lines (strncmp(rl_variable_value("horizontal-scroll-mode"),"off",3) == 0)
 #endif
 
-
-
-
+#if defined(HAVE_LIBPROC_H)
+#  include <libproc.h>
+#endif
 
 
 /* in main.c: */
@@ -338,6 +338,7 @@ void  close_logfile(void);
 void  timestamp(char *buf, int size);
 unsigned long hash_multiple(int n, ...);
 int   killed_by(int status);
+void  update_cwd_for_slave_using_libproc(int pid);
 void  change_working_directory(void);
 void  log_terminal_settings(struct termios *terminal_settings);
 void  log_fd_info(int fd);
@@ -510,7 +511,6 @@ void filter_test(void);
 /* DPRINTF0 and its ilk  doesn't produce any output except when DEBUG is #defined (via --enable-debug configure option) */
 
 #ifdef  DEBUG
-
 
 #  define DEBUG_TERMIO                           1
 #  define DEBUG_SIGNALS                          2
