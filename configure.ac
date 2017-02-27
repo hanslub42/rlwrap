@@ -69,23 +69,22 @@ AC_ARG_ENABLE(proc-mountpoint,
      opt_proc_mountpoint=$enableval) 
 
 
-if test $opt_debug = yes; then
+if test $opt_debug = yes ; then
     AC_DEFINE(DEBUG,1 ,Define to 1 to get debugging info)
     test -z "$CFLAGS" || AC_MSG_WARN([Because CFLAGS is set, configure will not add -g and -Wall to them - do it yourself if necessary])
     test -z "$CFLAGS" && AC_SUBST(CFLAGS,"-O0 -g -Wall") # compile for debugging, and  give plenty of warnings
 fi
 
-if test $opt_pedantic_ansi = yes; then
+if test $opt_pedantic_ansi = yes ; then
     AC_SUBST(CFLAGS,"$CFLAGS -ansi -Wimplicit-function-declaration -Wimplicit -pedantic -Wextra")
 fi
+
+# wait with defining SPY_ON_READLINE until we know we can use _rl_horizontal_scroll_mode (cf below)
 
 
 AC_USE_SYSTEM_EXTENSIONS
 
 test $opt_homegrown_redisplay = yes && AC_DEFINE(HOMEGROWN_REDISPLAY,1 ,[Define to 1 to use homegrown_redisplay()])
-
-test $opt_spy_on_readline = yes && AC_DEFINE(SPY_ON_READLINE,1 ,Define to 1 to use private _rl_horizontal_scroll_mode)
-
 
 
 AC_CONFIG_FILES([Makefile filters/Makefile doc/Makefile src/Makefile doc/rlwrap.man]) 
@@ -355,9 +354,13 @@ AC_DEFUN([AC_EGREP_RL_HEADER_AND_CHECK_FUNC],
            fi
            if test x$in_lib = x1 -a x$in_header = x1 ; then
               AC_DEFINE($3, 1 ,[Define to 1 if your readline lib has $1])
+              last_check=1
+           else
+              last_check=0
            fi
            AC_MSG_RESULT(yes)
            ])
+
 
 
 AC_EGREP_RL_HEADER_AND_CHECK_FUNC([rl_variable_value], [rl_variable_value("blah")], [HAVE_RL_VARIABLE_VALUE]) 
@@ -365,6 +368,24 @@ AC_EGREP_RL_HEADER_AND_CHECK_FUNC([rl_variable_value], [rl_variable_value("blah"
 AC_EGREP_RL_HEADER_AND_CHECK_FUNC([rl_readline_version],[printf("%d",rl_readline_version)], [HAVE_RL_READLINE_VERSION]) 
 
 AC_EGREP_RL_HEADER_AND_CHECK_FUNC([rl_executing_keyseq],[printf("%s", rl_executing_keyseq)], [HAVE_RL_EXECUTING_KEYSEQ]) 
+
+# rlwrap tries to read a global (but private) readline variable _rl_horizontal_scroll_mode if the the option spy-on-realine is enabled
+# Depending on the linker (or linker options like gcc's -fvisibility=xxx) it may or may not be visible:
+
+AC_MSG_CHECKING([whether the private symbol _rl_horizontal_scroll_mode is visble in your readline libs])
+AC_TRY_LINK([#include <stdio.h>
+             extern int _rl_horizontal_scroll_mode;],
+             [printf("%d", _rl_horizontal_scroll_mode)],
+             found_rl_horiz=yes, found_rl_horiz=no)
+AC_MSG_RESULT($found_rl_horiz)
+
+if test $opt_spy_on_readline = yes  -a $found_rl_horiz = no ; then
+  AC_MSG_WARN([I can't find _rl_horizontal_scroll_mode: disabling spy-on-readline now])
+  opt_spy_on_readline=no
+fi
+
+test $opt_spy_on_readline = yes && AC_DEFINE(SPY_ON_READLINE,1 ,Define to 1 to use private _rl_horizontal_scroll_mode)
+
 
 # check for existence of myself under $opt_proc_mountpoint/$$/cwd If the user specified --disable-proc-mountpoint we'll still do these tests
 # but they wil fail unless /no is a procfs mountpoint ;-)
