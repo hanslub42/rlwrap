@@ -46,7 +46,7 @@ static void bindkey(int key, rl_command_func_t *function, const char *maplist);
 static int munge_line_in_editor(int, int);
 static int direct_keypress(int, int);
 static int handle_hotkey(int, int);
-static int handle_hotkey_ignore_history(int, int);
+static int handle_hotkey_without_history(int, int);
 static int please_update_alaf(int,int);
 static int please_update_ce(int,int);
 
@@ -63,7 +63,7 @@ init_readline(char *UNUSED(prompt))
   rl_add_defun("rlwrap-call-editor", munge_line_in_editor, -1);
   rl_add_defun("rlwrap-direct-keypress", direct_keypress, -1);  
   rl_add_defun("rlwrap-hotkey", handle_hotkey, -1);
-  rl_add_defun("rlwrap-hotkey-ignore-history", handle_hotkey_ignore_history, -1);
+  rl_add_defun("rlwrap-hotkey-without-history", handle_hotkey_without_history, -1);
 
   /* only useful while debugging */
   rl_add_defun("rlwrap-dump-all-keybindings", dump_all_keybindings,-1);
@@ -655,7 +655,7 @@ debug_ad_hoc(int UNUSED(count), int UNUSED(hotkey))
 
 
 static int
-handle_hotkey2(int UNUSED(count), int hotkey, int ignore_history)
+handle_hotkey2(int UNUSED(count), int hotkey, int without_history)
 {
   char *prefix, *postfix, *history,  *histpos_as_string, *executing_keyseq;
   char *new_prefix, *new_postfix, *new_history, *new_histpos_as_string, *message; 
@@ -674,13 +674,13 @@ handle_hotkey2(int UNUSED(count), int hotkey, int ignore_history)
 #endif
 
     
-  DPRINTF3(DEBUG_READLINE, "hotkey press (ignore_history == %d): %x (%s)", ignore_history, hotkey, mangle_string_for_debug_log(executing_keyseq, MANGLE_LENGTH));
+  DPRINTF3(DEBUG_READLINE, "hotkey press (without_history == %d): %x (%s)", without_history, hotkey, mangle_string_for_debug_log(executing_keyseq, MANGLE_LENGTH));
 
   prefix = mysavestring(rl_line_buffer);
   prefix[rl_point] = '\0';                                     /* chop off just before cursor */
   postfix = mysavestring(rl_line_buffer + rl_point);
 
-  if (ignore_history) {
+  if (without_history) {
     histpos_as_string = mysavestring("0");
     history = mysavestring("");
   } else {
@@ -705,7 +705,7 @@ handle_hotkey2(int UNUSED(count), int hotkey, int ignore_history)
   new_history           = fragments[3];
   new_histpos_as_string = fragments[4];
 
-  if (!ignore_history && hash_multiple(2, new_history, new_histpos_as_string) != hash) { /* history has been rewritten */
+  if (!without_history && hash_multiple(2, new_history, new_histpos_as_string) != hash) { /* history has been rewritten */
     char **linep, **history_lines = split_on_single_char(new_history, '\n', 0);
     DPRINTF3(DEBUG_READLINE, "hash=%lx, new_history is %d bytes long, histpos <%s>", hash, (int) strlen(new_history), new_histpos_as_string);
     clear_history();
@@ -755,7 +755,7 @@ handle_hotkey(int count, int hotkey)
 
 
 static int
-handle_hotkey_ignore_history(int count, int hotkey)
+handle_hotkey_without_history(int count, int hotkey)
 {
   return handle_hotkey2(count, hotkey, TRUE);
 }       
