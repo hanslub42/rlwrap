@@ -501,11 +501,12 @@ int killed_by(int status) {
 
 /* change_working_directory() changes rlwrap's working directory to /proc/<command_pid>/cwd
    (on systems where this makes sense, like linux and Solaris) */
-   
+
+
 void
 change_working_directory()
 {
-#ifdef HAVE_PROC_PID_CWD
+#if defined(HAVE_PROC_PID_CWD)
   static char proc_pid_cwd[MAXPATHLEN+1];
   static int initialized = FALSE;
   int linklen = 0;
@@ -524,11 +525,31 @@ change_working_directory()
     else
       snprintf1(slaves_working_directory, MAXPATHLEN, "? (%s)", strerror(errno));
 #endif /* HAVE_READLINK */
-  }                 
-#else /* HAVE_PROC_PID_CWD */
+  }              
+#elif HAVE_DECL_PROC_PIDVNODEPATHINFO
+  int ret;
+  struct proc_vnodepathinfo vpi;
+  char *result;
+  size_t len;
+  if (command_pid <= 0)
+    return;
+  ret = proc_pidinfo(command_pid, PROC_PIDVNODEPATHINFO, 0, &vpi, sizeof(vpi));
+  if (ret <= 0) {
+    snprintf1(slaves_working_directory, MAXPATHLEN, "? (%s)", strerror(errno));
+    return;
+  }
+  
+  strncpy(slaves_working_directory, vpi.pvi_cdir.vip_path, MAXPATHLEN+1);
+  DPRINTF1(DEBUG_COMPLETION, "get_cwd %s", slaves_working_directory);
+  if (chdir(slaves_working_directory) < 0) {
+    DPRINTF1(DEBUG_COMPLETION, "get_cwd failed to chdir: %s", strerror(errno));
+  }
+#else 
   /* do nothing at all */
 #endif
 }
+ 
+
 
 
 #undef isset

@@ -111,6 +111,8 @@ AC_CHECK_HEADERS([ term.h  ncurses/term.h], , ,
      #endif])
 
 
+AC_CHECK_DECLS(PROC_PIDVNODEPATHINFO, , , [#include libproc.h])
+
 
 # Found this in configure.ac for 'top':
 # The third argument to tputs is a putc-like function that takes an

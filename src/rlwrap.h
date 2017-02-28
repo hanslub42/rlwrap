@@ -121,6 +121,10 @@ char *strchr(), *strrchr();
 #endif
 
 
+#if HAVE_DECL_PROC_PIDVNODEPATHINFO
+#  include <libproc.h>
+#endif
+
 
 
 #define BUFFSIZE 512
