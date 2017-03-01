@@ -111,7 +111,7 @@ AC_CHECK_HEADERS([ term.h  ncurses/term.h], , ,
      #endif])
 
 
-AC_CHECK_DECLS(PROC_PIDVNODEPATHINFO, , , [#include libproc.h])
+AC_CHECK_DECLS(PROC_PIDVNODEPATHINFO, , , [#include <libproc.h>])
 
 
 # Found this in configure.ac for 'top':
