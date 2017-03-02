@@ -338,22 +338,6 @@ AC_CHECK_FUNCS(tigetnum)
 
 AC_CHECK_HEADER([readline/readline.h],[],AC_MSG_ERROR([readline.h not found - you may need to install a readline development package]))
 
-AC_MSG_CHECKING(whether your readline headers know about rl_set_screen_size)
-AC_EGREP_HEADER([rl_set_screen_size],[readline/readline.h], true , 
-	AC_MSG_ERROR([
-You need a more recent version (at least 4.2) of the readline 
-library (ftp://ftp.gnu.org/gnu/readline/) to build this program!
-])) 
-AC_MSG_RESULT(yes)
-
-AC_MSG_CHECKING(whether your readline library knows about rl_set_screen_size)
-AC_CHECK_FUNC(rl_set_screen_size,true,AC_MSG_ERROR([[
-Although you have recent enough readline headers, the readline library that I found is old and/or incomplete.
-This may e.g. happen on Mac OS X machines, where the readline library is just a re-badged copy of editline
-Please re-configure with ./configure LDFLAGS='-L/path/to/the/real/readline/lib/'
-]]))
-
-
 # AC_EGREP_RL_HEADER_AND_CHECK_FUNC(function_or_variable, [code using function_or_variable],  HAVE_FUNCTION_OR_VARIABLE)
 # This macro looks for <function_or_variable>, both as a declaration in header.h, and as a symbol in $LIBS  
 # ------------------------------------------------------------------------------------------
@@ -363,19 +347,39 @@ AC_DEFUN([AC_EGREP_RL_HEADER_AND_CHECK_FUNC],
            AC_TRY_LINK([ #include <stdio.h>
                          #include "readline/readline.h" ],
                          [$2], in_lib=1, in_lib=0)
-           if test x$in_lib = x0 -a x$in_header = x1 ; then
-              AC_MSG_WARN([$1 is found in readline.h, but not in your libreadline. This is probably a misconfiguration!])
-           fi
            if test x$in_lib = x1 -a x$in_header = x1 ; then
               AC_DEFINE($3, 1 ,[Define to 1 if your readline lib has $1])
-              last_check=1
+              last_check=yes
            else
-              last_check=0
+              last_check=no
            fi
-           AC_MSG_RESULT(yes)
+           remark=
+           if test x$in_lib = x0 -a x$in_header = x1 ; then
+               remark=" (only in headers, not in lib. Hmmmmm....)"
+           fi
+           AC_MSG_RESULT([$last_check$remark])
            ])
 
 
+AC_DEFUN([AC_MY_ERROR],
+[AC_MSG_ERROR([
+           
+********************************************************************************
+$1
+********************************************************************************
+])])
+
+AC_EGREP_RL_HEADER_AND_CHECK_FUNC([rl_set_screen_size], [rl_set_screen_size(25,80)], [HAVE_RL_SET_SCREEN_SIZE])
+
+test $last_check = no && AC_MY_ERROR([You need a more recent version (at least 4.2) of the readline
+library (ftp://ftp.gnu.org/gnu/readline/) to build this program!])
+
+
+AC_EGREP_RL_HEADER_AND_CHECK_FUNC([rl_basic_quote_characters], [printf("%s", rl_basic_quote_characters)], [HAVE_RL_BASIC_QUOTE_CHARS]) 
+
+test $last_check = no && AC_MY_ERROR([[The readline library that I found is incomplete, probably just a wrapper
+around libedit (like on Mac OS X) Please install GNU Readline and re-configure
+with the correct CFLAGS and LDFLAGS (cf. the instructions in INSTALL)]])
 
 AC_EGREP_RL_HEADER_AND_CHECK_FUNC([rl_variable_value], [rl_variable_value("blah")], [HAVE_RL_VARIABLE_VALUE]) 
 
