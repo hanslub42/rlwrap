@@ -547,7 +547,7 @@ get_new_slave_cwd(char **cwd)
   struct proc_vnodepathinfo vpi;
 
   if (proc_pidinfo(command_pid, PROC_PIDVNODEPATHINFO, 0, &vpi, sizeof(vpi)) <= 0)
-    DPRINTF2(DEBUG_COMPLETION, "proc_pidinfo(%d, .. failed: %s", command_pid, strerr(errno));
+    DPRINTF2(DEBUG_COMPLETION, "proc_pidinfo(%d, .. failed: %s", command_pid, strerror(errno));
   possibly_new_cwd = mysavestring(vpi.pvi_cdir.vip_path);
 
 #elif HAVE_FREEBSD_LIBPROCSTAT /* FreeBSD without the proc filesystem */
