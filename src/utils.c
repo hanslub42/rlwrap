@@ -23,7 +23,6 @@
 
 
 
-char slaves_working_directory[MAXPATHLEN+1]; 
 
 static FILE *log_fp;
 
@@ -513,80 +512,96 @@ int killed_by(int status) {
     }  
 */ 
 
-void
-change_working_directory()
+
+
+/* get_new_slave_cwd(&cwd)  finds the rlwrapped command's current working directory. If this differs from cwd, free(*cwd) and
+   set *cwd to (a copy of) the new working directory. Return value: 0, or 1 if rlwrap needs to do a chdir(cwd) to again have 
+   the same working dir as the rlwrapped command.
+*/
+static int
+get_new_slave_cwd(char **cwd)
 {
-#if defined(HAVE_PROC_PID_CWD) /* Linux, Solaris, and FreeBSD with the proc filesystem */
-  static char proc_pid_cwd[MAXPATHLEN+1];
-  static int initialized = FALSE;
-  int linklen = 0;
+  char *possibly_new_cwd = NULL;
+  int return_value = 0;
 
-  snprintf0(slaves_working_directory, MAXPATHLEN, "?");
-
-  if (!initialized && command_pid > 0) {        /* first time we're called after birth of child */
-    snprintf2(proc_pid_cwd, MAXPATHLEN , "%s/%d/cwd", PROC_MOUNTPOINT, command_pid);
-    initialized = TRUE;
-  }     
-  if (chdir(proc_pid_cwd) == 0) { /* This will already make our working directory equal to that of the rlwrapped command */  
-#  ifdef HAVE_READLINK            /* Can we find its name? */
-    linklen = readlink(proc_pid_cwd, slaves_working_directory, MAXPATHLEN);
-    if (linklen > 0)
-      slaves_working_directory[linklen] = '\0';
-    else
-      snprintf1(slaves_working_directory, MAXPATHLEN, "? (%s)", strerror(errno));
-#  endif /* HAVE_READLINK */
-  }              
-#elif HAVE_DECL_PROC_PIDVNODEPATHINFO /* OS X */
-  int ret;
-  struct proc_vnodepathinfo vpi;
-  char *result;
-  size_t len;
-  if (command_pid <= 0)
-    return;
-  ret = proc_pidinfo(command_pid, PROC_PIDVNODEPATHINFO, 0, &vpi, sizeof(vpi));
-  if (ret <= 0) {
-    snprintf1(slaves_working_directory, MAXPATHLEN, "? (%s)", strerror(errno));
-    return;
-  }
   
-  strncpy(slaves_working_directory, vpi.pvi_cdir.vip_path, MAXPATHLEN+1);
-  DPRINTF1(DEBUG_COMPLETION, "get_cwd %s", slaves_working_directory);
-  if (chdir(slaves_working_directory) < 0) {
-    DPRINTF1(DEBUG_COMPLETION, "get_cwd failed to chdir: %s", strerror(errno));
-  }
-# elif HAVE_FREEBSD_LIBPROCSTAT /* FreeBSD without the proc filesystem */
+#if defined(HAVE_PROC_PID_CWD) /* Linux, Solaris, and FreeBSD with the proc filesystem */
+
+  static char *proc_pid_cwd = NULL;
+  char readlink_buffer[MAXPATHLEN+1];
+    
+  if (!proc_pid_cwd)
+    proc_pid_cwd = add3strings(PROC_MOUNTPOINT, "/", add2strings(as_string(command_pid), "/cwd"));
+
+# ifdef HAVE_READLINK
+  if  (readlink(proc_pid_cwd, readlink_buffer, MAXPATHLEN) > 0)
+    possibly_new_cwd = mysavestring(readlink_buffer);
+# else
+  /* readlink unavailable, use /proc/nnn/cwd ... */
+  possibly_new_cwd = mysavestring(proc_pid_cwd);
+  return_value = 1; /* always do a chdir(): the symlink /proc/nnn/cwd may point somewhere else now... */
+#  endif /* HAVE_READLINK */
+  
+#elif HAVE_DECL_PROC_PIDVNODEPATHINFO /* OS X */
+
+  struct proc_vnodepathinfo vpi;
+
+  if (proc_pidinfo(command_pid, PROC_PIDVNODEPATHINFO, 0, &vpi, sizeof(vpi)) <= 0)
+    DPRINTF2(DEBUG_COMPLETION, "proc_pidinfo(%d, .. failed: %s", command_pid, strerr(errno));
+  possibly_new_cwd = mysavestring(vpi.pvi_cdir.vip_path);
+
+#elif HAVE_FREEBSD_LIBPROCSTAT /* FreeBSD without the proc filesystem */
+
   unsigned int count = 0;
   struct procstat *procstat = procstat_open_sysctl();
   struct kinfo_proc *kip = procstat_getprocs(procstat, KERN_PROC_PID, command_pid, &count);
   struct filestat_list *head;
   struct filestat *fst;
-  char *cwd = NULL;
   
-  if (count != 1)
-    return;
-  head = procstat_getfiles(procstat, kip, 0);
+  if (count == 1) {
+    head = procstat_getfiles(procstat, kip, 0);
   
-  STAILQ_FOREACH(fst, head, next) 
-    if (fst->fs_uflags & PS_FST_UFLAG_CDIR) {
-      cwd = fst->fs_path;
-      strncpy(slaves_working_directory, cwd, MAXPATHLEN+1);
-      DPRINTF1(DEBUG_COMPLETION, "get_cwd %s", slaves_working_directory);
-      if (chdir(slaves_working_directory) < 0) {
-        DPRINTF1(DEBUG_COMPLETION, "get_cwd failed to chdir: %s", strerror(errno));
-      }
-      break;
-    }
-  
-  procstat_freefiles(procstat, head);
-  procstat_freeprocs(procstat, kip);
-  procstat_close(procstat); 
-#else 
-  return; /* do nothing at all */
+    STAILQ_FOREACH(fst, head, next) 
+      if (fst->fs_uflags & PS_FST_UFLAG_CDIR) {
+        possibly_new_cwd = mysavestring(fst->fs_path);
+        break;
+      }     
+    procstat_freefiles(procstat, head);
+    procstat_freeprocs(procstat, kip);
+    procstat_close(procstat);
+  }     
+
+#else
+  /* no HAVE_PROC_PID_CWD, HAVE_DECL_PROC_PIDVNODEPATHINFO or HAVE_FREEBSD_LIBPROCSTAT: do nothing */
 #endif
-    
   
-}
+  if (possibly_new_cwd && strcmp(*cwd, possibly_new_cwd)) {
+    return_value = 1;
+    free(*cwd);
+    *cwd = mysavestring(possibly_new_cwd);
+  }
+  free(possibly_new_cwd);
+  return return_value;
+}     
  
+
+
+
+void
+change_working_directory()
+{
+  static char *slaves_working_directory = NULL;
+  if (!slaves_working_directory)
+    slaves_working_directory = mysavestring(".");
+  if(command_pid > 0 && get_new_slave_cwd(&slaves_working_directory)) {
+    if (chdir(slaves_working_directory)) {
+      DPRINTF2(DEBUG_COMPLETION, "chdir(%s) failed: %s", slaves_working_directory, strerror(errno));
+    } else {
+      DPRINTF1(DEBUG_COMPLETION, "chdir(%s): success", slaves_working_directory);
+    }   
+  }
+}       
+
 
 
 

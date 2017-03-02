@@ -358,7 +358,6 @@ void  log_fd_info(int fd);
 void  last_minute_checks(void);
 void  mymicrosleep(int msec);
 void  do_nothing(int unused);
-extern char slaves_working_directory[];
 
 
 /* in string_utils.c */
