@@ -15,4 +15,8 @@ Jon Olsson (jon at vexed.se) contributed patches to weed out unsafe
 strcat and strcpy calls
 
 Hisanobu Okuda ported the RlwrapFilter.pm perl module (and a number
-of example filters) to python, and contributed the handling
+of example filters) to python, and contributed a new way of handling 
+multi-part filter messages.
+
+Robert Kroeger contributed code to keep track of the rlwrapped command's
+working directory under OS X

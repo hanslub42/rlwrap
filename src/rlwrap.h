@@ -125,7 +125,17 @@ char *strchr(), *strrchr();
 #  include <libproc.h>
 #endif
 
+#if HAVE_FREEBSD_LIBPROCSTAT
+#  include <sys/param.h>
+#  include <sys/queue.h>
+#  include <sys/socket.h>
+#  include <libprocstat.h>
+#  include <sys/sysctl.h>
+#endif
 
+#if HAVE_PROC_PID_CWD || HAVE_DECL_PROC_PIDVNODEPATHINFO || HAVE_FREEBSD_LIBPROCSTAT
+#  define CAN_FOLLOW_COMMANDS_CWD 1
+#endif
 
 #define BUFFSIZE 512
 

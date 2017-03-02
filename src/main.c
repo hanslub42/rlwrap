@@ -737,7 +737,12 @@ read_options_and_command_name(int argc, char **argv)
       rl_basic_word_break_characters = add3strings("\r\n \t", optarg, "");
       opt_b = TRUE;
       break;
-    case 'c':	complete_filenames = TRUE; break;
+    case 'c':   complete_filenames = TRUE;
+#ifndef CAN_FOLLOW_COMMANDS_CWD
+                myerror(WARNING|NOERRNO, "On this system rlwrap cannot follow the rlwrapped command's working directory:\n"
+                                         "filename completion will only be relative to rlwrap's own working directory ");
+#endif
+                break;
     case 'C':	opt_C = mysavestring(optarg); break;
     case 'd':
 #ifdef DEBUG

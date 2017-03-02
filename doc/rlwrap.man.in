@@ -5,12 +5,6 @@ rlwrap \- readline wrapper
 .ie \\n(.$-1 .RI "[\ \fB\\$1\fP " "\\$2" "\ ]"
 .el .RB "[\ " "\\$1" "\ ]"
 ..
-.de CW
-.ie '@HAVE_PROC_PID_CWD@'yes'  When doing this, rlwrap keeps track \
-of \fIcommand\fPs working directory.
-.el This is not always useful, as rlwrap cannot keep track of \
-\fIcommand\fP's working directory.
-..
 .de OA
 .ie '@HAVE_OPTIONAL_ARGS@'yes' The argument is optional; if given, it has to \
 directly follow the option  without an
@@ -34,8 +28,8 @@ and completion.
 (or your shell) shouldn't notice any difference between \fBcommand\fP and \fBrlwrap
 command\fP \- except the added readline functionality, of course.
 This should even hold true when you are re\-directing, piping and
-sending signals from and to \fIcommand\fP, or when \fIcommand\fP
-manipulates its terminal settings.  
+sending signals from and to \fIcommand\fP, and when \fIcommand\fP
+manipulates its terminal settings or working directory.
 
 There are many options to add
 (programmable) completion, handle multi\-line input, colour and
@@ -76,9 +70,10 @@ Default list (){}[],'+\-=&^%$#@"";|\\ Unless \-c is specified, \" twice " to kee
 / and \. (period) are included in the default list.
 .TP
 .OL \-c \-\-complete\-filenames
-Complete filenames (filename completion is always case\-sensitive, even with the
-\-i option)
-.CW
+Complete filenames (filename completion is always case\-sensitive,
+even with the \-i option). On Linux, OS X, FreeBSD and Solaris
+\fBrlwrap\fP will keep track of \fIcommand\fP's working directory, so
+that relative filenames will be completed as one would expect.
 .TP
 .OL \-C \-\-command\-name \fIcommand_name|N\fP
 Use \fIcommand_name\fP instead of \fIcommand\fP to determine the names of

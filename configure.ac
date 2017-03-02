@@ -113,6 +113,18 @@ AC_CHECK_HEADERS([ term.h  ncurses/term.h], , ,
 
 AC_CHECK_DECLS(PROC_PIDVNODEPATHINFO, , , [#include <libproc.h>])
 
+have_freebsd_libprocstat=yes
+AC_CHECK_DECLS([procstat_open_sysctl, procstat_getprocs, procstat_getfiles, STAILQ_FOREACH] ,[] ,[have_freebsd_libprocstat=no],
+      [#include <sys/param.h>
+       #include <sys/queue.h>
+       #include <sys/socket.h>
+       #include <libprocstat.h>
+       #include <sys/sysctl.h>])
+
+if test x$have_freebsd_libprocstat = xyes ; then
+   AC_DEFINE(HAVE_FREEBSD_LIBPROCSTAT,1 ,[Define to 1 to use FREEBSD libprocstat])
+   PROCSTATLIB='-lprocstat'
+fi
 
 # Found this in configure.ac for 'top':
 # The third argument to tputs is a putc-like function that takes an
@@ -318,7 +330,7 @@ You need the GNU readline library(ftp://ftp.gnu.org/gnu/readline/ ) to build
 this program!
 ]), [$READLINE_SUPPLIB])
 
-LIBS="$LIBS $READLINELIB $READLINE_SUPPLIB"
+LIBS="$LIBS $PROCSTATLIB $READLINELIB $READLINE_SUPPLIB"
 
 AC_CHECK_FUNCS(tigetnum)
 
@@ -399,10 +411,9 @@ if test x$cross_compiling = xyes; then
    echo
    AC_MSG_WARN([This test doesn't work when cross-compiling. Edit HAVE_PROC_PID_CWD in config.h by hand. Guessing: ])   
 else 
-   AC_CHECK_FILES($opt_proc_mountpoint/$$/cwd/configure.ac,[                                                                                      
-                 AC_DEFINE(HAVE_PROC_PID_CWD, 1 ,[Define to 1 if <opt_proc_mountpoint>/<pid>/cwd is a link to working directory of process <pid>]) 
-                 AC_SUBST(HAVE_PROC_PID_CWD,[yes])
-              ],[AC_SUBST(HAVE_PROC_PID_CWD,[no])])
+   AC_CHECK_FILES($opt_proc_mountpoint/$$/cwd/configure.ac,                                                                                      
+              [AC_DEFINE(HAVE_PROC_PID_CWD, 1 ,[Define to 1 if <opt_proc_mountpoint>/<pid>/cwd is a link to working directory of process <pid>])]
+              ,[])
 fi
 #AC_MSG_RESULT([$HAVE_PROC_PID_CWD])
 

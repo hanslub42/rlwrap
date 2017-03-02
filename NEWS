@@ -56,7 +56,9 @@
 
       --enable-pedantic-ansi is a new configure option separate from
       --enable-debug (it used to be implied by --enable-debug)
-      
+
+      --complete-filenames (-c) will now work on OS X and FreeBSD as well
+
 0.42  Added --mirror-arguments (-U) option 
 
       On SunOS tcgetattr(slave pty) failed with "Invalid argument" 

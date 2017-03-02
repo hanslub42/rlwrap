@@ -501,12 +501,22 @@ int killed_by(int status) {
 
 /* change_working_directory() changes rlwrap's working directory to /proc/<command_pid>/cwd
    (on systems where this makes sense, like linux and Solaris) */
+/* TODO: clean up this mess: 
 
+   * use only a global char *slaves_working_directory (not proc_pid_cwd)
+   * factor out a function int get_new_slave_cwd(char **cwd) that returns 1 (and updates slaves_working_directory) only 
+     if the working dir has changed, and use it like this:
+
+    void change_working_directory() { 
+         if(get_new_slave_cwd(&slaves_working_directory)) 
+           chdir(slaves_working_directory);
+    }  
+*/ 
 
 void
 change_working_directory()
 {
-#if defined(HAVE_PROC_PID_CWD)
+#if defined(HAVE_PROC_PID_CWD) /* Linux, Solaris, and FreeBSD with the proc filesystem */
   static char proc_pid_cwd[MAXPATHLEN+1];
   static int initialized = FALSE;
   int linklen = 0;
@@ -517,16 +527,16 @@ change_working_directory()
     snprintf2(proc_pid_cwd, MAXPATHLEN , "%s/%d/cwd", PROC_MOUNTPOINT, command_pid);
     initialized = TRUE;
   }     
-  if (chdir(proc_pid_cwd) == 0) {
-#ifdef HAVE_READLINK
+  if (chdir(proc_pid_cwd) == 0) { /* This will already make our working directory equal to that of the rlwrapped command */  
+#  ifdef HAVE_READLINK            /* Can we find its name? */
     linklen = readlink(proc_pid_cwd, slaves_working_directory, MAXPATHLEN);
     if (linklen > 0)
       slaves_working_directory[linklen] = '\0';
     else
       snprintf1(slaves_working_directory, MAXPATHLEN, "? (%s)", strerror(errno));
-#endif /* HAVE_READLINK */
+#  endif /* HAVE_READLINK */
   }              
-#elif HAVE_DECL_PROC_PIDVNODEPATHINFO
+#elif HAVE_DECL_PROC_PIDVNODEPATHINFO /* OS X */
   int ret;
   struct proc_vnodepathinfo vpi;
   char *result;
@@ -544,9 +554,37 @@ change_working_directory()
   if (chdir(slaves_working_directory) < 0) {
     DPRINTF1(DEBUG_COMPLETION, "get_cwd failed to chdir: %s", strerror(errno));
   }
+# elif HAVE_FREEBSD_LIBPROCSTAT /* FreeBSD without the proc filesystem */
+  unsigned int count = 0;
+  struct procstat *procstat = procstat_open_sysctl();
+  struct kinfo_proc *kip = procstat_getprocs(procstat, KERN_PROC_PID, command_pid, &count);
+  struct filestat_list *head;
+  struct filestat *fst;
+  char *cwd = NULL;
+  
+  if (count != 1)
+    return;
+  head = procstat_getfiles(procstat, kip, 0);
+  
+  STAILQ_FOREACH(fst, head, next) 
+    if (fst->fs_uflags & PS_FST_UFLAG_CDIR) {
+      cwd = fst->fs_path;
+      strncpy(slaves_working_directory, cwd, MAXPATHLEN+1);
+      DPRINTF1(DEBUG_COMPLETION, "get_cwd %s", slaves_working_directory);
+      if (chdir(slaves_working_directory) < 0) {
+        DPRINTF1(DEBUG_COMPLETION, "get_cwd failed to chdir: %s", strerror(errno));
+      }
+      break;
+    }
+  
+  procstat_freefiles(procstat, head);
+  procstat_freeprocs(procstat, kip);
+  procstat_close(procstat); 
 #else 
-  /* do nothing at all */
+  return; /* do nothing at all */
 #endif
+    
+  
 }
  
 
