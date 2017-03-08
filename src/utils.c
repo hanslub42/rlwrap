@@ -498,25 +498,11 @@ int killed_by(int status) {
   return 0;
 }       
 
-/* change_working_directory() changes rlwrap's working directory to /proc/<command_pid>/cwd
-   (on systems where this makes sense, like linux and Solaris) */
-/* TODO: clean up this mess: 
-
-   * use only a global char *slaves_working_directory (not proc_pid_cwd)
-   * factor out a function int get_new_slave_cwd(char **cwd) that returns 1 (and updates slaves_working_directory) only 
-     if the working dir has changed, and use it like this:
-
-    void change_working_directory() { 
-         if(get_new_slave_cwd(&slaves_working_directory)) 
-           chdir(slaves_working_directory);
-    }  
-*/ 
 
 
-
-/* get_new_slave_cwd(&cwd)  finds the rlwrapped command's current working directory. If this differs from cwd, free(*cwd) and
-   set *cwd to (a copy of) the new working directory. Return value: 0, or 1 if rlwrap needs to do a chdir(cwd) to again have 
-   the same working dir as the rlwrapped command.
+/* get_new_slave_cwd(&cwd) tries to find the rlwrapped command's current working directory. If this
+   differs from cwd, free(*cwd) and set *cwd to (a copy of) the new working directory. Return value: 0, or 1
+   if rlwrap needs to do a chdir(cwd) to again have the same working dir as the rlwrapped command.
 */
 static int
 get_new_slave_cwd(char **cwd)
@@ -586,7 +572,7 @@ get_new_slave_cwd(char **cwd)
  
 
 
-
+/* change_working_directory() tries to change rlwrap's working directory to the rlwrapped command's current working directory   */
 void
 change_working_directory()
 {
