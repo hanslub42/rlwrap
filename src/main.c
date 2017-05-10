@@ -540,6 +540,15 @@ main_loop()
 	    free(sent_EOF);
 	  }	
 	  else {
+	    if (retain) {
+	      static int prev_byte;
+	      /* Starting a new command while already having something carried over from the last time? Clear the old one. */
+	      if (prev_byte == '\r' && byte_read != '\n') {
+	        rl_replace_line("", 0);
+	        rl_redisplay();
+	      }
+	      prev_byte = byte_read;
+	    }
 	    rl_stuff_char(byte_read);  /* stuff it back in readline's input queue */
 	    DPRINTF0(DEBUG_TERMIO, "passing it to readline");	
 	    DPRINTF2(DEBUG_READLINE, "rl_callback_read_char() (_rl_eof_char=%d, term_eof=%d)", _rl_eof_char, term_eof);
