@@ -46,6 +46,7 @@ int renice = FALSE;                          /* -R option: whether to be nicer t
 int mirror_arguments = FALSE;                /* -U option: whether to mirror command's arguments */
 int wait_before_prompt =  40;	             /* -w option: how long we wait before deciding we have a cookable prompt (in msec)) */
 int polling = FALSE;                         /* -W option: always give select() a small (=wait_before_prompt) timeout. */
+int retain = FALSE;                          /* -y option: retain previous command in prompt for easy spamming */
 int impatient_prompt = TRUE;                 /* show raw prompt as soon as possible, even before we cook it. may result in "flashy" prompt */
 char *substitute_prompt = NULL;              /* -S option: substitute our own prompt for <command>s */
 char *filter_command = NULL;                 /* -z option: pipe prompts, input, output, history and completion requests through an external filter */
@@ -96,11 +97,11 @@ static void test_main(void);
 
 /* options */
 #ifdef GETOPT_GROKS_OPTIONAL_ARGS
-static char optstring[] = "+:a::Ab:cC:d::D:e:f:F:g:hH:iIl:nNM:m::oO:p::P:q:rRs:S:t:TUvw:Wz:";
+static char optstring[] = "+:a::Ab:cC:d::D:e:f:F:g:hH:iIl:nNM:m::oO:p::P:q:rRs:S:t:TUvw:Wyz:";
 /* +: is not really documented. configure checks wheteher it works as expected
    if not, GETOPT_GROKS_OPTIONAL_ARGS is undefined. @@@ */
 #else
-static char optstring[] = "+:a:Ab:cC:d:D:e:f:F:g:hH:iIl:nNM:m:oO:p:P:q:rRs:S:t:TUvw:Wz:";	
+static char optstring[] = "+:a:Ab:cC:d:D:e:f:F:g:hH:iIl:nNM:m:oO:p:P:q:rRs:S:t:TUvw:Wyz:";	
 #endif
 
 #ifdef HAVE_GETOPT_LONG
@@ -140,6 +141,7 @@ static struct option longopts[] = {
   {"version", 			no_argument, 		NULL, 'v'},
   {"wait-before-prompt",        required_argument,      NULL, 'w'},    
   {"polling",                   no_argument,            NULL, 'W'},
+  {"retain",                    no_argument,            NULL, 'y'},
   {"filter",                    required_argument,      NULL, 'z'}, 
   {0, 0, 0, 0}
 };
@@ -348,6 +350,8 @@ main_loop()
                    mangle_string_for_debug_log(saved_rl_state.raw_prompt, MANGLE_LENGTH),
                    mangle_string_for_debug_log(saved_rl_state.cooked_prompt, MANGLE_LENGTH));
 	  my_putstr(saved_rl_state.cooked_prompt);
+	  if (retain)
+	    my_putstr(saved_rl_state.input_buffer);
 	  rlwrap_already_prompted = TRUE;
 	}
 	prompt_is_still_uncooked = FALSE;
@@ -838,6 +842,8 @@ read_options_and_command_name(int argc, char **argv)
       break;
     case 'W': 
       polling = TRUE; break;
+    case 'y':
+      retain = TRUE; break;
     case 'z': filter_command = mysavestring(optarg);	break;
     case '?':
       assert(optind > 0);

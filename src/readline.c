@@ -250,7 +250,8 @@ line_handler(char *line)
 
     accepted_lines++;
     free_foreign(line);         /* free_foreign because line was malloc'ed by readline, not by rlwrap */
-    free(filtered_line);        /* we're done with them  */
+    if(!retain)
+      free(filtered_line);        /* we're done with them  */
         
     return_key = 0;
     within_line_edit = FALSE;
@@ -263,10 +264,10 @@ line_handler(char *line)
     free(saved_rl_state.raw_prompt);
     free(saved_rl_state.cooked_prompt); 
     
-    saved_rl_state.input_buffer = mysavestring("");
+    saved_rl_state.input_buffer = retain ? filtered_line : mysavestring("");
     saved_rl_state.raw_prompt = mysavestring("");
     saved_rl_state.cooked_prompt = NULL;
-    saved_rl_state.point = 0;
+    saved_rl_state.point = retain ? strlen(filtered_line) : 0;
     saved_rl_state.already_saved = TRUE;
     redisplay  = TRUE;
 
