@@ -162,8 +162,8 @@ def write_patiently(fh, buffer):
             if (nwritten <= 0):
                 send_error("error writing: {0}".format(str(buffer)))
             already_written = already_written + nwritten
-        except BrokenPipeError: # ignore harmless error when rlwrap dies
-            pass
+        except BrokenPipeError: # quit when rlwrap dies
+            sys.exit(1)
 
 def read_message():
     """
