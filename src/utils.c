@@ -702,6 +702,7 @@ usage(int status)
   print_option('i', "case-insensitive", NULL, FALSE, NULL);
   print_option('I', "pass-sigint-as-sigterm", NULL, FALSE, NULL);
   print_option('l', "logfile", "file", FALSE, NULL);
+  print_option('L', "seconds_before_exiting", "N", FALSE, "(sec)");
   print_option('m', "multi-line", "newline substitute", TRUE, NULL);
   print_option('M', "multi-line-ext", ".ext", FALSE, NULL);
   print_option('n', "no-warnings", NULL, FALSE, NULL);

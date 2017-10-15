@@ -36,6 +36,7 @@ int history_duplicate_avoidance_policy =
 char *history_format = NULL;                 /* -F option: format to append to history entries            */
 char *forget_regexp = NULL;                  /* -g option: keep matching input out of history           */
 int pass_on_sigINT_as_sigTERM =  FALSE;      /* -I option: send a SIGTERM to client when a SIGINT is received */
+int seconds_before_exiting =  0;             /* -L option: set the number of seconds before the program stops */
 char *multi_line_tmpfile_ext = NULL;         /* -M option: tmpfile extension for multi-line editor */
 int nowarn = FALSE;		             /* -n option: suppress warnings */
 int commands_children_not_wrapped =  FALSE;  /* -N option: always use direct mode when <command> is waiting */
@@ -96,11 +97,11 @@ static void test_main(void);
 
 /* options */
 #ifdef GETOPT_GROKS_OPTIONAL_ARGS
-static char optstring[] = "+:a::Ab:cC:d::D:e:f:F:g:hH:iIl:nNM:m::oO:p::P:q:rRs:S:t:TUvw:Wz:";
+static char optstring[] = "+:a::Ab:cC:d::D:e:f:F:g:hH:iIl:L:nNM:m::oO:p::P:q:rRs:S:t:TUvw:Wz:";
 /* +: is not really documented. configure checks wheteher it works as expected
    if not, GETOPT_GROKS_OPTIONAL_ARGS is undefined. @@@ */
 #else
-static char optstring[] = "+:a:Ab:cC:d:D:e:f:F:g:hH:iIl:nNM:m:oO:p:P:q:rRs:S:t:TUvw:Wz:";	
+static char optstring[] = "+:a:Ab:cC:d:D:e:f:F:g:hH:iIl:L:nNM:m:oO:p:P:q:rRs:S:t:TUvw:Wz:";
 #endif
 
 #ifdef HAVE_GETOPT_LONG
@@ -121,6 +122,7 @@ static struct option longopts[] = {
   {"case-insensitive", 		no_argument, 		NULL, 'i'},
   {"pass-sigint-as-sigterm",    no_argument,            NULL, 'I'},
   {"logfile", 			required_argument, 	NULL, 'l'},
+  {"limit-timeout-seconds",     required_argument,      NULL, 'L'},
   {"multi-line", 		optional_argument, 	NULL, 'm'},
   {"multi-line-ext",            required_argument,      NULL, 'M'},
   {"no-warnings", 		no_argument, 		NULL, 'n'},
@@ -133,12 +135,12 @@ static struct option longopts[] = {
   {"remember", 			no_argument, 		NULL, 'r'},
   {"renice", 			no_argument, 		NULL, 'R'},
   {"histsize", 			required_argument, 	NULL, 's'},
-  {"substitute-prompt",    	required_argument, 	NULL, 'S'},           
-  {"set-terminal-name",         required_argument,      NULL, 't'},        
+  {"substitute-prompt",    	required_argument, 	NULL, 'S'}, 
+  {"set-terminal-name",         required_argument,      NULL, 't'},
   {"test-terminal",  		no_argument, 		NULL, 'T'},
   {"mirror-arguments",          no_argument, 		NULL, 'U'},
   {"version", 			no_argument, 		NULL, 'v'},
-  {"wait-before-prompt",        required_argument,      NULL, 'w'},    
+  {"wait-before-prompt",        required_argument,      NULL, 'w'},
   {"polling",                   no_argument,            NULL, 'W'},
   {"filter",                    required_argument,      NULL, 'z'}, 
   {0, 0, 0, 0}
@@ -235,7 +237,7 @@ main_loop()
   int promptlen = 0;
   int leave_prompt_alone;
   sigset_t no_signals_blocked;
-  int seen_EOF = FALSE;     
+  int seen_EOF = FALSE;
 
    
   struct timespec         select_timeout, *select_timeoutptr;
@@ -243,7 +245,9 @@ main_loop()
   struct timespec  wait_a_little = {0, 0xBadf00d }; /* tv_usec field will be filled in when initialising */
   struct timespec  *forever = NULL;
   wait_a_little.tv_nsec = 1000 * 1000 * wait_before_prompt;
-
+  struct timeval start_time= { 0, 0 };
+  struct timeval next_time= { 0, 0 };
+  unsigned long elapsed_time=0;
   
   sigemptyset(&no_signals_blocked);
   
@@ -253,9 +257,20 @@ main_loop()
   pass_through_filter(TAG_OUTPUT,""); /* If something is wrong with filter, get the error NOW */
   set_echo(FALSE);		/* This will also put the terminal in CBREAK mode */
   test_main(); 
+
+  gettimeofday(&start_time, NULL);
   
   /* ------------------------------  main loop  -------------------------------*/
   while (TRUE) {
+
+    /*Check if we reached the possible set timeout value*/
+    if (seconds_before_exiting > 0 && gettimeofday(&next_time, NULL) == 0) {
+       if (next_time.tv_sec - start_time.tv_sec >= seconds_before_exiting) {
+          DPRINTF1(DEBUG_TERMIO, "we reached timeout session value of %d seconds, disconnecting !!", seconds_before_exiting);
+          cleanup_rlwrap_and_exit(EXIT_SUCCESS);
+       }
+    }
+
     /* listen on both stdin and pty_fd */
     FD_ZERO(&readfds);
     FD_SET(STDIN_FILENO, &readfds);
@@ -390,7 +405,7 @@ main_loop()
 	    cleanup_rlwrap_and_exit(EXIT_SUCCESS);
 	  } else  if (errno == EINTR) {	/* interrupted by signal ...*/	                     
 	    continue;                   /* ... don't worry */
-	  } else  if (! seen_EOF) {     /* maybe command has just died (and SIGCHLD, whose handler sets command_is_dead is not  */     
+	  } else  if (! seen_EOF) {     /* maybe command has just died (and SIGCHLD, whose handler sets command_is_dead is not  */
             mymicrosleep(50);           /* yet caught) Therefore we wait a bit,                                                 */
             seen_EOF = TRUE;            /* set a flag                                                                           */   
             continue;                   /* and try one more time (hopefully catching the signal this time round                 */
@@ -788,6 +803,7 @@ read_options_and_command_name(int argc, char **argv)
       break;
     case 'I':	pass_on_sigINT_as_sigTERM = TRUE; break;
     case 'l':	open_logfile(optarg); break;
+    case 'L':   seconds_before_exiting = abs(my_atoi(optarg)); break;
     case 'n':	nowarn = TRUE; break;
     case 'm':
 #ifndef HAVE_SYSTEM
@@ -1044,6 +1060,6 @@ static void test_main() {
     exit(0);
   }     
       
-#endif      
-}	
+#endif
+}
 

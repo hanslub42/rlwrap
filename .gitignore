@@ -20,3 +20,7 @@ src/Makefile.in
 src/rlwrap
 stamp-h1
 tools/
+test-suite.log
+test/testit.log
+test/testit.trs
+filters/RlwrapFilter.3pm
