@@ -240,13 +240,13 @@ main_loop()
   int seen_EOF = FALSE;
 
    
-  struct timespec         select_timeout, *select_timeoutptr;
+  struct timespec select_timeout, *select_timeoutptr;
   struct timespec immediately = { 0, 0 }; /* zero timeout when child is dead */
-  struct timespec  wait_a_little = {0, 0xBadf00d }; /* tv_usec field will be filled in when initialising */
-  struct timespec  *forever = NULL;
+  struct timespec wait_a_little = {0, 0xBadf00d }; /* tv_usec field will be filled in when initialising */
+  struct timespec *forever = NULL;
   wait_a_little.tv_nsec = 1000 * 1000 * wait_before_prompt;
-  struct timeval start_time= { 0, 0 };
-  struct timeval next_time= { 0, 0 };
+  struct timespec start_time = { 0, 0 };
+  struct timespec next_time  = { 0, 0 };
   unsigned long elapsed_time=0;
   
   sigemptyset(&no_signals_blocked);
@@ -258,13 +258,13 @@ main_loop()
   set_echo(FALSE);		/* This will also put the terminal in CBREAK mode */
   test_main(); 
 
-  gettimeofday(&start_time, NULL);
+  clock_gettime(CLOCK_MONOTONIC, &start_time);
   
   /* ------------------------------  main loop  -------------------------------*/
   while (TRUE) {
 
     /*Check if we reached the possible set timeout value*/
-    if (seconds_before_exiting > 0 && gettimeofday(&next_time, NULL) == 0) {
+    if (seconds_before_exiting > 0 && clock_gettime(CLOCK_MONOTONIC, &next_time) == 0) {
        if (next_time.tv_sec - start_time.tv_sec >= seconds_before_exiting) {
           DPRINTF1(DEBUG_TERMIO, "we reached timeout session value of %d seconds, disconnecting !!", seconds_before_exiting);
           cleanup_rlwrap_and_exit(EXIT_SUCCESS);
