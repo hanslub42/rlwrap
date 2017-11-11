@@ -579,9 +579,13 @@ init_rlwrap(char *command_line)
   
   /* Determine rlwrap home dir and prefix for default history and completion filenames */
   homedir = (getenv("RLWRAP_HOME") ? getenv("RLWRAP_HOME") : getenv("HOME"));
+  if (!homedir) {
+    homedir = ".";
+    myerror(WARNING | NOERRNO, "No HOME, using '%s'", homedir);
+  }
   homedir_prefix = (getenv("RLWRAP_HOME") ?                    /* is RLWRAP_HOME set?                */
 		    add2strings(getenv("RLWRAP_HOME"), "/") :  /* use $RLWRAP_HOME/<command>_history */
-		    add2strings(getenv("HOME"), "/."));	       /* if not, use ~/.<command>_history   */
+		    add2strings(homedir, "/."));	       /* if not, use ~/.<command>_history   */
 
   /* Determine history file name and check its existence and permissions */
 
