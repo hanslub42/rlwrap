@@ -45,6 +45,7 @@ static void bindkey(int key, rl_command_func_t *function, const char *maplist);
 /* readline bindable functions: */
 static int munge_line_in_editor(int, int);
 static int direct_keypress(int, int);
+static int direct_prefix(int, int);
 static int handle_hotkey(int, int);
 static int handle_hotkey_without_history(int, int);
 static int please_update_alaf(int,int);
@@ -62,6 +63,7 @@ init_readline(char *UNUSED(prompt))
   rl_add_defun("rlwrap-accept-line-and-forget", my_accept_line_and_forget,-1);
   rl_add_defun("rlwrap-call-editor", munge_line_in_editor, -1);
   rl_add_defun("rlwrap-direct-keypress", direct_keypress, -1);  
+  rl_add_defun("rlwrap-direct-prefix", direct_prefix, -1);
   rl_add_defun("rlwrap-hotkey", handle_hotkey, -1);
   rl_add_defun("rlwrap-hotkey-without-history", handle_hotkey_without_history, -1);
 
@@ -627,6 +629,23 @@ direct_keypress(int UNUSED(count), int key)
   put_in_output_queue(key_as_str);
   free(key_as_str);
 #endif
+  return 0;
+}
+
+static int
+direct_prefix(int count, int key)
+{
+  /* process the keypress used to invoke the function */
+  direct_keypress(count, key);
+
+  /* read an extra key to pass on */
+  key = rl_read_key();
+  char *key_as_str = mysavestring("?");
+  *key_as_str = key;
+  DPRINTF1(DEBUG_READLINE,"read key: %s", mangle_char_for_debug_log(key, TRUE));
+  put_in_output_queue(key_as_str);
+  free(key_as_str);
+
   return 0;
 }
 
