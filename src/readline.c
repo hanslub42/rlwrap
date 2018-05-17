@@ -616,12 +616,17 @@ munge_line_in_editor(int UNUSED(count), int UNUSED(key))
 static int
 direct_keypress(int UNUSED(count), int key)
 {
+#ifdef HAVE_RL_EXECUTING_KEYSEQ /* i.e. if readline version is >= 6.3 */
+  DPRINTF1(DEBUG_READLINE,"direct keypress: %s", mangle_string_for_debug_log(rl_executing_keyseq, MANGLE_LENGTH));
+  put_in_output_queue(rl_executing_keyseq);
+#else
   char *key_as_str = mysavestring("?");
   /* put the key in the output queue    */
   *key_as_str = key;
   DPRINTF1(DEBUG_READLINE,"direct keypress: %s", mangle_char_for_debug_log(key, TRUE));
   put_in_output_queue(key_as_str);
   free(key_as_str);
+#endif
   return 0;
 }
 
