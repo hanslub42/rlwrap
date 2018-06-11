@@ -103,7 +103,7 @@ AC_CHECK_PROG(STRIP,strip,strip,true)
 AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
 AC_CHECK_HEADERS([errno.h fcntl.h libgen.h libutil.h stdlib.h string.h sched.h sys/ioctl.h sys/wait.h sys/resource.h stddef.h ])
-AC_CHECK_HEADERS([termios.h unistd.h stdint.h time.h getopt.h regex.h curses.h termcap.h ])
+AC_CHECK_HEADERS([termios.h unistd.h stdint.h time.h getopt.h regex.h curses.h termcap.h util.h])
 
 AC_CHECK_HEADERS([ term.h  ncurses/term.h], , ,
     [#ifdef HAVE_CURSES_H
