@@ -453,6 +453,7 @@ else
   $CC -o conftest conftest.c  
   ./conftest $random_nonsense1 >/dev/null 2>&1 &
   CONFTEST_PID=$!
+  sleep 1
   if grep $random_nonsense2 $opt_proc_mountpoint/$CONFTEST_PID/cmdline >/dev/null 2>&1; then
       AC_DEFINE(ENABLE_MIRROR_ARGS, 1, [Define if overwriting argv changes args visible in ps (1)])
       result="yes"
