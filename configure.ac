@@ -1,7 +1,7 @@
 dnl  configuration script for rlwrap
 dnl  Process this file with autoconf to produce configure.
 dnl
-dnl  Copyright (C) 2000-20017 Hans Lub hanslub42@gmail.com
+dnl  Copyright (C) 2000-2017 Hans Lub hanslub42@gmail.com
 dnl
 dnl  This file is part of rlwrap
 dnl
