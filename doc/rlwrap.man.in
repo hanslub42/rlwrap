@@ -417,7 +417,7 @@ number of subtle race conditions, where e.g. \fIcommand\fP may have
 changed the state of its terminal before \fBrlwrap\fP has read
 \fIcommand\fP output that was written before the state change. You
 will notice these races especially on a busy machine and with heavy
-"cooking" and filtering, when suddenly (and unpredictably) promtps or
+"cooking" and filtering, when suddenly (and unpredictably) prompts or
 command output are garbled or incorrectly coloured.
   
 \fBrlwrap\fP can try, but often fails to, handle prompts that contain
