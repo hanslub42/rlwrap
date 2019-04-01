@@ -1,4 +1,4 @@
-#! /usr/bin/perl
+#! /usr/bin/env perl
 use lib ($ENV{RLWRAP_FILTERDIR} or ".");
 use RlwrapFilter;
 use strict;
