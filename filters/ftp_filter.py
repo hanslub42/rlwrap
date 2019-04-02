@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 
 # this filter demonstrates a (rather whacky and extreme) use of 'cloak_and_dagger'
 # cloak_and_dagger is used for

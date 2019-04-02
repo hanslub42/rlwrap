@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 
 # this is maybe the most practical of the filter examples. Is is also a test for rlwraps signal handling.
 # At present, a CTRL-C in a pager will also kill rlwrap (bad)
