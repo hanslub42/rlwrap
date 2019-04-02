@@ -24,7 +24,7 @@ intervening space.
 in order to provide \fBreadline\fP's line editing, persistent history
 and completion. 
 
-\fBrlwrap\fP tries (and \fIalmost\fP suceeds) to be completely transparent \- you
+\fBrlwrap\fP tries (and \fIalmost\fP succeeds) to be completely transparent \- you
 (or your shell) shouldn't notice any difference between \fBcommand\fP and \fBrlwrap
 command\fP \- except the added readline functionality, of course.
 This should even hold true when you are re\-directing, piping and
@@ -376,7 +376,7 @@ even after a crash.
 home directory if this variable is not set. This will quickly become messy if you use \fBrlwrap\fP for many different commands. 
 .TP
 $RLWRAP_HOME/\fIcommand\fP_history, ~/.\fIcommand\fP_history
-History for \fIcommand\fP (remember that \fIcommand\fP may be overriden by the \fB\-\-command\-name\fP (or \fB\-C\fP) option)  
+History for \fIcommand\fP (remember that \fIcommand\fP may be overridden by the \fB\-\-command\-name\fP (or \fB\-C\fP) option)  
 .TP
 $RLWRAP_HOME/\fIcommand\fP_completions, ~/.\fIcommand\fP_completions
 Per\-user completion word list for \fIcommand\fP. \fBrlwrap\fP never
