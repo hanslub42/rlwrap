@@ -73,9 +73,10 @@ init_readline(char *UNUSED(prompt))
   rl_add_defun("rlwrap_accept_line_and_forget", please_update_alaf,-1);
   rl_add_defun("rlwrap_call_editor", please_update_ce,-1);
   
-  
-  rl_variable_bind("blink-matching-paren","on"); /* Shouldn't this be on by default? */
+  /* put the next variable binding(s) *before* rl_initialize(), so they can be overridden */
+  rl_variable_bind("blink-matching-paren","on"); 
 
+  
   bindkey('\n', my_accept_line, "emacs-standard; vi-insert; vi-command"); 
   bindkey('\r', my_accept_line, "emacs-standard; vi-insert; vi-command"); 
   bindkey(15, my_accept_line_and_forget, "emacs-standard; vi-insert; vi-command");	/* ascii #15 (Control-O) is unused in readline's emacs and vi keymaps */
@@ -90,7 +91,11 @@ init_readline(char *UNUSED(prompt))
 				   readline will not bother to call tgetent(), will be agnostic about terminal
 				   capabilities and hence not be able to honour e.g. a set horizontal-scroll-mode off
 				   in .inputrc */
-  
+
+  /* put the next variable binding(s) *after* rl_initialize(), so they cannot be overridden */
+  rl_variable_bind("enable-bracketed-paste","off");     /* enable-bracketed-paste changes cursor positioning after printing the prompt ...
+                                                           ... causing rlwrap to overwrite it after accepting input                        */
+ 
   using_history();
   rl_redisplay_function = my_redisplay;
   rl_completion_entry_function =
@@ -98,6 +103,7 @@ init_readline(char *UNUSED(prompt))
   
   rl_catch_signals = FALSE;
   rl_catch_sigwinch = FALSE;
+
   saved_rl_state.input_buffer = mysavestring(pre_given ? pre_given : ""); /* Even though the pre-given input won't be displayed before the first 
                                                                              cooking takes place, we still want it to be accepted when the user 
                                                                              presses ENTER before that (e.g. because she already knows the 
