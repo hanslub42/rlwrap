@@ -1,6 +1,6 @@
 rlwrap v 0.43  July 19 2016
 
-* WHAT IT IS: 
+## WHAT IT IS: 
 
 rlwrap is a 'readline wrapper', a small utility that uses the GNU
 readline library to allow the editing of keyboard input for any
@@ -14,15 +14,15 @@ lists) and persistent history, or if you want to program 'special
 effects' using the filter mechanism. rlwrap compiles and runs on a 
 fairly wide range of Unix-like systems.
 
-* HOW TO USE IT:
+## HOW TO USE IT:
 If 
 
-  $ <command> <args>
+    $ <command> <args>
 
 doesn't let you use arrow keys to edit input, or if you just want
 decent input history and completion, try:
 
-  $ rlwrap [-options] <command> <args>
+    $ rlwrap [-options] <command> <args>
 
 You then can edit <command>'s input and recall the input history using
 the arrow keys.  Input history is remembered accross invocations,
@@ -41,42 +41,42 @@ detect whether <command> asks for a password. This can be remedied by
 giving the password prompt (excluding trailing space and possibly the
 first few letters) as an argument to the -a option.
  
-* EXAMPLES:
+## EXAMPLES:
 Run netcat with command-line editing:
 
-  rlwrap nc localhost 80
+    rlwrap nc localhost 80
 
 Run lprolog and use library1 and library2 to build a completion word
 list:
   
-  rlwrap -f library1 -f library2 lprolog
+    rlwrap -f library1 -f library2 lprolog
 
 Run smbclient (which already uses readline), add all input and output
 to completion list, complete local filenames, avoid showing (and
 storing) passwords:
 
-  rlwrap -cr -aPassword: smbclient '\\PEANUT\C' 
+    rlwrap -cr -aPassword: smbclient '\\PEANUT\C' 
 
-* INSTALLATION:
+## INSTALLATION:
 Usually just
 
-# ./configure; make install
+    # ./configure; make install
 
 See the INSTALL file for more information.
 
-* PARENTHESIS MATCHING 
+## PARENTHESIS MATCHING 
 This can be controlled by putting "set blink-matching-paren (off|on)"
 in your .inputrc. This setting is mentioned, but not clearly
 documented in readline's info or manpages; it should be on by default.
 
-* FILTERS 
+## FILTERS 
 Filters are "plug-in" scripts that give you complete control
 over rlwrap's input and output, history and completion. They are 
 somewhat experimental, and their implementation and the example
 filters still are of slightly dubious ('alpha') quality.
 
-* AUTHOR
+## AUTHOR
 Hans Lub, hanslub42@gmail.com
 
-* HOMEPAGE
+## HOMEPAGE
 https://github.com/hanslub42/rlwrap
