@@ -68,6 +68,11 @@ init_readline(char *UNUSED(prompt))
   /* only useful while debugging */
   rl_add_defun("rlwrap-dump-all-keybindings", dump_all_keybindings,-1);
   rl_add_defun("rlwrap-debug-ad-hoc", debug_ad_hoc, -1);
+
+  /* if someone's .inputrc binds a key to accept-line, make it use our own version in lieu of readline's */
+  rl_add_defun("accept-line", my_accept_line, -1);
+  
+
   
   /* the old rlwrap bindable function names with underscores are deprecated: */
   rl_add_defun("rlwrap_accept_line_and_forget", please_update_alaf,-1);
