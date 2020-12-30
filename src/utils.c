@@ -857,7 +857,7 @@ void mirror_args(pid_t command_pid) {
   long cmdline_length;
   static int been_warned = 0;
 
-  if (!stored_cmdline_filename)
+  if (!stored_cmdline_filename || !command_pid) /* uninitialized, unborn or dead command */
     return;
   if (!*stored_cmdline_filename) 
      snprintf2(stored_cmdline_filename, MAXPATHLEN , "%s/%d/cmdline", PROC_MOUNTPOINT, command_pid);
