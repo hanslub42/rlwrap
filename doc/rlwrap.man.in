@@ -203,6 +203,9 @@ making rlwrap hold back the prompt until it has been cooked ("patient mode"). Th
 .OL \-W \-\-polling 
 EXPERIMENTAL: Wake up every \fItimeout\fP millisecs, where \fItimeout\fP is the same as for the \-w (\-\-wait\-before\-prompt) option, 40 ms by default. This is used to sense the slave's interrupt character and ISIG flag and to adjust stdin's terminal settings accordingly, even before you press a key. Try this option e.g. when CTRL-C acts differently on  \fIcommand\fP  with, and without, rlwrap. 
 .TP
+.OL \-y \-\-retain 
+Retain the last command in the input line. Pressing entern will repeat it.
+.TP
 .OL \-z \-\-filter  \fIfilter\fP
 Use a filter to change \fBrlwrap\fP's behaviour. A filter can be used to keep certain input out of the history, 
 to change the prompt, to implement simple macros or programmable completion.. \fBrlwrap\fP comes with a \fBperl\fP and a \fBPython 3\fP module
