@@ -436,7 +436,6 @@ AC_DEFINE_UNQUOTED(RANDOM_NONSENSE2, "\"$random_nonsense2\"", nonsense arg to ov
 
 if test $cross_compiling = "yes"; then
    AC_DEFINE(ENABLE_MIRROR_ARGS, 0, [Define if overwriting argv changes args visible in ps (1)])
-   echo
    AC_MSG_WARN([This test doesn't work when cross-compiling. Edit ENABLE_MIRROR_ARGS  in config.h by hand. Guessing:])
    result="no"
 else
@@ -453,11 +452,16 @@ else
   $CC -o conftest conftest.c  
   ./conftest $random_nonsense1 >/dev/null 2>&1 &
   CONFTEST_PID=$!
-  if grep $random_nonsense2 $opt_proc_mountpoint/$CONFTEST_PID/cmdline >/dev/null 2>&1; then
-      AC_DEFINE(ENABLE_MIRROR_ARGS, 1, [Define if overwriting argv changes args visible in ps (1)])
+  for N in  1 2 3 ; do # retry a few times because of a possible  race (on 1-processor systems) where ./conftest has been forked by the shell, ...
+                       # ... but not yet executed (which will make the following test fail)
+    if grep $random_nonsense2 $opt_proc_mountpoint/$CONFTEST_PID/cmdline >/dev/null 2>&1; then
+      $as_echo "#define ENABLE_MIRROR_ARGS 1" >>confdefs.h
       result="yes"
-  fi 
-  kill $! 
+      break
+    fi
+    sleep 1 # shorter sleep is not portable
+  done
+  kill $CONFTEST_PID
 fi
 AC_MSG_RESULT($result)
 
