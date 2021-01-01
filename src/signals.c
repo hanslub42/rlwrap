@@ -238,6 +238,8 @@ static void
 pass_on_signal(int signo)
 {
   int ret, saved_errno = errno, pass_it_on = TRUE;
+  char signo_as_str[4];
+  
   DEBUG_RANDOM_SLEEP;
   zero_select_timeout();
 #ifdef DEBUG
@@ -246,7 +248,11 @@ pass_on_signal(int signo)
   
   if(pass_on_sigINT_as_sigTERM && signo == SIGINT)
     signo=SIGTERM;
-  
+
+  assert(MAX_SIG < 1000);  errno = 0 ; /* prevent overflow of sprintf and underflow of strtol on the next line */
+  sprintf(signo_as_str, "%d", signo);
+  signo = strtol(pass_through_filter(TAG_SIGNAL, signo_as_str), NULL, 10);
+
   switch (signo) {
   case SIGWINCH: /* non-POSIX, but present on most systems */
     /* Make slave pty's winsize equal to that of STDIN. Pass the signal on *only if*

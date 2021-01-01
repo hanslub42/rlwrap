@@ -28,6 +28,7 @@ use constant TAG_HISTORY                       => 2;
 use constant TAG_COMPLETION                    => 3;
 use constant TAG_PROMPT                        => 4;
 use constant TAG_HOTKEY                        => 5;
+use constant TAG_SIGNAL                        => 6;
 use constant TAG_WHAT_ARE_YOUR_INTERESTS       => 127;
 use constant TAG_IGNORE                        => 251;
 use constant TAG_ADD_TO_COMPLETION_LIST        => 252;
@@ -91,7 +92,7 @@ sub new {
   my $self = {};
   my @accessors = qw(initialiser help_text input_handler
 		   output_handler prompt_handler echo_handler
-		   message_handler history_handler hotkey_handler completion_handler
+		   message_handler history_handler hotkey_handler completion_handler signal_handler
 		   echo_handler message_handler cloak_and_dagger_verbose
 		   cumulative_output prompts_are_never_empty
 		   minimal_rlwrap_version);
@@ -149,6 +150,8 @@ sub run {
 
 	  $response = when_defined $self -> prompt_handler, "$message";
 	  croak "prompts may not contain newlines!" if $response =~ /\n/;
+        } elsif ($tag == TAG_SIGNAL) {
+	  $response = when_defined($self -> signal_handler, $message);
         } elsif ($tag == TAG_WHAT_ARE_YOUR_INTERESTS) {
           $response = $self -> add_interests($message);
         }
@@ -194,7 +197,8 @@ sub add_interests {
       or ($tag == TAG_HISTORY    and $self -> history_handler)
       or ($tag == TAG_COMPLETION and $self -> completion_handler)
       or ($tag == TAG_PROMPT     and $self -> prompt_handler)
-      or ($tag == TAG_HOTKEY     and $self -> hotkey_handler);
+      or ($tag == TAG_HOTKEY     and $self -> hotkey_handler)
+      or ($tag == TAG_SIGNAL     and $self -> signal_handler);
   }
   return join '', @interested;
 }
@@ -395,7 +399,7 @@ sub vacuum_stale_message {
 sub tag2name {
   my ($self, $tag) = @_;
   for my $name (qw(TAG_REMOVE_FROM_COMPLETION_LIST TAG_ADD_TO_COMPLETION_LIST TAG_INPUT TAG_PROMPT TAG_COMPLETION
-		   TAG_HOTKEY TAG_HISTORY TAG_WHAT_ARE_YOUR_INTERESTS  TAG_OUTPUT_OUT_OF_BAND TAG_ERROR  TAG_IGNORE TAG_OUTPUT)) {
+		   TAG_HOTKEY TAG_SIGNAL TAG_HISTORY TAG_WHAT_ARE_YOUR_INTERESTS  TAG_OUTPUT_OUT_OF_BAND TAG_ERROR  TAG_IGNORE TAG_OUTPUT)) {
     return $name if (eval "$tag == $name");
   }
   croak "unknown tag $tag";
