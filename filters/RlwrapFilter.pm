@@ -911,7 +911,7 @@ die() within an eval() sets $@ as usual.
 
 Before calling a filter, B<rlwrap> sets the following environment variables:
 
-    RLWRAP_FILTERDIR      directory where RlwrapFilter.pm and most filters live (set by B<rlwrap>, can be
+    RLWRAP_FILTERDIR      directory where RlwrapFilter.pm and most filters live (set by rlwrap, can be
                           overridden by the user before calling rlwrap)
 
     PATH	          rlwrap automatically adds $RLWRAP_FILTERDIR to the front of filter's PATH
@@ -922,7 +922,7 @@ Before calling a filter, B<rlwrap> sets the following environment variables:
 
     RLWRAP_COMMAND_LINE   command line of the rlwrapped command
 
-    RLWRAP_IMPATIENT      whether rlwrap is in "impatient mode" (cf B<rlwrap (1)>). In impatient mode,
+    RLWRAP_IMPATIENT      whether rlwrap is in "impatient mode" (cf rlwrap (1)). In impatient mode,
                           the candidate prompt is filtered through the output handler (and displayed before
                           being overwritten by the cooked prompt).
 
@@ -930,8 +930,9 @@ Before calling a filter, B<rlwrap> sets the following environment variables:
 
     RLWRAP_OUTPUT_PIPE_FD File descriptor of output pipe. For internal use only
 
-    RLWRAP_MASTER_PTY_FD File descriptor of I<command>'s pty.
+    RLWRAP_MASTER_PTY_FD  File descriptor of command's pty.
 
+    RLWRAP_BREAK_CHARS    The characters rlwrap considers word-breaking (cf. the --break-chars option in rlwrap (1)) 
 
 =head1 DEBUGGING FILTERS
 

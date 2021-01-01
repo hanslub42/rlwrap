@@ -122,7 +122,8 @@ void spawn_filter(const char *filter_command) {
     mysetenv("RLWRAP_INPUT_PIPE_FD", as_string(input_pipe_fds[0]));
     mysetenv("RLWRAP_OUTPUT_PIPE_FD", as_string(output_pipe_fds[1]));
     mysetenv("RLWRAP_MASTER_PTY_FD", as_string(master_pty_fd));
-        
+    mysetenv("RLWRAP_BREAK_CHARS", rl_basic_word_break_characters);
+    
     close(filter_input_fd);
     close(filter_output_fd);
 

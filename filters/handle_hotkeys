@@ -144,7 +144,8 @@ sub edit_history {
 
 sub fuzzy_filter_history {
     my ($command, $doc, $prefix, $postfix, $history, $histpos) = @_;
-    $doc and return "use $command to choose from history entries that match current input before cursor";  
+    $doc and return "use $command to choose from history entries that match current input before cursor";
+    my @prefix_words = split '[' . $ENV{RLWRAP_BREAK_CHARS} . ']', $prefix;
     my $editfile = ($ENV{TMP} || $ENV{TEMP} || "/tmp") . "/history.$$.txt";
     my $lineno = $histpos + 1;
     my $colno = length($prefix) + 1;
