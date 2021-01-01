@@ -6,6 +6,7 @@ import subprocess
 import sys
 import os
 import tempfile
+import re
 
 if 'RLWRAP_FILTERDIR' in os.environ:
     sys.path.append(os.environ['RLWRAP_FILTERDIR'])
@@ -118,11 +119,22 @@ def edit_history(doc, prefix, postfix, history, histpos):
 
 
 
+def split_off_last_word(string):
+    '''split_off_last_word("In the gener") = ("In the ", "gener") '''
+    break_chars = os.environ['RLWRAP_BREAK_CHARS'] if 'RLWRAP_BREAK_CHARS' in os.environ else " \t\n" # old rlwrap with newer filter - use a sensible default
+    break_chars =  re.sub(r'([\[\]])', r'\\1', break_chars)      
+    break_chars = break_chars or ' ' # prevent python from choking on a bad regex '[]' in the next line
+    words       = re.split('[{}]'.format(break_chars), string)
+    last_word  = words[-1]
+    return (string[0:len(string)-len(last_word)], last_word)
+
+
 def fuzzy_filter_history(doc, prefix, postfix, history, histpos, command):
     '''filter history through command (either 'peco' or the very similar  'fzf') '''
     if doc:
         return "{} current history".format(command)
-    command_line = [command, '--select-1', '--query',  prefix ]
+    first_chunk, last_word  = split_off_last_word(prefix)
+    command_line = [command, '--select-1', '--query',  last_word ]
     select_1 = ''
     with subprocess.Popen(command_line
                           ,stdin=subprocess.PIPE
@@ -130,7 +142,7 @@ def fuzzy_filter_history(doc, prefix, postfix, history, histpos, command):
                           ,universal_newlines=True) as p:
         (select_1, error) = p.communicate(input=history)
     select_1 = select_1.rstrip()
-    return ("", select_1, postfix, history, histpos)
+    return ("", first_chunk + select_1, postfix, history, histpos)
 
 def peco_history(doc, prefix, postfix, history, histpos):
     return fuzzy_filter_history(doc, prefix, postfix, history, histpos, 'peco')
