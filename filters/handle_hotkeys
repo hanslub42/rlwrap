@@ -12,8 +12,8 @@ use POSIX qw(:signal_h);
 my $keymap =
 { '\C-y'       => \&yank_clipboard,
   '\C-n'       => \&edit_history, 
-  '\C-i'       => \&peco_history, 
-  '\C-r'       => \&peco_history, 
+  '\C-p'       => \&peco_history, 
+  '\C-f'       => \&fzf_history, 
   '\C-t'       => \&date_in_echo_area,
   '\M-\C-m'    => \&date_in_echo_area # test a multi-byte hotkey (ESC-ENTER)
 };  
@@ -142,20 +142,29 @@ sub edit_history {
   return ("", $prefix, $postfix, (join "\n", @new_history), $histpos);
  }   
 
-sub peco_history {
-    my ($doc, $prefix, $postfix, $history, $histpos) = @_;
-    $doc and return "use peco to choose from history entries that match current input before cursor";  
+sub fuzzy_filter_history {
+    my ($command, $doc, $prefix, $postfix, $history, $histpos) = @_;
+    $doc and return "use $command to choose from history entries that match current input before cursor";  
     my $editfile = ($ENV{TMP} || $ENV{TEMP} || "/tmp") . "/history.$$.txt";
     my $lineno = $histpos + 1;
     my $colno = length($prefix) + 1;
     $history ||= " "; #writefile crashes  if called on an empty string....
     write_file($editfile , $history);
     my $peco = "peco";
-    my $select_1 = `$peco --select-1 --query "$prefix" $editfile`;
+    my $select_1 = `cat $editfile | $command --select-1 --query "$prefix"`;
     chomp $select_1;
     return ("", $select_1, $postfix, $history, $histpos);
 }
 
+sub peco_history {
+    return fuzzy_filter_history("peco", @_);
+}
+
+sub fzf_history {
+    return fuzzy_filter_history("fzf", @_);
+}
+
+    
 ############################## helper functions #########################################################
 
 sub document_all_hotkeys {

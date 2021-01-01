@@ -36,10 +36,12 @@ import rlwrapfilter
 
 # generic hotkey handler, that dispatches on the value of $key (using the hash %$keymap defined at the top of this file
 
-def hotkey(key, *other_params): # key = e.g.  "<CTRL-Y>" 
-    handler = keymap[uncontrol(key)]
-    if handler == None:
+@rlwrapfilter.intercept_error
+def hotkey(key, *other_params): # key = e.g.  "<CTRL-Y>"
+    ukey = uncontrol(key)
+    if ukey not in keymap:
         return (key, *other_params) # a filter further downstream may want to handle this hotkey
+    handler = keymap[ukey]
     result = handler(0, *other_params)
     return result
 
@@ -114,10 +116,13 @@ def edit_history(doc, prefix, postfix, history, histpos):
     return ("", prefix, postfix, '\n'.join(new_history), histpos)
 
 
-def peco_history(doc, prefix, postfix, history, histpos):
+
+
+def fuzzy_filter_history(doc, prefix, postfix, history, histpos, command):
+    '''filter history through command (either 'peco' or the very similar  'fzf') '''
     if doc:
-        return "peco current history"
-    command_line = 'peco --select-1 --query "{0}"'.format(prefix).split()
+        return "{} current history".format(command)
+    command_line = [command, '--select-1', '--query',  prefix ]
     select_1 = ''
     with subprocess.Popen(command_line
                           ,stdin=subprocess.PIPE
@@ -127,13 +132,20 @@ def peco_history(doc, prefix, postfix, history, histpos):
     select_1 = select_1.rstrip()
     return ("", select_1, postfix, history, histpos)
 
+def peco_history(doc, prefix, postfix, history, histpos):
+    return fuzzy_filter_history(doc, prefix, postfix, history, histpos, 'peco')
 
-# change the table below if you like, but don't forget to bind the corresponding keys  to 'rlwrap-hotkey' in your .inputrc
+def fzf_history(doc, prefix, postfix, history, histpos):
+    return fuzzy_filter_history(doc, prefix, postfix, history, histpos, 'fzf')
+
+
+# change the table below if you like, but don't forget to bind the corresponding keys  to 'rlwrap-hotkey' in your .inputrc, or the hotkeys won't work!
 
 keymap = {
     "y" : yank_clipboard,
     "n" : edit_history,
-    "i" : peco_history,
+    "p" : peco_history,
+    "f" : fzf_history,
     "r" : peco_history,
     "t" : date_in_echo_area
 }
