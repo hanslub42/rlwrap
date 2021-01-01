@@ -11,12 +11,12 @@ use POSIX qw(:signal_h);
 
 my $keymap =
 { '\C-y'       => \&yank_clipboard,
-  '\C-n'       => \&edit_history, 
-  '\C-p'       => \&peco_history, 
-  '\C-f'       => \&fzf_history, 
+  '\C-n'       => \&edit_history,
+  '\C-p'       => \&peco_history,
+  '\C-f'       => \&fzf_history,
   '\C-t'       => \&date_in_echo_area,
   '\M-\C-m'    => \&date_in_echo_area # test a multi-byte hotkey (ESC-ENTER)
-};  
+};
 
 my @tempfiles; # list of files to be cleaned on exit;
 
@@ -56,16 +56,16 @@ $filter -> run;
 # history is not passed to the handler, and the last two elements of the returned list are ignored.
 #
 # If the postfix is returned with a concluding newline, the resulting input line is accepted immediately, otherwise
-# it is put in readline's input buffer again, with the cursor at the beginning of the returned postfix 
+# it is put in readline's input buffer again, with the cursor at the beginning of the returned postfix
 #
 # Summary: ($echo, $prefix, $postfix, $history, $histpos) = handler($key, $prefix, $postfix, $history, $histpos)
 
 
 # generic hotkey handler, that dispatches on the value of $key (using the hash %$keymap defined at the top of this file
 sub hotkey {
-    my ($keyseq, @other_params) = @_;                                  # key = e.g.  "<CTRL-Y>" 
+    my ($keyseq, @other_params) = @_;                                  # key = e.g.  "<CTRL-Y>"
     my $handler = $handlers -> {$keyseq};
-    return ($keyseq, @other_params) unless $handler; # a filter further downstream may want to handle this hotkey 
+    return ($keyseq, @other_params) unless $handler; # a filter further downstream may want to handle this hotkey
     my @result = &$handler(0, @other_params);
     return @result;
 }
@@ -100,7 +100,7 @@ sub date_in_echo_area {
 my $instance = 0;
 sub edit_history {
   my ($doc, $prefix, $postfix, $history, $histpos) = @_;
-  my $editor = $ENV{RLWRAP_EDITOR} || "vi +%L";  
+  my $editor = $ENV{RLWRAP_EDITOR} || "vi +%L";
   $doc and return "edit current history with '$editor' - add empty line (lines) to select (accept) the following line";
   $histpos =~ /\d/ or die "$histpos is not a number - did you bind this key to 'rlwrap-hotkey-without-history'?";
   $instance++;
@@ -124,7 +124,7 @@ sub edit_history {
       if ($empty_counter > 0) {
         # remember position of last line after an empty line,
         # and the number of empty lines:
-        ($last_counter, $last_empty_counter) = ($counter, $empty_counter); 
+        ($last_counter, $last_empty_counter) = ($counter, $empty_counter);
       }
       $empty_counter = 0;
       $counter++; # We count 0-based, so increment only now
@@ -140,22 +140,33 @@ sub edit_history {
     $postfix = "";
   }
   return ("", $prefix, $postfix, (join "\n", @new_history), $histpos);
- }   
+ }
+
+sub split_off_last_word {
+    # split_off_last_word("In the gener") = ["In the ", "gener"]
+    my ($string) = @_;
+    my $break_chars = $ENV{RLWRAP_BREAK_CHARS};
+    $break_chars =~ s/([\[\]])/\\$1/g; # escape any [ and ]
+    $break_chars ||= ' '; # prevent perl from choking on the regex /[]/ in the next line
+    my @words = split /[$break_chars]/, $string;
+    my $last_word = $words[-1];
+    return [substr($string, 0,  length($string) - length($last_word)), $last_word];
+  }
 
 sub fuzzy_filter_history {
     my ($command, $doc, $prefix, $postfix, $history, $histpos) = @_;
     $doc and return "use $command to choose from history entries that match current input before cursor";
-    my @prefix_words = split '[' . $ENV{RLWRAP_BREAK_CHARS} . ']', $prefix;
     my $editfile = ($ENV{TMP} || $ENV{TEMP} || "/tmp") . "/history.$$.txt";
     my $lineno = $histpos + 1;
     my $colno = length($prefix) + 1;
-    $history ||= " "; #writefile crashes  if called on an empty string....
+    $history ||= " "; # write_file crashes  if called on an empty string....
     write_file($editfile , $history);
-    my $peco = "peco";
-    my $select_1 = `cat $editfile | $command --select-1 --query "$prefix"`;
+
+    my ($first_chunk, $last_word) = @{split_off_last_word($prefix)};
+    my $select_1 = `cat $editfile | $command --select-1 --query "$last_word"`;
     chomp $select_1;
-    return ("", $select_1, $postfix, $history, $histpos);
-}
+    return ("", $first_chunk . $select_1, $postfix, $history, $histpos);
+  }
 
 sub peco_history {
     return fuzzy_filter_history("peco", @_);
@@ -165,7 +176,7 @@ sub fzf_history {
     return fuzzy_filter_history("fzf", @_);
 }
 
-    
+
 ############################## helper functions #########################################################
 
 sub document_all_hotkeys {
@@ -187,7 +198,7 @@ sub safe_backtick {
     open my $pipefh, '-|' or exec @command_line or die "$command_line failed: $!\n";
     my $result;
     { local $/;               # slurp all output in one go
-      $result = <$pipefh>; 
+      $result = <$pipefh>;
       close $pipefh;
     }
     chomp $result;            # chop off last newline
@@ -204,8 +215,8 @@ sub translate_from_readline_keynotation {
     return $keyseq;
 }
 
-# translate_control("m") == translate_control("M") ==  '\0x13' etc. 
-sub translate_control { 
+# translate_control("m") == translate_control("M") ==  '\0x13' etc.
+sub translate_control {
     my ($ctrlkey) = @_;
     $ctrlkey =  uc $ctrlkey; # Don't discriminate between \C-M and \C-m
     return pack("c", unpack("c", $ctrlkey) - 64);
