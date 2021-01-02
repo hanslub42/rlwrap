@@ -289,7 +289,7 @@ sub reset_prompt {
 }
 
 sub ridiculously_wide_prompt {
-  $prompt = "Supercalifragilistic, " x 10; # 220
+  $prompt = "כשנכנסתי אליו לחדר, מולל חרוזי תפילה כתומים בין אצבעות כמושות, " x 10; # 220
   $prompt .= "Expialidocious > ";         # + 17 = 237 
 }
 
