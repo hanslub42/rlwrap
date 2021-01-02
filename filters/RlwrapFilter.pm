@@ -712,6 +712,16 @@ be echoed back preceded by a continuation prompt; it is up to the
 output handler what to do with it.
 
 
+=item $handler = $f -> signal_handler, $f -> signal_handler(\&handler)
+
+As B<rlwrap> is transparent to signals, signals get passed on to I<command>.
+This handler gets called (as handler($signo)) for signals SIGHUP, SIGINT,
+SIGQUIT, SIGTERM, SIGCONT, SIGUSR1, SIGUSR2, and SIGWINCH, before the signal is delivered.
+It receives (and should return) $signo as a string. The returned signal is delivered to
+I<command>; return "0" to ignore the signal altogether. Output can be written out-of-band (to B<rlwrap>) or 
+cloak_and_dagger (to I<command>, see below)
+
+
 =item $handler = $f -> message_handler, $f -> message_handler(\&handler)
 
 This handler gets called (as handler($message, $tag)) for every
@@ -720,7 +730,10 @@ all other handlers. Its return value is ignored, but it may be useful
 for logging and debugging purposes. The $tag is an integer that can be
 converted to a tag name by the 'tag2name' method
 
+
 =back
+
+
 
 =head2 OTHER METHODS
 
@@ -864,6 +877,7 @@ The protocol uses the following tags (tags E<gt> 128 are out-of-band)
  TAG_COMPLETION  3
  TAG_PROMPT      4
  TAG_HOTKEY      5
+ TAG_SIGNAL      6
 
  TAG_WHAT_ARE_YOUR_INTERESTS     127
 

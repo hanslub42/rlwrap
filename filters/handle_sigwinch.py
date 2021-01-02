@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-"""a demo of using a filter to handle signals"""
+"""a demo of using a filter to handle signals. I am still not convined of the usefulness of signal filtering"""
 
 import sys, os, signal, argparse, re
 
@@ -8,9 +8,6 @@ if 'RLWRAP_FILTERDIR' in os.environ:
     sys.path.append(os.environ['RLWRAP_FILTERDIR'])
 else:
     sys.path.append('.')
-
-
-
 
 
 parser = argparse.ArgumentParser()
@@ -35,12 +32,12 @@ filter.cloak_and_dagger_verbose =  args.verbose
 
 
 def handle_signal(signo):
-    if int(signo) == int(signal.SIGWINCH):          # signo is passed as a string, e.g. "11"
-       new_cols, new_lines = os.get_terminal_size() # stdin is still the users terminal
+    if int(signo) == int(signal.SIGWINCH):                # signo is passed as a string, e.g. "11"
+       new_cols, new_lines = os.get_terminal_size()       # stdin is still the users terminal
        output = re.sub('%L', str(new_lines), args.format)
-       output = re.sub('%C', str(new_cols), output)
-       filter.cloak_and_dagger(output, args.prompt, 0.1)
-    return signo
+       output = re.sub('%C', str(new_cols), output)      
+       filter.cloak_and_dagger(output, args.prompt, 0.1)  # cloak_and_dagger: we don't want to see the dialogue (except when verbose)
+    return signo                                          # don't mess with the signal itself
                    
 filter.signal_handler = handle_signal
 
