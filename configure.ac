@@ -58,9 +58,9 @@ AC_ARG_ENABLE(homegrown-redisplay,
     AC_HELP_STRING([--enable-homegrown-redisplay], [try this only if rlwrap messes up the prompt [[default=NO]]]),
     opt_homegrown_redisplay=$enableval)
 
-AC_ARG_ENABLE(multibyte_aware,
+AC_ARG_ENABLE(multibyte-aware,
     AC_HELP_STRING([--enable-multibyte-aware [[default=NO]]], [(experimental) make rlwrap aware of multibyte characters [[default=NO]]]]),
-    opt_multibyte-aware=$enableval)
+    opt_multibyte_aware=$enableval)
 
 
 AC_ARG_ENABLE(spy-on-readline,
@@ -409,6 +409,7 @@ fi
 
 test x$opt_spy_on_readline = xyes && AC_DEFINE(SPY_ON_READLINE,1 ,Define to 1 to use private _rl_horizontal_scroll_mode)
 
+test x$opt_multibyte_aware  = xyes && AC_DEFINE(MULTIBYTE_AWARE,1 ,Define to 1 to be aware of  wide chars in prompts)
 
 # check for existence of myself under $opt_proc_mountpoint/$$/cwd If the user specified --disable-proc-mountpoint we'll still do these tests
 # but they wil fail unless /no is a procfs mountpoint ;-)

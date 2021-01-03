@@ -495,6 +495,24 @@ void filter_test(void);
 
 
 
+/* in multibyte.c: */
+
+#ifdef MULTIBYTE_AWARE /* i.e. if configured with --enable-multibyte-aware  */
+   #define MBSTATE mbstate_t
+#else
+   #define MBSTATE int
+#endif
+
+MBSTATE * mbc_initstate(MBSTATE *st);
+int mbc_is_valid(const char *mb_string, const MBSTATE *st);
+const char * mbc_next(const char *mb_string, MBSTATE *st);
+int mbc_charwidth(const char *p, MBSTATE *st);
+char *mbc_first(const char *mb_string, const MBSTATE *st);
+int is_multibyte(const char *mb_char, const MBSTATE *st);
+const char *mbc_inc(const char **mbc, MBSTATE *st);
+size_t mbc_strnlen(const char *mb_string, size_t maxlen, MBSTATE *st);
+
+
 
 /* some handy macros */
 
