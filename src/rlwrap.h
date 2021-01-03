@@ -50,8 +50,11 @@
    #define __USE_GNU */
 
 #include <stdlib.h>
+#include <locale.h>
+
 
 #include <sched.h>
+
 
 
 
@@ -202,7 +205,7 @@ extern int _rl_horizontal_scroll_mode;
 
 
 
-
+extern void test_main(void);
 
 /* in main.c: */
 extern int master_pty_fd;

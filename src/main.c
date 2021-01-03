@@ -90,7 +90,6 @@ static void init_rlwrap(char *command_line);
 static void fork_child(char *command_name, char **argv);
 static char *read_options_and_command_name(int argc, char **argv);
 static void main_loop(void);
-static void test_main(void);
 
 
 
@@ -154,7 +153,7 @@ static struct option longopts[] = {
 
 int
 main(int argc, char **argv)
-{ 
+{
   char *command_name;
   rlwrap_command_line = unsplit_with(argc, argv, " ");     
   init_completer();
@@ -251,9 +250,10 @@ main_loop()
   init_readline("");
   last_minute_checks();
   pass_through_filter(TAG_OUTPUT,""); /* If something is wrong with filter, get the error NOW */
-  set_echo(FALSE);		/* This will also put the terminal in CBREAK mode */
-  test_main(); 
-  
+  set_echo(FALSE);		      /* This will also put the terminal in CBREAK mode */
+  #ifdef TEST
+  test_main();                        /* when TESTing some new functionality, call this function (which should never return) */
+  #endif
   /* ------------------------------  main loop  -------------------------------*/
   while (TRUE) {
     /* listen on both stdin and pty_fd */
@@ -1028,26 +1028,4 @@ cleanup_rlwrap_and_exit(int status)
   }
 }
 
-
-
-extern int test_haystack(const char *haystack, const char *needle);
-static void test_main() {
-#ifdef DEBUG
-  if(debug & DEBUG_TEST_MAIN) {
-    /* test, test */
-    test_haystack("rabarber","r");
-    test_haystack("","r");
-    test_haystack("rr rr rr rrr","rr");
-    /* test_haystack("bobobo",""); */
-    test_haystack("lalalalalal","la");
-
-    test_unbackspace("abc\rd","dbc");
-    test_unbackspace("abc\bd\re","ebd");
-    test_unbackspace("abc\rde\rf","fec");
-    puts("tests OK");
-    exit(0);
-  }     
-      
-#endif      
-}	
 

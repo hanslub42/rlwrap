@@ -58,6 +58,11 @@ AC_ARG_ENABLE(homegrown-redisplay,
     AC_HELP_STRING([--enable-homegrown-redisplay], [try this only if rlwrap messes up the prompt [[default=NO]]]),
     opt_homegrown_redisplay=$enableval)
 
+AC_ARG_ENABLE(multibyte_aware,
+    AC_HELP_STRING([--enable-multibyte-aware [[default=NO]]], [(experimental) make rlwrap aware of multibyte characters [[default=NO]]]]),
+    opt_multibyte-aware=$enableval)
+
+
 AC_ARG_ENABLE(spy-on-readline,
     AC_HELP_STRING([--enable-spy-on-readline [[default=YES]]],
 	[use private readline variable to keep screen tidy when resizing terminal [[default=YES]]]),

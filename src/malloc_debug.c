@@ -199,7 +199,7 @@ void debug_postmortem() {
 }             
 
       
-
+#ifdef TEST
 int test_main() {
   char **list = split_with("a bee    ceee", " ");
   char **word = list;
@@ -209,5 +209,6 @@ int test_main() {
   free_splitlist(list);
   return 0;
 }
+#endif
 
 #endif /* def USE_MALLOC_DEBUGGER */
