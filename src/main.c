@@ -57,6 +57,8 @@ FILE *debug_fp = NULL;  	     /* filehandle of debugging log */
 char *program_name, *command_name;   /* "rlwrap" (or whatever has been symlinked to rlwrap)  and (base-)name of command */
 char *rlwrap_command_line = "";      /* rlwrap command line (rlwrap -options command <command_args> */
 char *command_line = "";             /* command <command_args> */
+int unit_test_argc;                  /* only used by unit tests: number of arguments, not including options */
+char **unit_test_argv = NULL;        /* only used by unit tests: arguments (in place of command <command_args>) after rlwrap options  */
 int within_line_edit = FALSE;	     /* TRUE while user is editing input */
 pid_t command_pid = 0;		     /* pid of child (client), or 0 before child is born */
 int i_am_child = FALSE;		     /* Am I child or parent? after forking, child will set this to TRUE */
@@ -146,6 +148,14 @@ static struct option longopts[] = {
 
 
 
+/* helper function to run a unit test whenever UNIT_TEST is #defined, e.g. by "make clean; make CFLAGS='-DUNIT_TEST=my_test'" */
+static void run_unit_test(int argc, char **argv, enum test_stage stage) {
+  #ifdef UNIT_TEST
+    extern void UNIT_TEST(int argc, char **argv, enum test_stage stage);
+    UNIT_TEST(argc, argv, stage);
+  #endif
+}
+
 /*
  * main function. initialises everything and calls main_loop(),
  * which never returns
@@ -155,25 +165,33 @@ int
 main(int argc, char **argv)
 {
   char *command_name;
+  int i;
+  
+  run_unit_test(argc, argv,TEST_AT_PROGRAM_START);
   rlwrap_command_line = unsplit_with(argc, argv, " ");     
   init_completer();
 
   /* Harvest options and leave optind pointing to first non-option argument: */
   command_name = read_options_and_command_name(argc, argv);
 
+
   /* by now, optind points to slave <command>, and &argv[optind] is <command>'s argv. Remember slave command line: */
   command_line = unsplit_with(argc - optind, argv + optind, " ");
+  
+  run_unit_test(argc - optind, argv + optind, TEST_AFTER_OPTION_PARSING); /* argv points at the first non-option rlwrap argument */
 
   /* if stdin is not a tty, just execute <command>: */ 
   if (!isatty(STDIN_FILENO) && execvp(argv[optind], &argv[optind]) < 0)
-    myerror(FATAL|USE_ERRNO, "Cannot execute %s", argv[optind]);	
+    myerror(FATAL|USE_ERRNO, "Cannot execute %s", argv[optind]);
+  
   init_rlwrap(rlwrap_command_line);
   install_signal_handlers();	
   block_all_signals();
   fork_child(command_name, argv); /* this will unblock most signals most of the time */
   if (filter_command)
     spawn_filter(filter_command);
-  
+  run_unit_test(argc - optind, argv + optind, TEST_AFTER_SPAWNING_SLAVE_COMMAND); /* argv points at the first non-option rlwrap argument */
+
   main_loop();
   return 42;			/* The Answer, but, sadly, we'll never get there.... */
 }
@@ -235,7 +253,6 @@ main_loop()
   int leave_prompt_alone;
   sigset_t no_signals_blocked;
   int seen_EOF = FALSE;     
-
    
   struct timespec         select_timeout, *select_timeoutptr;
   struct timespec immediately = { 0, 0 }; /* zero timeout when child is dead */

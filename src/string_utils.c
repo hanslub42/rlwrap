@@ -693,8 +693,6 @@ copy_next(int n, const char **original, char **copy)
 
 
 
-  
-
 /* helper function: returns the number of displayed characters (the
    "colourless length") of str (which has its unprintable sequences
    marked with RL_PROMPT_*_IGNORE).  Puts a copy without the
@@ -759,6 +757,85 @@ colourless_strlen(const char *str, char **pcopy_without_ignore_markers, int term
 
   return q - copy_without_ignore_markers;
 }
+
+/* helper function: returns the number of displayed characters (the
+   "colourless length") of str (which has its unprintable sequences
+   marked with RL_PROMPT_*_IGNORE).
+
+   Until rlwrap 0.43, this function didn't take wide characters into 
+   consideration, causing problems with long prompts.
+*/
+
+
+/* int */
+/* colourless_strlen2(const char *str, char ** pcopy_without_ignore_markers, int termwidth) */
+/* { */
+/*   int visible  = TRUE; */
+/*   int colno    = 0; */
+/*   int lineno   = 0; */
+/*   int length   = strlen(str); */
+/*   int colourless_length; */
+/*   const char *p;  */
+/*   char *q; */
+/*   char **character_cells;           /\* array of pointers to consecutive (wide) characters), needed for backtracking when a backspace is encountered *\/ */
+/*   int  current_char;                /\* character_cells[current_char] points to current(wide)  char *\/ */
+/*   MBSTATE st; */
+
+/*   assert(termwidth >= 0); */
+/*   copy_without_ignore_markers = mymalloc(length + 1); */
+/*   first_char_on_current_line  = 0; /\* last char seen on colno 0 (can be != q if str is longer than termwidt) *\/ */
+/*   character_cells             = (char **) mymalloc(length * sizeof(char **)); */
+/*   character_positions         = (int*) mymalloc(length * sizeof(int)); */
+/*   character_colno_positions[termwidth * lineno + colno] = q; */
+
+/*   /\* The next loop scans str, constructing a colourless copy *\/ */
+/*   for(mbc_initstate(&st), colourless_length = 0,  p = str; *p; mbc_inc(&p, &st)) { */
+/*     assert (q < copy_without_ignore_markers + length);  */
+/*     switch (*p) { */
+/*     case RL_PROMPT_START_IGNORE: */
+/*       visible = FALSE; */
+/*       continue; */
+/*     case RL_PROMPT_END_IGNORE: */
+/*       visible = TRUE; */
+/*       continue; */
+/*     case '\r': */
+/*       if (visible) { */
+        
+/*         colourless_length  */
+/*         colno = 0; */
+/*         continue; */
+/*       } */
+/*       break; */
+/*     case '\b': */
+/*       if ((visible && q > copy_without_ignore_markers)) { */
+/*         q  */
+/*         colno -= 1; */
+/*         if (termwidth && colno < 0)  */
+/*           colno += termwidth; */
+/*         continue; */
+/*       } */
+/*       break; */
+/*     }    */
+/*     if (visible) { */
+/*       MBSTATE stc; */
+/*       mbc_copy(p, &q, mbc_copystate(st, &stc)); */
+/*       colno +=1; */
+/*       if (termwidth && colno >= termwidth) */
+/*         colno -= termwidth; */
+/*     } */
+/*   }  */
+/*   *q = '\0'; */
+/*   DPRINTF4(DEBUG_READLINE, "colourless_strlen(\"%s\", 0x%lx, %d) = %ld", */
+/*            mangle_string_for_debug_log(str, MANGLE_LENGTH), (long) pcopy_without_ignore_markers, */
+/*            termwidth,  q - copy_without_ignore_markers);   */
+/*   if (pcopy_without_ignore_markers) */
+/*     *pcopy_without_ignore_markers = copy_without_ignore_markers; */
+/*   else */
+/*     free (copy_without_ignore_markers); */
+
+/*   return q - copy_without_ignore_markers; */
+/* } */
+
 
 int
 colourless_strlen_unmarked (const char *str, int termwidth)

@@ -216,6 +216,8 @@ extern int always_readline;
 extern int complete_filenames;
 extern pid_t command_pid;
 extern char *rlwrap_command_line;
+extern int unit_test_argc;
+extern char **unit_test_argv;
 extern char *command_line;
 extern char *extra_char_after_completion;
 extern int i_am_child;
@@ -249,6 +251,8 @@ extern int commands_children_not_wrapped;
 extern int accepted_lines;
 extern char *filter_command;
 extern int polling;
+enum test_stage {TEST_AT_PROGRAM_START, TEST_AFTER_OPTION_PARSING, TEST_AFTER_SPAWNING_SLAVE_COMMAND};
+
 
 void cleanup_rlwrap_and_exit(int status);
 void put_in_output_queue(char *stuff);
@@ -498,18 +502,21 @@ void filter_test(void);
 /* in multibyte.c: */
 
 #ifdef MULTIBYTE_AWARE /* i.e. if configured with --enable-multibyte-aware  */
+   #include <wchar.h>
    #define MBSTATE mbstate_t
 #else
    #define MBSTATE int
 #endif
 
 MBSTATE * mbc_initstate(MBSTATE *st);
+MBSTATE *mbc_copystate(MBSTATE st, MBSTATE *stc);
 int mbc_is_valid(const char *mb_string, const MBSTATE *st);
 const char * mbc_next(const char *mb_string, MBSTATE *st);
 int mbc_charwidth(const char *p, MBSTATE *st);
 char *mbc_first(const char *mb_string, const MBSTATE *st);
 int is_multibyte(const char *mb_char, const MBSTATE *st);
 const char *mbc_inc(const char **mbc, MBSTATE *st);
+void mbc_copy(const char *p, char **q, MBSTATE *st);
 size_t mbc_strnlen(const char *mb_string, size_t maxlen, MBSTATE *st);
 
 
