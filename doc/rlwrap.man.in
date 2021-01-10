@@ -102,8 +102,7 @@ completion word list.
 .OL \-g \-\-forget\-matching \fIregexp\fP
 Forget (i.e. never put into the history list) all input lines that match 
 the POSIX 1003.2 regular expression \fIregexp\fP.
-The match is always case\-insensitive. \fIregexp\fP may be an ordinary
-string. For more about regular expressions, see  \fBregex (7)\fP
+The match is always case\-insensitive.  \fBperl\fP-style character classes like '\\d' are not recognised, use '[:digit:]'. For more about regular expressions, see  \fBregex (7)\fP
 .TP
 .OL \-h \-\-help
 Print a short help message.
@@ -422,6 +421,9 @@ command output are garbled or incorrectly coloured.
   
 \fBrlwrap\fP can try, but often fails to, handle prompts that contain
 control characters.  A filter may be used to clean up the prompt.
+
+\fBrlwap\fP cannot (yet) handle bracketed-paste mode (which is on by default in \fBreadline\fP 8.1 and higher), and ignores it even if specified in \fB~/.inputrc\fP
+
 
 .SH VERSION
 This manpage documents rlwrap version @VERSION@
