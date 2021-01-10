@@ -12,10 +12,10 @@ use warnings;  # on by default
 use warnings  qw(FATAL utf8);    # fatalize encoding glitches
 use open      qw(:std :utf8);    # undeclared streams in UTF-8
 use charnames qw(:full :short);  # unneeded in v5.16
-use strict;
 use Getopt::Std;
 eval "use Term::ReadKey";
 my $have_ReadKey = not $@;
+my $interrupt_char = "^C";
 
 
 my $opt_d;
@@ -49,6 +49,7 @@ while(1) {
   prompt();
   $_ = <>;
   defined $_ or exit 0;
+  /^:a(\s+(.*))/ and change_argv($2);
   /^:b/ and run_bash();
   /^:B/ and progress_bar();
   /^:c\b/ and change_prompt();
@@ -59,6 +60,7 @@ while(1) {
   /^:f/ and do_fork();
   /^:h/ and help();
   /^:H/ and hanky_panky();
+  /^:i/ and toggle_interrupt_char();
   /^:l/ and long_and_difficult_string();
   /^:p/ and pass();
   /^:P/ and print_chunky(scalar `cat $0`);
@@ -104,16 +106,18 @@ client does things like:
 
 ! <cmd> run <cmd> in shell
 !!<exp> evaluate Perl expression <exp>
-:b run ./bash or bash (the "gold standard" readline app) with current prompt
+:a <new command line> change commandline
+:b run ./bash or bash with current prompt (to compare readline behaviour with weird prompts)
 :B show a progress bar using Unicode block elements
 :c change prompt
 :cd [<dir>] chdir to <dir> (or \$HOME)
 :C countdown in prompt
-:d die eloquently
+:d die eloquently 
 :e [N] exit (with error code N)
 :f fork and let child take over (parent waits)
 :h help
 :H hanky-panky with backspace and carriage return
+:i toggle interrupt char between CTRL C and CTRL G
 :l print a long and difficult text
 :p ask "passsword"
 :P print chunky
@@ -143,6 +147,11 @@ sub prompt {
   lprint $sprompt;
 }
 
+
+sub change_argv {
+  my ($cmdline) = @_;
+  $0=$cmdline;
+}
 
 sub run_bash {
   my $bashprompt = $prompt;
@@ -233,6 +242,12 @@ sub hanky_panky {
 }
     
 
+sub toggle_interrupt_char {
+  $interrupt_char = $interrupt_char eq "^C" ? "^G" : "^C";
+  print "interrupt char is now '$interrupt_char'\n";
+  system "stty intr '$interrupt_char'";
+}
+
 sub countdown {
   local $prompting;
   for (my $i = 9; $i >= 0; $i--) {
@@ -308,16 +323,17 @@ sub reset_prompt {
 }
 
 sub ridiculously_wide_prompt {
-  $prompt = "כשנכנסתי אליו לחדר, מולל חרוזי תפילה כתומים בין אצבעות כמושות, " x 10; # 220
+  $prompt = "Supercalifragilistic, " x 10; # 220
   $prompt .= "Expialidocious > ";         # + 17 = 237 
 }
 
 sub utf8 {
   $prompt = "Íslenska: ";
-  printf "Ég  get etið gler án þess að meiða mig\n";
+  printf "Ég get etið gler án þess að meiða mig\n";
 }
 
 sub raw {
+  binmode(STDIN, ":raw");
   cbreak();
   my $key;
   prompt (local $prompt = "Press Any Key >");
@@ -325,6 +341,7 @@ sub raw {
   my $c = ord $key;
   cooked();
   lprint "\nYou typed a '$key' (ASCII $c)\n";
+  binmode(STDIN, ":utf8");
 
 }
 
@@ -415,7 +432,7 @@ sub lprint($) {
 
   eval '"a" =~ /[[:^print:]]/'; # check whether this perl knows (negated) POSIX character class syntax (not before perl 5.6.0?)
   if (! $@) {
-    $text =~ s/([[:^print:^\n^\r]])/sprintf("\\x%02x", (unpack "c", $1))/eg; # show unprintable characters in hex;
+    $text =~ s/([^[:print:]\s])/sprintf("\\x%02x", (unpack "c", $1))/eg; # show unprintable characters in hex;
   }
   if ($debug_file) {
     syswrite DEBUG, $text;
