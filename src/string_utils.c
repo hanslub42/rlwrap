@@ -170,7 +170,7 @@ mydirname(const char *filename)
 #endif
 }
 
-
+ 
 
 /* Better atoi() with error checking */
 int
@@ -700,8 +700,96 @@ copy_next(int n, const char **original, char **copy)
    != NULL)
 */
 
+
+
 int
-colourless_strlen(const char *str, char **pcopy_without_ignore_markers, int termwidth)
+colourless_strlen(const char *str, char ** pcopy_without_ignore_markers, int unused)
+{
+  int visible  = TRUE;
+  int length   = strlen(str);
+  int i, colourless_length, colourless_bytes;
+  const char *str_ptr, *p;
+  char *copy_ptr, *copy_without_ignore_markers;
+  MBSTATE st;
+
+  typedef struct {
+    char *bytes;
+    MBSTATE state;
+  } mbchar_cell;
+  
+  mbchar_cell *cellptr, *copied_cells = mymalloc((length + 1)  * sizeof(mbchar_cell));
+    
+  /* The next loop scans str, one multi-byte character at a time, constructing a colourless copy  */
+  /* cellptr always points at the next available free cell                                        */
+  for(mbc_initstate(&st), str_ptr = str, colourless_bytes = 0, cellptr = copied_cells;
+      *str_ptr;
+      mbc_inc(&str_ptr, &st)) {
+    assert (cellptr < copied_cells + length);
+    switch (*str_ptr) {
+    case RL_PROMPT_START_IGNORE:
+      visible = FALSE;
+      continue;
+    case RL_PROMPT_END_IGNORE:
+      visible = TRUE;
+      continue;
+    case '\r':
+      if (visible) {                  /* only ever interpret CR (and Backspace) when visible (i.e. outside control sequences) */
+        for ( ; cellptr > copied_cells; cellptr--)  
+          free((cellptr-1)->bytes);   /* free all cells            */
+        mbc_initstate(&st);           /* restart with virgin state */
+        colourless_bytes = 0;
+      }
+      continue;
+    case '\b':
+      if ((visible && cellptr > copied_cells)) {     /* except when invisible, or at beginning of copy ... */
+        cellptr -= 1;                                /* ... reset cellptr to previous (multibyte) char     */
+        colourless_bytes -= strlen(cellptr->bytes);  
+        free(cellptr->bytes);
+        if (cellptr > copied_cells)
+          st = (cellptr -1) -> state;                /* restore corresponding shift state                  */
+        else
+          mbc_initstate(&st);                        /* or initial state, if at start of line              */
+      }
+      continue;
+    }
+    if (visible) {
+      MBSTATE st_copy   = st;
+      int nbytes        = mbc_charwidth(str_ptr, &st_copy);
+      colourless_bytes += nbytes;
+      char *q           = cellptr -> bytes = mymalloc(1 + nbytes);
+      mbc_copy(str_ptr,&q, &st); /* copy the wide character at str_ptr to cellptr -> bytes , incrementing q to just past the copy */
+      *q                = '\0';
+      cellptr -> state  = st; /* remember shift state after reading str_ptr, just in case a backspace comes along later */
+      cellptr           += 1;
+    }
+  } /* end of for loop */
+
+  colourless_length = cellptr - copied_cells;
+  
+  copy_without_ignore_markers = mymalloc(colourless_bytes + 1);
+  for (cellptr = copied_cells, copy_ptr = copy_without_ignore_markers, i = 0; i < colourless_length; i++, cellptr++) {
+    for(p = cellptr->bytes; *p; p++, copy_ptr++) 
+      *copy_ptr = *p;
+    free(cellptr->bytes);
+  }
+  free(copied_cells);
+
+
+  DPRINTF4(DEBUG_READLINE, "colourless_strlen(\"%s\", \"%s\") = %d (%d  bytes)",
+           mangle_string_for_debug_log(str, MANGLE_LENGTH), copy_without_ignore_markers, colourless_length, colourless_bytes);
+
+  if (pcopy_without_ignore_markers)
+    *pcopy_without_ignore_markers = copy_without_ignore_markers;
+  else
+    free(copy_without_ignore_markers);
+  
+  
+
+  return colourless_length;
+}
+
+int
+colourless_strlen_old(const char *str, char **pcopy_without_ignore_markers, int termwidth)
 {
   int visible = TRUE;
   int column = 0;
@@ -762,79 +850,10 @@ colourless_strlen(const char *str, char **pcopy_without_ignore_markers, int term
    "colourless length") of str (which has its unprintable sequences
    marked with RL_PROMPT_*_IGNORE).
 
-   Until rlwrap 0.43, this function didn't take wide characters into 
-   consideration, causing problems with long prompts.
+   Until rlwrap 0.44, this function didn't take wide characters into 
+   consideration, causing problems with long prompts containing wide characters.
 */
 
-
-/* int */
-/* colourless_strlen2(const char *str, char ** pcopy_without_ignore_markers, int termwidth) */
-/* { */
-/*   int visible  = TRUE; */
-/*   int colno    = 0; */
-/*   int lineno   = 0; */
-/*   int length   = strlen(str); */
-/*   int colourless_length; */
-/*   const char *p;  */
-/*   char *q; */
-/*   char **character_cells;           /\* array of pointers to consecutive (wide) characters), needed for backtracking when a backspace is encountered *\/ */
-/*   int  current_char;                /\* character_cells[current_char] points to current(wide)  char *\/ */
-/*   MBSTATE st; */
-
-/*   assert(termwidth >= 0); */
-/*   copy_without_ignore_markers = mymalloc(length + 1); */
-/*   first_char_on_current_line  = 0; /\* last char seen on colno 0 (can be != q if str is longer than termwidt) *\/ */
-/*   character_cells             = (char **) mymalloc(length * sizeof(char **)); */
-/*   character_positions         = (int*) mymalloc(length * sizeof(int)); */
-/*   character_colno_positions[termwidth * lineno + colno] = q; */
-
-/*   /\* The next loop scans str, constructing a colourless copy *\/ */
-/*   for(mbc_initstate(&st), colourless_length = 0,  p = str; *p; mbc_inc(&p, &st)) { */
-/*     assert (q < copy_without_ignore_markers + length);  */
-/*     switch (*p) { */
-/*     case RL_PROMPT_START_IGNORE: */
-/*       visible = FALSE; */
-/*       continue; */
-/*     case RL_PROMPT_END_IGNORE: */
-/*       visible = TRUE; */
-/*       continue; */
-/*     case '\r': */
-/*       if (visible) { */
-        
-/*         colourless_length  */
-/*         colno = 0; */
-/*         continue; */
-/*       } */
-/*       break; */
-/*     case '\b': */
-/*       if ((visible && q > copy_without_ignore_markers)) { */
-/*         q  */
-/*         colno -= 1; */
-/*         if (termwidth && colno < 0)  */
-/*           colno += termwidth; */
-/*         continue; */
-/*       } */
-/*       break; */
-/*     }    */
-/*     if (visible) { */
-/*       MBSTATE stc; */
-/*       mbc_copy(p, &q, mbc_copystate(st, &stc)); */
-/*       colno +=1; */
-/*       if (termwidth && colno >= termwidth) */
-/*         colno -= termwidth; */
-/*     } */
-/*   }  */
-/*   *q = '\0'; */
-/*   DPRINTF4(DEBUG_READLINE, "colourless_strlen(\"%s\", 0x%lx, %d) = %ld", */
-/*            mangle_string_for_debug_log(str, MANGLE_LENGTH), (long) pcopy_without_ignore_markers, */
-/*            termwidth,  q - copy_without_ignore_markers);   */
-/*   if (pcopy_without_ignore_markers) */
-/*     *pcopy_without_ignore_markers = copy_without_ignore_markers; */
-/*   else */
-/*     free (copy_without_ignore_markers); */
-
-/*   return q - copy_without_ignore_markers; */
-/* } */
 
 
 int

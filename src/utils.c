@@ -382,13 +382,16 @@ myerror(int error_flags, const char *message_format, ...)
   if (! (is_warning && nowarn))
     fputs(message, stderr); /* @@@ error reporting (still) uses buffered I/O */
   if (is_warning && !warnings_given++ && !nowarn) 
-    fputs("\nwarnings can be silenced by the --no-warnings (-n) option\n", stderr);
+    fputs("warnings can be silenced by the --no-warnings (-n) option\n", stderr);
   
   fflush(stderr);
   free(message);
   errno =  saved_errno;
 
-  if (error_flags & FATAL) { 
+  if (error_flags & FATAL) {
+    #ifdef DUMP_CORE_ON_ERROR
+      KA_BOOM;
+    #endif
     if (!i_am_child)
       cleanup_rlwrap_and_exit(EXIT_FAILURE);
     else /* child: die and let parent clean up */
@@ -771,6 +774,9 @@ mymalloc(size_t size)
   ptr = malloc(size);
   if (ptr == NULL) {
     /* don't call myerror(), as this calls mymalloc() again */
+    #ifdef DUMP_CORE_ON_ERROR
+       KA_BOOM;
+    #endif
     fprintf(stderr, "Out of memory: tried in vain to allocate %d bytes\n", (int) size);
     exit(EXIT_FAILURE);
   }     

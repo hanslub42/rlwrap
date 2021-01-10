@@ -52,26 +52,24 @@ char *filter_command = NULL;                 /* -z option: pipe prompts, input, 
 
 
 /* variables for global bookkeeping */
-int master_pty_fd;		     /* master pty (rlwrap uses this to communicate with client) */
-FILE *debug_fp = NULL;  	     /* filehandle of debugging log */
-char *program_name, *command_name;   /* "rlwrap" (or whatever has been symlinked to rlwrap)  and (base-)name of command */
-char *rlwrap_command_line = "";      /* rlwrap command line (rlwrap -options command <command_args> */
-char *command_line = "";             /* command <command_args> */
-int unit_test_argc;                  /* only used by unit tests: number of arguments, not including options */
-char **unit_test_argv = NULL;        /* only used by unit tests: arguments (in place of command <command_args>) after rlwrap options  */
-int within_line_edit = FALSE;	     /* TRUE while user is editing input */
-pid_t command_pid = 0;		     /* pid of child (client), or 0 before child is born */
-int i_am_child = FALSE;		     /* Am I child or parent? after forking, child will set this to TRUE */
-int ignore_queued_input = FALSE;     /* read and then ignore all characters in input queue until it is empty (i.e. read would block) */
-int received_WINCH = FALSE;          /* flag set in SIGWINCH signal handler: start line edit as soon as possible */
-int prompt_is_still_uncooked = TRUE; /* The main loop consults this variable to determine the select() timeout: when TRUE, it is
-                                        a few millisecs, if FALSE, it is infinite.						
-                                        TRUE just after receiving command output (when we still don't know whether we have a
-                                        prompt), and, importantly, at startup (so that substitute prompts get displayed even with
-                                        programs that don't have a startup message, such as cat)  */
+int master_pty_fd;		             /* master pty (rlwrap uses this to communicate with client) */
+FILE *debug_fp = NULL;  	             /* filehandle of debugging log */
+char *program_name = "rlwrap", *command_name;/* "rlwrap" (or whatever has been symlinked to rlwrap) and (base-)name of command */
+char *rlwrap_command_line = "";              /* rlwrap command line (rlwrap -options command <command_args> */
+char *command_line = "";                     /* command <command_args> */
+int within_line_edit = FALSE;	             /* TRUE while user is editing input */
+pid_t command_pid = 0;		             /* pid of child (client), or 0 before child is born */
+int i_am_child = FALSE;		             /* Am I child or parent? after forking, child will set this to TRUE */
+int ignore_queued_input = FALSE;             /* read and then ignore all characters in input queue until it is empty (i.e. read would block) */
+int received_WINCH = FALSE;                  /* flag set in SIGWINCH signal handler: start line edit as soon as possible */
+int prompt_is_still_uncooked = TRUE;         /* The main loop consults this variable to determine the select() timeout: when TRUE, it is
+                                                a few millisecs, if FALSE, it is infinite.						
+                                                TRUE just after receiving command output (when we still don't know whether we have a
+                                                prompt), and, importantly, at startup (so that substitute prompts get displayed even with
+                                                programs that don't have a startup message, such as cat)  */
 						
-int we_just_got_a_signal_or_EOF = FALSE;  /* When we got a signal or EOF, and the program sends something that ends in a newline, take it
-					     as a response to user input - i.e. preserve a cooked prompt and just print the new output after it */
+int we_just_got_a_signal_or_EOF = FALSE;    /* When we got a signal or EOF, and the program sends something that ends in a newline, take it
+					       as a response to user input - i.e. preserve a cooked prompt and just print the new output after it */
 int rlwrap_already_prompted = FALSE;
 int accepted_lines =  0; /* number of lines accepted (used for one-shot rlwrap) */
 
@@ -151,8 +149,13 @@ static struct option longopts[] = {
 /* helper function to run a unit test whenever UNIT_TEST is #defined, e.g. by "make clean; make CFLAGS='-DUNIT_TEST=my_test'" */
 static void run_unit_test(int argc, char **argv, enum test_stage stage) {
   #ifdef UNIT_TEST
-    extern void UNIT_TEST(int argc, char **argv, enum test_stage stage);
-    UNIT_TEST(argc, argv, stage);
+  extern void UNIT_TEST(int argc, char **argv, enum test_stage stage);
+  #define VALUE_AS_STRING(v) NAME_AS_STRING(v)
+  #define NAME_AS_STRING(n) #n
+  
+  if(stage == TEST_AT_PROGRAM_START)
+    myerror(WARNING|NOERRNO, "running unit test %s", VALUE_AS_STRING(UNIT_TEST)); 
+  UNIT_TEST(argc, argv, stage);
   #endif
 }
 
@@ -165,8 +168,10 @@ int
 main(int argc, char **argv)
 {
   char *command_name;
-  int i;
-  
+
+  setlocale (LC_ALL, ""); /* ANSI C says that all programs start by default in the standard `C' locale. 
+                             To use the locales specified by the environment, we must call  setlocale. */
+
   run_unit_test(argc, argv,TEST_AT_PROGRAM_START);
   rlwrap_command_line = unsplit_with(argc, argv, " ");     
   init_completer();

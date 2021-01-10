@@ -4,10 +4,19 @@
 
 # TODO: use Term::ReadKey if available
 
+
+use utf8;      # so literals and identifiers can be in UTF-8
+use v5.12;     # or later to get "unicode_strings" feature
+use strict;    # quote strings, declare variables
+use warnings;  # on by default
+use warnings  qw(FATAL utf8);    # fatalize encoding glitches
+use open      qw(:std :utf8);    # undeclared streams in UTF-8
+use charnames qw(:full :short);  # unneeded in v5.16
 use strict;
 use Getopt::Std;
 eval "use Term::ReadKey";
 my $have_ReadKey = not $@;
+
 
 my $opt_d;
 getopts('d:');
@@ -41,6 +50,7 @@ while(1) {
   $_ = <>;
   defined $_ or exit 0;
   /^:b/ and run_bash();
+  /^:B/ and progress_bar();
   /^:c\b/ and change_prompt();
   /^:C/ and countdown();
   /^:cd(\s+(.*))?/  and chdir($2 ? $2 : $ENV{HOME});
@@ -95,6 +105,7 @@ client does things like:
 ! <cmd> run <cmd> in shell
 !!<exp> evaluate Perl expression <exp>
 :b run ./bash or bash (the "gold standard" readline app) with current prompt
+:B show a progress bar using Unicode block elements
 :c change prompt
 :cd [<dir>] chdir to <dir> (or \$HOME)
 :C countdown in prompt
@@ -142,6 +153,14 @@ sub run_bash {
   close OUT;
   system "bash --rcfile $rcfile";
   unlink $rcfile;
+}
+
+sub progress_bar {
+  for (my $i=0; $i < 200; $i++) {
+    print "\x{2588}";
+    select(undef, undef, undef, 0.02);
+  }
+  print "\n";
 }
 
 sub pass {
@@ -275,7 +294,7 @@ sub blue {
 
 sub kleur {
   my ($text, $kleurcode) = @_;
-  $text = "\e[1;${kleurcode}m$text\e[0m"  if $ENV{TERM} =~ /ansi|xterm|rxvt|cygwin|linux/;
+  $text = "\e[1;${kleurcode}m$text\e[0m"  if $ENV{TERM} =~ /ansi|xterm|rxvt|cygwin|linux|screen|tmux/;
   return $text;
 }
 
