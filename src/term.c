@@ -171,6 +171,9 @@ init_terminal(void)
     term_rmcup          = tigetstr_or_else_tgetstr("rmcup",  "te"); 
     term_rmkx           = tigetstr_or_else_tgetstr("rmkx",   "ke");
 
+    if (!term_cursor_right) /* probably only on 'dumb' terminal */
+      term_cursor_right = " ";
+    
     /* 
     term_colors         = tigetnum("colors");
     DPRINTF1(DEBUG_TERMIO, "terminal colors: %d", term_colors); 
@@ -221,7 +224,6 @@ cursor_hpos(int col)
     tputs(instantiated, 1, my_putchar);
   } else {
     int i;
-    assert(term_cursor_right != NULL);
     cr();
     for (i = 0; i < col; i++)
       tputs(term_cursor_right, 1, my_putchar);

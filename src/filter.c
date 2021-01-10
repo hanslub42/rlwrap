@@ -250,8 +250,7 @@ void handle_out_of_band(int tag, char *message) {
   case TAG_ERROR:
     if (expected_tag == TAG_COMPLETION) /* start new line when completing (looks better) */
       fprintf(stderr, "\n"); /* @@@ error reporting (still) uses buffered I/O */
-    myerror(FATAL|NOERRNO, message);
-    break; /* not reached */
+    WONTRETURN(myerror(FATAL|NOERRNO, message));
   case TAG_OUTPUT_OUT_OF_BAND:
     my_putstr(message);
     break;
@@ -262,7 +261,7 @@ void handle_out_of_band(int tag, char *message) {
   case TAG_IGNORE:
     break;
   default:
-    myerror(FATAL|USE_ERRNO, "out-of-band message with unknown tag %d: <%20s>", tag, message);
+    WONTRETURN(myerror(FATAL|USE_ERRNO, "out-of-band message with unknown tag %d: <%20s>", tag, message));
   }     
   if (split_em_up) {
     char **words = split_with(message, " \n\t");
