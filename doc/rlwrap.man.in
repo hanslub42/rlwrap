@@ -109,7 +109,7 @@ string. For more about regular expressions, see  \fBregex (7)\fP
 Print a short help message.
 .TP
 .OL \-H \-\-history\-filename  \fIfile\fP
-Read command history  from \fIfile\fP (and write it back there if
+Read command history from \fIfile\fP (and write it back there if
 \-\-histsize >= 0)  
 .TP
 .OL \-i \-\-case\-insensitive
