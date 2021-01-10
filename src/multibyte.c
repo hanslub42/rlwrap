@@ -34,7 +34,7 @@ int
 mbc_is_valid(const char *mb_string, const MBSTATE *st)
 {
   MBSTATE scrap = *st;
-  return (int) mbrlen(mb_string, MB_CUR_MAX, &scrap ) >= 0;
+  return (int) mbrlen(mb_string, MB_LEN_MAX, &scrap ) >= 0;
 }
 
 const char *
@@ -58,8 +58,8 @@ char *
 mbc_first(const char *mb_string, const MBSTATE *st)
 {
   MBSTATE scrap = *st;
-  char buffer[MB_CUR_MAX+1];
-  int len = mbrlen(mb_string, MB_CUR_MAX, &scrap );
+  char buffer[MB_LEN_MAX+1];
+  int len = mbrlen(mb_string, MB_LEN_MAX, &scrap );
   strncpy(buffer, mb_string, len);
   buffer[len] = '\0';
   return mysavestring(buffer);
@@ -90,7 +90,7 @@ int
 is_multibyte(const char *mb_char, const MBSTATE *st)
 {
   MBSTATE scrap = *st;
-  return mbc_is_valid(mb_char, st) && mbrlen(mb_char, MB_CUR_MAX, &scrap) > 1;
+  return mbc_is_valid(mb_char, st) && mbrlen(mb_char, MB_LEN_MAX, &scrap) > 1;
 }
 
 size_t
@@ -175,18 +175,12 @@ mbc_strnlen(const char *string, size_t maxlen, MBSTATE *st)
 
 
 
-void test_mbc_strnlen(int argc, char**argv, enum test_stage stage) {
+void test_mbc_strnlen(int UNUSED(argc), char** UNUSED(argv), enum test_stage stage) {
   MBSTATE st; 
-  const char *p;
+  const char *p, teststring[] = "hihi אני יכול לאכול זכוכית וזה לא מזיק לי jaja!";
 
   if (stage != TEST_AT_PROGRAM_START)
     return;
-
-  setlocale (LC_ALL, ""); // because ANSI C says that all programs
-                          // start by default in the standard `C'
-                          // locale. To use the locales specified by
-                          // the environment, you must call setlocale.
-  const char teststring[] = "hihi אני יכול לאכול זכוכית וזה לא מזיק לי jaja!";
   printf("teststring: <%s>\n", teststring);
   for (mbc_initstate(&st), p = teststring; *p ; mbc_inc(&p, &st))
     printf("%s: len: %d multi? %s\n", mbc_first(p, &st), (int) mbc_charwidth(p, &st), is_multibyte(p, &st) ? "ja" : "nee");
@@ -199,30 +193,26 @@ void test_utf8(int argc, char**argv, enum test_stage stage) {
   char buf[BUFFSIZE];
   MBSTATE st;
   int i;
-
-    
+  FILE *fp_in, *fp_out;
+  
   if (stage != TEST_AT_PROGRAM_START)
     return;
   if (argc < 3)
     myerror(FATAL|NOERRNO, "need 2 args");
 
-  setlocale (LC_ALL, ""); // because ANSI C says that all programs
-                          // start by default in the standard `C'
-                          // locale. To use the locales specified by
-                          // the environment, you must call setlocale.
-
-  FILE *fp_in = fopen(argv[1],"r");
+  fp_in = fopen(argv[1],"r");
   if (!fp_in)
     myerror(FATAL|USE_ERRNO, "Kan %s niet lezen", argv[1]); 
 
-  FILE *fp_out= fopen(argv[2],"w");
+  fp_out= fopen(argv[2],"w");
   if (!fp_out)
     myerror(FATAL|USE_ERRNO, "Kan %s niet schrijven", argv[2]);
   mbc_initstate(&st);
   while (fgets(buf, BUFFSIZE, fp_in)) {
-    puts(buf); fputs(buf, fp_out);
     int mbl =  mbc_strnlen(buf, BUFFSIZE, &st);
     int len =  strnlen(buf, BUFFSIZE);
+
+    puts(buf); fputs(buf, fp_out);
     for(i = 0; i< mbl -1; i++) {
       putchar(len == mbl ?  '*' : '+');
       fputc(len == mbl ?  '*' : '+', fp_out);
@@ -242,19 +232,19 @@ static char *repeat(const char *repetendum, int times) {
   return result;
 }
 
-void test_colourless_strnlen(int argc, char**argv, enum test_stage stage) {
+void test_colourless_strnlen(int UNUSED(argc), char** UNUSED(argv), enum test_stage stage) {
   char buf[BUFFSIZE], *copy;
   if (stage != TEST_AFTER_OPTION_PARSING)
     return;
 
   while(fgets(buf, BUFFSIZE, stdin)) {
-    int len = strnlen(buf, BUFFSIZE);
-    char *marked;
+    int len = strnlen(buf, BUFFSIZE), len2;
+    char *marked, *stars;
     if (len > 0 && buf[len-1] == '\n')
       buf[len-1] = '\0';
     marked = mark_invisible(buf);
-    int len2 = colourless_strlen(marked, &copy, 0);
-    char *stars = repeat("*", len2);
+    len2 = colourless_strlen(marked, &copy, 0);
+    stars = repeat("*", len2);
     printf("%d\n<%s>\n<%s>\n<%s>\n\n", len, buf, copy, stars);
     free(copy);
     free(stars);

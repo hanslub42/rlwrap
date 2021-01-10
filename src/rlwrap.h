@@ -551,6 +551,9 @@ size_t mbc_strnlen(const char *mb_string, size_t maxlen, MBSTATE *st);
 
 /* DPRINTF0 and its ilk  doesn't produce any output except when DEBUG is #defined (via --enable-debug configure option) */
 
+/* Use a superfluous "break" (withn a switch) to prevent "this statement may fall through" warnings when we know that a statement will end the program anyway */
+#define WONTRETURN(statement) statement;break
+
 #ifdef  DEBUG
 
 
@@ -627,10 +630,10 @@ size_t mbc_strnlen(const char *mb_string, size_t maxlen, MBSTATE *st);
 #  define MAYBE_UNUSED(x)           
 #  define MAYBE_UNUSED2(x,y)                     
 #  define DPRINTF0(mask, format)
-#  define DPRINTF1(mask, format,arg)
-#  define DPRINTF2(mask, format,arg1, arg2)
-#  define DPRINTF3(mask, format,arg1, arg2, arg3)
-#  define DPRINTF4(mask, format,arg1, arg2, arg3, arg4)
+#  define DPRINTF1(mask, format,arg) {}
+#  define DPRINTF2(mask, format,arg1, arg2) {}
+#  define DPRINTF3(mask, format,arg1, arg2, arg3) {}
+#  define DPRINTF4(mask, format,arg1, arg2, arg3, arg4) {}
 #  define ERRMSG(b)
 #  define SHOWCURSOR
 #  define DEBUG_RANDOM_SLEEP  

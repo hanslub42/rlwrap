@@ -147,18 +147,21 @@ static struct option longopts[] = {
 
 
 /* helper function to run a unit test whenever UNIT_TEST is #defined, e.g. by "make clean; make CFLAGS='-DUNIT_TEST=my_test'" */
-static void run_unit_test(int argc, char **argv, enum test_stage stage) {
-  #ifdef UNIT_TEST
-  extern void UNIT_TEST(int argc, char **argv, enum test_stage stage);
-  #define VALUE_AS_STRING(v) NAME_AS_STRING(v)
-  #define NAME_AS_STRING(n) #n
-  
-  if(stage == TEST_AT_PROGRAM_START)
-    myerror(WARNING|NOERRNO, "running unit test %s", VALUE_AS_STRING(UNIT_TEST)); 
-  UNIT_TEST(argc, argv, stage);
-  #endif
-}
 
+#ifdef UNIT_TEST
+  static void run_unit_test(int argc, char **argv, enum test_stage stage) {
+    extern void UNIT_TEST(int argc, char **argv, enum test_stage stage);
+    #define VALUE_AS_STRING(v) NAME_AS_STRING(v)
+    #define NAME_AS_STRING(n) #n
+  
+    if(stage == TEST_AT_PROGRAM_START)
+      myerror(WARNING|NOERRNO, "running unit test %s", VALUE_AS_STRING(UNIT_TEST)); 
+    UNIT_TEST(argc, argv, stage);
+  }
+#else
+  static void run_unit_test(int UNUSED(argc), char ** UNUSED(argv), enum test_stage UNUSED(stage)) {
+  }
+#endif
 /*
  * main function. initialises everything and calls main_loop(),
  * which never returns
@@ -803,9 +806,9 @@ read_options_and_command_name(int argc, char **argv)
         feed_file_into_completion_list(optarg);
       opt_f = TRUE;
       break;
-    case 'F': myerror(FATAL|NOERRNO, "The -F (--history-format) option is obsolete. Use -z \"history_format '%s'\" instead", optarg);
+    case 'F': WONTRETURN(myerror(FATAL|NOERRNO, "The -F (--history-format) option is obsolete. Use -z \"history_format '%s'\" instead", optarg));
     case 'g': forget_regexp = mysavestring(optarg); match_regexp("just testing", forget_regexp, 1); break;
-    case 'h': usage(EXIT_SUCCESS);		/* will call exit() */
+    case 'h': WONTRETURN(usage(EXIT_SUCCESS));	  
     case 'H': history_filename = mysavestring(optarg); break;
     case 'i': 
       if (opt_f)
@@ -867,11 +870,10 @@ read_options_and_command_name(int argc, char **argv)
     case 'z': filter_command = mysavestring(optarg);	break;
     case '?':
       assert(optind > 0);
-      myerror(FATAL|NOERRNO, "unrecognised option %s\ntry '%s --help' for more information", argv[optind-1], full_program_name);
+      WONTRETURN(myerror(FATAL|NOERRNO, "unrecognised option %s\ntry '%s --help' for more information", argv[optind-1], full_program_name));
     case ':':
       assert(optind > 0);
-      myerror(FATAL|NOERRNO, "option %s requires an argument \ntry '%s --help' for more information",
-         argv[optind-1], full_program_name);
+      WONTRETURN(myerror(FATAL|NOERRNO, "option %s requires an argument \ntry '%s --help' for more information", argv[optind-1], full_program_name));
 
     default:
       usage(EXIT_FAILURE);

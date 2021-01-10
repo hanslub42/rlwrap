@@ -693,17 +693,13 @@ copy_next(int n, const char **original, char **copy)
 
 
 
-/* helper function: returns the number of displayed characters (the
-   "colourless length") of str (which has its unprintable sequences
-   marked with RL_PROMPT_*_IGNORE).  Puts a copy without the
-   RL_PROMPT_*_IGNORE characters in *copy_without_ignore_markers (if
-   != NULL)
+/* helper function: returns the number of displayed characters (the "colourless length") of str (which has to have its
+   unprintable sequences marked with RL_PROMPT_*_IGNORE).  Puts a copy without the RL_PROMPT_*_IGNORE characters in
+   *copy_without_ignore_markers (if != NULL)
 */
 
-
-
 int
-colourless_strlen(const char *str, char ** pcopy_without_ignore_markers, int unused)
+colourless_strlen(const char *str, char ** pcopy_without_ignore_markers, int UNUSED(termwidth))
 {
   int visible  = TRUE;
   int length   = strlen(str);
@@ -755,8 +751,9 @@ colourless_strlen(const char *str, char ** pcopy_without_ignore_markers, int unu
     if (visible) {
       MBSTATE st_copy   = st;
       int nbytes        = mbc_charwidth(str_ptr, &st_copy);
-      colourless_bytes += nbytes;
       char *q           = cellptr -> bytes = mymalloc(1 + nbytes);
+
+      colourless_bytes += nbytes;
       mbc_copy(str_ptr,&q, &st); /* copy the wide character at str_ptr to cellptr -> bytes , incrementing q to just past the copy */
       *q                = '\0';
       cellptr -> state  = st; /* remember shift state after reading str_ptr, just in case a backspace comes along later */
@@ -786,64 +783,6 @@ colourless_strlen(const char *str, char ** pcopy_without_ignore_markers, int unu
   
 
   return colourless_length;
-}
-
-int
-colourless_strlen_old(const char *str, char **pcopy_without_ignore_markers, int termwidth)
-{
-  int visible = TRUE;
-  int column = 0;
-  int length = strlen(str);
-  const char *p; 
-  char *q, *copy_without_ignore_markers;
-  
-
-  assert(termwidth >= 0);
-  q = copy_without_ignore_markers = mymalloc(length + 1);
-	
-  for(p = str; *p; p++) {
-    assert (q < copy_without_ignore_markers + length); 
-    switch (*p) {
-    case RL_PROMPT_START_IGNORE:
-      visible = FALSE;
-      continue;
-    case RL_PROMPT_END_IGNORE:
-      visible = TRUE;
-      continue;
-    case '\r':
-      if (visible) {
-        q -= column;
-        column = 0;
-        continue;
-      }
-      break;
-    case '\b':
-      if ((visible && q > copy_without_ignore_markers)) {
-        q -= 1;
-        column -= 1;
-        if (termwidth && column < 0) 
-          column += termwidth;
-        continue;
-      }
-      break;
-    }   
-    if (visible) {
-      *q++ = *p;
-      column +=1;
-      if (termwidth && column >= termwidth)
-        column -= termwidth;
-    }
-  } 
-  *q = '\0';
-  DPRINTF4(DEBUG_READLINE, "colourless_strlen(\"%s\", 0x%lx, %d) = %ld",
-           mangle_string_for_debug_log(str, MANGLE_LENGTH), (long) pcopy_without_ignore_markers,
-           termwidth,  q - copy_without_ignore_markers);  
-  if (pcopy_without_ignore_markers)
-    *pcopy_without_ignore_markers = copy_without_ignore_markers;
-  else
-    free (copy_without_ignore_markers);
-
-  return q - copy_without_ignore_markers;
 }
 
 /* helper function: returns the number of displayed characters (the

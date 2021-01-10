@@ -646,7 +646,7 @@ static char* entire_history_as_one_string(void) {
 
   for (entryp = the_list; *entryp; entryp++) {
     int length = strlen((*entryp)->line);
-    strncpy(stringp, (*entryp)->line, length); /* copy line, without closing NULL byte; */
+    strcpy(stringp, (*entryp)->line); 
     stringp +=length;
     *stringp++ = '\n';
   }
