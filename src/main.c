@@ -160,6 +160,7 @@ static struct option longopts[] = {
   }
 #else
   static void run_unit_test(int UNUSED(argc), char ** UNUSED(argv), enum test_stage UNUSED(stage)) {
+    /*do nothing */
   }
 #endif
 /*
