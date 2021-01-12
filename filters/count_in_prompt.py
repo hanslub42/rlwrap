@@ -38,6 +38,9 @@ filter.help_text = '\n'.join(
 
 filter.prompt_handler = munge_prompt
 
+# This handler doesn't do anything, but it ensures that output is regeitered in $filter -> preious_tag:
+filter.output_handler = lambda output: output
+
 filter.run()
 
 

@@ -22,7 +22,6 @@ sub wait_a_little_and_return {
 }
 
 
-
 if ($ENV{RLWRAP_DEBUG} | DEBUG_FILTERING) {
     # make this filter "interested" in all message types (important for debugging)
     $filter -> output_handler(sub {wait_a_little_and_return($_)});

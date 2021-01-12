@@ -188,9 +188,6 @@ int filter_is_interested_in(int tag) {
       message[i] = 'n';
     message[i] = '\0';
     interests = pass_through_filter(TAG_WHAT_ARE_YOUR_INTERESTS, message);
-    if (!strchr(interests, 'y'))    /* A completely uninterested filter ... */
-      for (i=0; i <= MAX_INTERESTING_TAG; i++)  /* (e.g. logger, on its own) ... */
-        interests[i] = 'y';         /* gets all message types        */
     if(interests[TAG_SIGNAL] == 'y')
       myerror(WARNING|NOERRNO, "this filter handles signals, which means that signals are blocked during filter processing\n"
                                "if the filter hangs, you won't be able to interrupt with e.g. CTRL-C (use pkill -9 rlwrap)  ");
