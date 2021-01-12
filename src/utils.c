@@ -173,7 +173,6 @@ write_patiently(int fd, const void *buffer, int count, const char *whither) {
 
 
 
-static int user_frustration_signals[] = {SIGHUP, SIGINT, SIGQUIT, SIGTERM, SIGALRM};
 
 /* keep  reading from fd and write into buffer until count bytes have been read.
    for uninterruptible_msec, restart when interrupted by a signal, after this,
@@ -190,8 +189,9 @@ read_patiently2 (int fd,
   int total_read =  0;
   int interruptible = FALSE;
 
+  DPRINTF2(DEBUG_AD_HOC, "read_patiently2 tries to read %d bytes (uninterruptible: %d msec)", count, uninterruptible_msec);
+
   assert (count >= 0);
-  unblock_signals(user_frustration_signals); /* allow users to use CTRL-C, but only after uninterruptible_msec */
   if (count > 0) {
     myalarm(uninterruptible_msec);
     while (1) {
@@ -243,7 +243,6 @@ write_patiently2(int fd,
   assert(count >= 0);
   if (count == 0)
     return; /* no-op */
-  unblock_signals(user_frustration_signals); /* allow impatient users to hit CTRL-C, but only after uninterruptible_msec */
   myalarm(uninterruptible_msec);        
   while(1) { 
     if((nwritten = write(fd, (char *)buffer + total_written, count - total_written)) <= 0) {
@@ -265,7 +264,6 @@ write_patiently2(int fd,
   }
   myalarm(0);
   DPRINTF2(DEBUG_AD_HOC, "write_patiently2 wrote %d bytes: %s", total_written, mangle_buffer_for_debug_log(buffer, total_written));
-  block_all_signals();
   return;
 }       
 

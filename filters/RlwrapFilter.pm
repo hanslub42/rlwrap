@@ -15,7 +15,7 @@ require Exporter;
 require AutoLoader;
 @ISA = qw(Exporter AutoLoader);
 
-@EXPORT = qw(TAG_INPUT TAG_OUTPUT TAG_HISTORY TAG_COMPLETION TAG_PROMPT);
+@EXPORT = qw(TAG_INPUT TAG_OUTPUT TAG_HISTORY TAG_COMPLETION TAG_PROMPT TAG_HOTKEY TAG_SIGNAL DEBUG_FILTERING DEBUG_RANDOM_DELAY);
 $VERSION = '0.01';
 
 use Carp;
@@ -36,7 +36,13 @@ use constant TAG_REMOVE_FROM_COMPLETION_LIST   => 253;
 use constant TAG_OUTPUT_OUT_OF_BAND            => 254;
 use constant TAG_ERROR                         => 255;
 
+# to bitwise AND with $ENV{RLWRAP_DEBUG}, the value of the rlwrap --debug option:
+use constant DEBUG_FILTERING                   => 16;
+use constant DEBUG_RANDOM_DELAY                => 1024;
+
 use constant REJECT_PROMPT                    => "_THIS_CANNOT_BE_A_PROMPT_";
+
+
 
 # we want to behave differently when running outside rlwrap
 my $we_are_running_under_rlwrap = defined $ENV{RLWRAP_COMMAND_PID};

@@ -493,6 +493,7 @@ extern pid_t filter_pid;
 extern int filter_is_dead;
 void spawn_filter(const char *filter_command);
 void kill_filter(void);
+int filter_is_interested_in(int tag); 
 char *pass_through_filter(int tag, const char *buffer);
 char *filters_last_words(void);
 void filter_test(void);

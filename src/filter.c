@@ -123,6 +123,8 @@ void spawn_filter(const char *filter_command) {
     mysetenv("RLWRAP_OUTPUT_PIPE_FD", as_string(output_pipe_fds[1]));
     mysetenv("RLWRAP_MASTER_PTY_FD", as_string(master_pty_fd));
     mysetenv("RLWRAP_BREAK_CHARS", rl_basic_word_break_characters);
+    mysetenv("RLWRAP_DEBUG", as_string(debug));
+
     
     close(filter_input_fd);
     close(filter_output_fd);
@@ -181,7 +183,7 @@ int filter_is_interested_in(int tag) {
   if (!interests) {
     char message[MAX_INTERESTING_TAG + 2];
     int i;
-    mymicrosleep(500);
+    mymicrosleep(500); /* Kludge - shouldn't the filter talk first - so we know it's alive? */
     for (i=0; i <= MAX_INTERESTING_TAG; i++)
       message[i] = 'n';
     message[i] = '\0';
@@ -189,22 +191,35 @@ int filter_is_interested_in(int tag) {
     if (!strchr(interests, 'y'))    /* A completely uninterested filter ... */
       for (i=0; i <= MAX_INTERESTING_TAG; i++)  /* (e.g. logger, on its own) ... */
         interests[i] = 'y';         /* gets all message types        */
+    if(interests[TAG_SIGNAL] == 'y')
+      myerror(WARNING|NOERRNO, "this filter handles signals, which means that signals are blocked during filter processing\n"
+                               "if the filter hangs, you won't be able to interrupt with e.g. CTRL-C (use pkill -9 rlwrap)  ");
 
   }
   return (interests[tag] == 'y');
 }
  
+static int user_frustration_signals[] = {SIGHUP, SIGINT, SIGQUIT, SIGTERM, SIGALRM};
 
    
 char *pass_through_filter(int tag, const char *buffer) {
   char *filtered;
+
   assert(!out_of_band(tag));
   if (filter_pid ==0 || (tag <  MAX_INTERESTING_TAG && !filter_is_interested_in(tag)))
     return mysavestring(buffer);
+
+  if (tag == TAG_WHAT_ARE_YOUR_INTERESTS ||    /* only evaluate next alternative if interests are known                                                       */
+      !filter_is_interested_in(TAG_SIGNAL))    /* signal handling filters will get an "unexpected tag" error when the signal arrives during filter processing */
+    unblock_signals(user_frustration_signals); /* allow users to use CTRL-C, but only after uninterruptible_msec                                              */
+
   DPRINTF3(DEBUG_FILTERING, "to filter (%s, %d bytes) %s", tag2description(tag), (int) strlen(buffer), mangle_string_for_debug_log(buffer, MANGLE_LENGTH)); 
   write_to_filter((expected_tag = tag), buffer);
   filtered = read_from_filter(tag);
-  DPRINTF2(DEBUG_FILTERING, "from filter (%d bytes) %s", (int) strlen(filtered), mangle_string_for_debug_log(filtered, MANGLE_LENGTH));
+  DPRINTF3(DEBUG_FILTERING, "from filter (%s, %d bytes) %s",  tag2description(tag), (int) strlen(filtered), mangle_string_for_debug_log(filtered, MANGLE_LENGTH));
+
+  block_all_signals();
+
   return filtered;
 }
 
@@ -215,11 +230,12 @@ static char *read_from_filter(int tag) {
   uint8_t  tag8;
   DEBUG_RANDOM_SLEEP;
   assert (!out_of_band(tag));
+
   
   while (read_patiently2(filter_output_fd, &tag8, sizeof(uint8_t), 1000, "from filter"), out_of_band(tag8))
     handle_out_of_band(tag8, read_tagless());
   if (tag8 != tag)
-    myerror(FATAL|USE_ERRNO, "Tag mismatch, expected %s from filter, but got %s", tag2description(tag), tag2description(tag8));
+    myerror(FATAL|NOERRNO, "Tag mismatch, expected %s from filter, but got %s", tag2description(tag), tag2description(tag8));
   
   return read_tagless();
 }
