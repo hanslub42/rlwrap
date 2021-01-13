@@ -41,7 +41,7 @@ char *term_cursor_left;         /* only used for debugging (the SHOWCURSOR macro
 char *term_cursor_right;        /* only used to emulate a missing term_cursor_hpos               */
 char *term_rmcup;               /* rmcup - char sequence to return from alternate screen         */
 char *term_rmkx;                /* rmkx - char sequence to return from keyboard application mode */
-/* int term_colors = -1;        number of colors ('colors' capability, only in terminfo)         */
+int term_has_colours;
 
 int redisplay = 1;
 int newline_came_last = TRUE; /* used to determine whether rlwrap needs to ouptut a newline at the very end */
@@ -165,7 +165,7 @@ init_terminal(void)
     term_cursor_right   = tigetstr_or_else_tgetstr("cuf1",   "nd");
     term_cursor_up      = tigetstr_or_else_tgetstr("cuu1",   "up");
     term_cursor_down    = tigetstr_or_else_tgetstr("cud1",   "do");
-
+    term_has_colours    = tigetstr_or_else_tgetstr("initc", "Ic") ? TRUE : FALSE; 
     
     /* the following codes are never output by rlwrap, but used to filter out "garbage" that is coming from commands that use them */ 
     term_rmcup          = tigetstr_or_else_tgetstr("rmcup",  "te"); 

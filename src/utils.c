@@ -332,12 +332,17 @@ int open_unique_tempfile(const char *suffix, char **tmpfile_name) {
   
 
 static char*
-markup(const char*str)
+markup(const char* colour_name, const char*str)
 {
-  if (isatty(STDOUT_FILENO) && (ansi_colour_aware || colour_the_prompt))
-    return add3strings("\033[1;31m", str,"\033[0m");
-  else
-    return mysavestring(str);
+  char *result, *colour_code;
+  if (colour_name && isatty(STDOUT_FILENO) && (ansi_colour_aware || term_has_colours || colour_the_prompt) {
+    colour_code = add3strings("\033[", colour_name_to_ansi_code(colour_name), "m");
+    result = add3strings(colour_code, str,"\033[0m");
+    free(colour_code);
+  } else {
+    result =  mysavestring(str);
+  }
+  return result;
 }       
 
 
@@ -348,14 +353,16 @@ markup(const char*str)
    USE_ERRNO: print perror(errno) after the message
 */
 
+   
 
+  
 void
 myerror(int error_flags, const char *message_format, ...)
 {
   int saved_errno = errno;
   char contents[BUFFSIZE];
   int is_warning = !(error_flags & FATAL);
-  char *warning_or_error = is_warning ? "warning: " : "error: ";
+  char *warning_or_error = is_warning ? markup("Magenta", "warning: ") : markup("Red", "error: ");
   static int warnings_given = 0;  
   char *message = add2strings(program_name, ": ");
 
@@ -364,7 +371,8 @@ myerror(int error_flags, const char *message_format, ...)
   vsnprintf(contents, sizeof(contents) - 1, message_format, ap);
   va_end(ap);
 
-  message = append_and_free_old(message, markup(warning_or_error)); 
+  message = append_and_free_old(message, warning_or_error);
+  free(warning_or_error);
   message = append_and_free_old(message, contents);
                              
   if ((error_flags & USE_ERRNO) && saved_errno) {
