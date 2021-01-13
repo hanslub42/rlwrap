@@ -72,7 +72,7 @@ mbc_charwidth(const char *p, MBSTATE *st)
   int width =  mbrlen(p, MB_LEN_MAX, st);
   if (width < 0) {
     DPRINTF1(DEBUG_READLINE, "invalid multi-byte charavter at stert of %s", mangle_string_for_debug_log(p, MANGLE_LENGTH)); 
-    myerror(FATAL|USE_ERRNO, "invalid multi-byte character");
+    width = 1; /* if we don''n recognise it, interpret it as a byte */
   }
   return width;
 }

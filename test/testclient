@@ -99,10 +99,9 @@ sub init {
 
 sub help {
   print <<EOF;
-This program copies lines from standard input to standard
-output (just like cat). Input lines that start with : or !
-are special, and are useful to test rlwraps behaviour when the
-client does things like:
+This program accepts input lines and reports what you typed.  Input
+ lines that start with : or !  are special, and are useful to (stress-)test
+ rlwraps behaviour when the client does things like:
 
 ! <cmd> run <cmd> in shell
 !!<exp> evaluate Perl expression <exp>
@@ -166,7 +165,7 @@ sub run_bash {
 
 sub progress_bar {
   for (my $i=0; $i < 200; $i++) {
-    print "\x{2588}";
+    print "\N{FULL BLOCK}";
     select(undef, undef, undef, 0.02);
   }
   print "\n";
@@ -299,17 +298,17 @@ sub segfault {
 
 sub red {
   my ($text) = @_;
-  return kleur($text,31);
+  return colour($text,31);
 }
 
 sub blue {
   my ($text) = @_;
-  return kleur($text,34);
+  return colour($text,34);
 }
 
-sub kleur {
-  my ($text, $kleurcode) = @_;
-  $text = "\e[1;${kleurcode}m$text\e[0m"  if $ENV{TERM} =~ /ansi|xterm|rxvt|cygwin|linux|screen|tmux/;
+sub colour {
+  my ($text, $colourcode) = @_;
+  $text = "\e[1;${colourcode}m$text\e[0m"  if $ENV{TERM} =~ /ansi|xterm|rxvt|cygwin|linux|screen|tmux/;
   return $text;
 }
 
@@ -432,7 +431,7 @@ sub lprint($) {
 
   eval '"a" =~ /[[:^print:]]/'; # check whether this perl knows (negated) POSIX character class syntax (not before perl 5.6.0?)
   if (! $@) {
-    $text =~ s/([^[:print:]\s])/sprintf("\\x%02x", (unpack "c", $1))/eg; # show unprintable characters in hex;
+    $text =~ s/([^[:print:]\s\e])/sprintf("\\x%02x", (unpack "c", $1))/eg; # show unprintable characters in hex;
   }
   if ($debug_file) {
     syswrite DEBUG, $text;

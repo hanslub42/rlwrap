@@ -129,10 +129,12 @@ void spawn_filter(const char *filter_command) {
     close(filter_input_fd);
     close(filter_output_fd);
 
-
+    /* @@@TODO: split the command in words (possibly quoted when containing spaces). DONT use the shell (|, < and > are never used on filter command lines */
     if (scan_metacharacters(filter_command, "'|\"><"))  { /* if filter_command contains shell metacharacters, let the shell unglue them */
       char *exec_command = add3strings("exec", " ", filter_command);
       argv = list4("sh", "-c", exec_command, NULL);
+      DPRINTF1(DEBUG_FILTERING, "exec_command = <%s>", exec_command);
+
     } else {                                              /* if not, split and feed to execvp directly (cheaper, better error message) */
       argv = split_with(filter_command, " ");
     }   

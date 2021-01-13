@@ -1,0 +1,37 @@
+#!/usr/bin/env perl
+
+use lib ($ENV{RLWRAP_FILTERDIR} or ".");
+use RlwrapFilter;
+use strict;
+
+
+
+my $filter = new RlwrapFilter;
+
+
+$filter -> help_text("Usage: rlwrap [-options] -z null <command>\n".
+		     "a filter that can take a lot of time to do nothing with any message type");
+
+
+sub wait_a_little_and_return {
+    my($retval) = @_;
+    if ($ENV{RLWRAP_DEBUG} & DEBUG_RANDOM_DELAY) { 
+        select(undef, undef, undef, 0.1*rand()); # Emulate a filter that takes a lot of time to respond
+    }
+    return($retval);
+}
+
+
+if ($ENV{RLWRAP_DEBUG} & DEBUG_FILTERING) {
+    # make this filter "interested" in all message types (important for debugging)
+    $filter -> output_handler(sub {wait_a_little_and_return($_)});
+    $filter -> input_handler(sub {wait_a_little_and_return($_)});
+    $filter -> signal_handler(sub {wait_a_little_and_return($_)});
+    $filter -> prompt_handler(sub {wait_a_little_and_return($_)});
+    $filter -> history_handler(sub {wait_a_little_and_return($_)});
+
+} else {
+    # just keep the unused handlers undefined
+}
+
+$filter -> run;

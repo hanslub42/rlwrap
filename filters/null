@@ -5,30 +5,10 @@ use RlwrapFilter;
 use strict;
 
 
-
+# Filter version of "Hello World":
 my $filter = new RlwrapFilter;
-
 
 $filter -> help_text("Usage: rlwrap [-options] -z null <command>\n".
 		     "a filter that does nothing");
-
-
-sub wait_a_little_and_return {
-    my($retval) = @_;
-    if ($ENV{RLWRAP_DEBUG} | DEBUG_RANDOM_DELAY) { 
-        select(undef, undef, undef, 0.1*rand());
-    }
-    return($retval);
-}
-
-
-if ($ENV{RLWRAP_DEBUG} | DEBUG_FILTERING) {
-    # make this filter "interested" in all message types (important for debugging)
-    $filter -> output_handler(sub {wait_a_little_and_return($_)});
-    $filter -> input_handler(sub {wait_a_little_and_return($_)});
-    $filter -> signal_handler(sub {wait_a_little_and_return($_)});
-} else {
-    # just keep the unused handlers undefined
-}
 
 $filter -> run;

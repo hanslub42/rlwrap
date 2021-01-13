@@ -6,9 +6,15 @@ use strict;
 my $filter = new RlwrapFilter;
 my $name = $filter->name;
 
-$filter->help_text("Usage: rlwrap -z '$name <filter-command>' <command>\n"
-                   . "Filter <command> output through <filter-command>");
+$filter->help_text("Usage: rlwrap -z '$name <filter-command> [<filter-command-args> ... ]' <command>\n"
+                   . "Filter <command> output through <filter-command>\n"
+                   . "e.g. 'rlwrap  -z \"outfilter grep -E --color 'blah|\$'\" command' will colour all blah's in commands output");
 
+
+# prevent quoting headaches
+foreach my $arg (@ARGV) {
+    $arg = "'$arg'";
+}
 
 my $filter_command = join ' ', @ARGV;
 die $filter -> help_text . "\n" if not $filter_command and $ENV{RLWRAP_COMMAND_PID};

@@ -256,11 +256,12 @@ split_with(const char *string, const char *delimiters) {
 }       
 
 /* unsplit_with(3, ["a", "bee", "cee"], "; ") returns a pointer to "a; bee; cee" on the heap */
+/* takes n elements from strings (or all of them if n < 0) */
 char *
 unsplit_with(int n, char **strings, const char *delim) {
   int i;
-  char *result = mysavestring(n> 0 ? strings[0]: "");
-  for (i = 1; i < n; i++) { 
+  char *result = mysavestring(n != 0 && strings[0] ? strings[0]: "");
+  for (i = 1; (n<0 && strings[i]) || i < n; i++) { 
        result = append_and_free_old(result, delim);
        result = append_and_free_old(result, strings[i]);
   }
@@ -268,7 +269,7 @@ unsplit_with(int n, char **strings, const char *delim) {
 }
 
 /* split_with("a\t\tbla", '\t') returns {"a" "bla", NULL}, but we want {"a", "", "bla", NULL} for filter completion.
-   We write a special version (can be freed with free_splitlist), that optionally checkst the number of components (if expected_count > 0) */
+   We write a special version (can be freed with free_splitlist), that optionally checks the number of components (if expected_count > 0) */
 char **split_on_single_char(const char *string, char c, int expected_count) {
   /* the 1st +1 for the last element ("bla"), the 2nd +1 for the marker element (NULL) */
   char **list = mymalloc((count_char_occurrences(string,c) + 1 + 1) * sizeof(char **));
@@ -1089,3 +1090,17 @@ split_filter_message(char *message, int *counter)
   *plist = 0;
   return list;
 }
+
+
+
+/* ------------------------- Unit tests: */
+
+void test_split(int UNUSED(argc), char** UNUSED(argv), enum test_stage stage) {
+  char buf[BUFFSIZE];
+  if (stage != TEST_AT_PROGRAM_START)
+    return;
+  while(fgets(buf, BUFFSIZE, stdin) && strlen(buf) > 0) {
+      buf[strlen(buf)-1]='\0';
+      printf("Result: <%s>\n", unsplit_with(-1, split_with(buf," \""), "+"));
+  }
+}       
