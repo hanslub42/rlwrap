@@ -188,7 +188,7 @@ sub when_defined($@) {
   }
 }
 
-# WHen the filter starts, it tells rlwrap its interests as a string 'yyny..' (TAG_MAX chars, 1 for each tag)
+# When the filter starts, it tells rlwrap its interests as a string 'yyny..' (1 + TAG_MAX chars, 1 for each tag)
 # when receiving a message 'nnynn...' the follwoing function changes 'n' to 'y' for those message types that the
 # filter handles,so that at the end of the pipeline the message reflects the interests of all filters in the
 # pipeline

@@ -299,8 +299,7 @@ static void write_to_filter(int tag, const char *string) {
 
 static void write_message(int fd, int tag,  const char *string, const char *description) {
   uint8_t  tag8     = tag;
-  uint32_t length32 = strlen(string) + 1;
-  
+  uint32_t length32 = strlen(string) + 1;  
   write_patiently2(fd, &tag8, sizeof (uint8_t) , 1000, description);
   write_patiently2(fd, &length32, sizeof(uint32_t), 1000, description);
   write_patiently2(fd, string, length32 - 1 , 1000, description);

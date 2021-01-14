@@ -953,10 +953,10 @@ int isnumeric(char *string){
   return TRUE;
 }
 
-#define DIGITS_NUMBER 8  /* number of digits of length of field */
-#define MAX_FIELD_LENGTH (~((-1)<<(DIGITS_NUMBER * 4 -1)) -1)
-#define MY_HEX_FORMAT(n) "%0" MY_ITOA(n) "x"
-#define MY_ITOA(n) #n
+#define DIGITS_NUMBER 8  /* number of (hex) digits of length of field. 6 digits -> max 16MB per message field, should suffice */
+#define MAX_FIELD_LENGTH ((1UL <<  (DIGITS_NUMBER * 4 - 1)) -1) /* max integer that can be written with DIGITS_NUMBER (hex)digits */
+#define MY_HEX_FORMAT(n) ("%0" MY_ITOA(n) "x")
+#define MY_ITOA(n) #n 
 
 
 /* fussy strtol with error checking */
@@ -1020,10 +1020,10 @@ message can be empty, or, equivalently, NULL.
 char *
 append_field_and_free_old(char *message, const char *field)
 {
-  int length = strlen(field);
+  long unsigned int length = strlen(field);
   char *encoded_length;
   if (length > MAX_FIELD_LENGTH)
-    myerror(FATAL|NOERRNO, "message field\"%s...\" has length %d, it should be less than %d",
+    myerror(FATAL|NOERRNO, "message field\"%s...\" has length %ld, it should be less than %ld",
             mangle_string_for_debug_log(field, 10), length,  MAX_FIELD_LENGTH);
   encoded_length =  encode_field_length(length);
   message = append_and_free_old(message, encoded_length);
