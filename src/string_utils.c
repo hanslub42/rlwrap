@@ -433,16 +433,22 @@ mangle_string_for_debug_log(const char *string, int maxlen)
   int total_length;
   char *mangled_char, *result;
   const char *p; /* good old K&R-style *p. I have become a fossil... */
-
+  MBSTATE st;
+  
   if (!string)
     return mysavestring("(null)");
   result = mysavestring("");
-  for(p = string, total_length = 0; *p; p++) {
-    mangled_char = mangle_char_for_debug_log(*p, FALSE);
-    total_length +=  strlen(mangled_char);
+  for(mbc_initstate(&st), p = string, total_length = 0; *p;  mbc_inc(&p, &st)) {
+    if (is_multibyte(p, &st)) {
+        mangled_char = mbc_first(p, &st);
+        total_length += 1;
+      } else {
+        mangled_char = mangle_char_for_debug_log(*p, FALSE);
+        total_length +=  strlen(mangled_char); /* can be more than 1 ("CTRL-A") */
+      } 
     if (maxlen && (total_length > maxlen)) {
       result = append_and_free_old(result, "...");      
-      break;  /* break *before* we reach maxlen */
+      break;  /* break *before* we append the latest char and exceed maxlen */
     }
     result = append_and_free_old(result, mangled_char);
     free(mangled_char);
@@ -755,7 +761,7 @@ colourless_strlen(const char *str, char ** pcopy_without_ignore_markers, int UNU
       char *q           = cellptr -> bytes = mymalloc(1 + nbytes);
 
       colourless_bytes += nbytes;
-      mbc_copy(str_ptr,&q, &st); /* copy the wide character at str_ptr to cellptr -> bytes , incrementing q to just past the copy */
+      mbc_copy(str_ptr,&q, &st); /* copy the possibly multi-byte character at str_ptr to cellptr -> bytes , incrementing q to just past the copy */
       *q                = '\0';
       cellptr -> state  = st; /* remember shift state after reading str_ptr, just in case a backspace comes along later */
       cellptr           += 1;
@@ -770,6 +776,7 @@ colourless_strlen(const char *str, char ** pcopy_without_ignore_markers, int UNU
       *copy_ptr = *p;
     free(cellptr->bytes);
   }
+  *copy_ptr = '\0';
   free(copied_cells);
 
 

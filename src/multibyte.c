@@ -5,7 +5,11 @@
 /* rlwrap was written without worrying about multibyte characters.
    the functions below "retrofit" multi-byte support by providing
    functions that can be used with minimal adaptations in the usual
-   idioms like for (char *p = s; *p; p++) 
+   idioms like 
+      for (char *p = s; *p; p++)
+   which can be re-written as:
+      for(mbc_initstate(&st), p = s; *p;  mbc_inc(&p, &st)) {
+ 
 
    c.f. https://kirste.userpage.fu-berlin.de/chemnet/use/info/libc/libc_18.html
 
@@ -77,7 +81,7 @@ mbc_charwidth(const char *p, MBSTATE *st)
   return width;
 }
 
-/* copy the first (wide) character in p to *q, incrementing q to one past the result */
+/* copy the first (wide) character in p to *q, incrementing q to one past the result. Does not NULL-terminate the copy */
 void mbc_copy(const char *p, char **q, MBSTATE *st)
 {
   int i;
