@@ -780,7 +780,7 @@ colourless_strlen(const char *str, char ** pcopy_without_ignore_markers, int UNU
   free(copied_cells);
 
 
-  DPRINTF4(DEBUG_READLINE, "colourless_strlen(\"%s\", \"%s\") = %d (%d  bytes)",
+  DPRINTF4(DEBUG_READLINE, "colourless_strlen(\"%s\", \"%s\") = %d  chars, %d  bytes",
            mangle_string_for_debug_log(str, MANGLE_LENGTH), copy_without_ignore_markers, colourless_length, colourless_bytes);
 
   if (pcopy_without_ignore_markers)
