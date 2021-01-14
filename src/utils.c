@@ -362,7 +362,8 @@ myerror(int error_flags, const char *message_format, ...)
   int saved_errno = errno;
   char contents[BUFFSIZE];
   int is_warning = !(error_flags & FATAL);
-  char *warning_or_error = is_warning ? markup("Magenta", "warning: ") : markup("Red", "error: ");
+  char *warning_or_error = is_warning ? "warning: " : "error: ";
+  char *coloured_warning_or_error = markup(is_warning? "Magenta" : "Red", warning_or_error);
   static int warnings_given = 0;  
   char *message = add2strings(program_name, ": ");
 
@@ -371,8 +372,8 @@ myerror(int error_flags, const char *message_format, ...)
   vsnprintf(contents, sizeof(contents) - 1, message_format, ap);
   va_end(ap);
 
-  message = append_and_free_old(message, warning_or_error);
-  free(warning_or_error);
+  message = append_and_free_old(message, coloured_warning_or_error);
+  free(coloured_warning_or_error);
   message = append_and_free_old(message, contents);
                              
   if ((error_flags & USE_ERRNO) && saved_errno) {

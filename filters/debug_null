@@ -27,7 +27,7 @@ sub wait_a_little_and_return {
 
 if ($process_all_messages) {
     # make this filter "interested" in all message types (important for debugging)
-    $filter -> send_output_oob("debugging filtering: all messages are processed" . ($delay_all_responses ? " and delayed." : "."));
+    $filter -> send_output_oob("debugging filtering: all message types will be processed" . ($delay_all_responses ? " and delayed.\n" : ".\n"));
     $filter -> output_handler(sub {wait_a_little_and_return($_)});
     $filter -> echo_handler(sub {wait_a_little_and_return($_)});
     $filter -> input_handler(sub {wait_a_little_and_return($_)});
