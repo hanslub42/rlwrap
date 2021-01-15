@@ -23,7 +23,7 @@ dnl  Boston, MA 02111-1307, USA.
 
 
 
-AC_INIT(rlwrap,0.43)
+AC_INIT(rlwrap,0.44)
 
 AC_PREREQ(2.61)
 
