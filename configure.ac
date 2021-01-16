@@ -43,34 +43,36 @@ AM_SANITY_CHECK
 opt_debug=no
 opt_homegrown_redisplay=no
 opt_spy_on_readline=yes
+opt_multibyte_aware=yes
 opt_proc_mountpoint=/proc
 
 AC_ARG_ENABLE(debug,
-    AC_HELP_STRING([--enable-debug], [enable debugging [[default=NO]]]),
+    AC_HELP_STRING([--enable-debug], [enable debugging (default=NO)]),
     opt_debug=$enableval)
 
 AC_ARG_ENABLE(pedantic-ansi,
-    AC_HELP_STRING([--enable-pedantic-ansi], [compile with -ansi and -pedantic [[default=NO]]]),
+    AC_HELP_STRING([--enable-pedantic-ansi], [compile with -ansi and -pedantic (default=NO)]),
     opt_pedantic_ansi=$enableval)
 
 
 AC_ARG_ENABLE(homegrown-redisplay,
-    AC_HELP_STRING([--enable-homegrown-redisplay], [try this only if rlwrap messes up the prompt [[default=NO]]]),
+    AC_HELP_STRING([--enable-homegrown-redisplay], [try this only if rlwrap messes up the prompt (default=NO)]),
     opt_homegrown_redisplay=$enableval)
 
+
+
 AC_ARG_ENABLE(multibyte-aware,
-    AC_HELP_STRING([--enable-multibyte-aware [[default=NO]]], [(experimental) make rlwrap aware of multibyte characters [[default=NO]]]]),
+    AC_HELP_STRING([--enable-multibyte-aware], [make rlwrap aware of multibyte characters (default=yes)]),
     opt_multibyte_aware=$enableval)
 
 
 AC_ARG_ENABLE(spy-on-readline,
-    AC_HELP_STRING([--enable-spy-on-readline [[default=YES]]],
-	[use private readline variable to keep screen tidy when resizing terminal [[default=YES]]]),
+    AC_HELP_STRING([--enable-spy-on-readline], [use private readline variable to keep screen tidy when resizing terminal (default=yes)]),
     opt_spy_on_readline=$enableval)
 
 AC_ARG_ENABLE(proc-mountpoint,                                                                                                                    
-     AC_HELP_STRING([--enable-proc-mountpoint [[default=/proc]]],                                                                                  
-       [specify mountpoint for Linux-style procfs (used for determination of command's PWD) [[default=/proc]]]), # '                               
+     AC_HELP_STRING([--enable-proc-mountpoint],                                                                                  
+       [specify mountpoint for Linux-style procfs (used for determination of command's PWD) (default=/proc)]), # '                               
      opt_proc_mountpoint=$enableval) 
 
 
@@ -91,6 +93,7 @@ AC_USE_SYSTEM_EXTENSIONS
 
 test x$opt_homegrown_redisplay = xyes && AC_DEFINE(HOMEGROWN_REDISPLAY,1 ,[Define to 1 to use homegrown_redisplay()])
 
+test x$opt_multibyte_aware  = xyes && AC_DEFINE(MULTIBYTE_AWARE,1 ,Define to 1 to be aware of  wide chars in prompts)
 
 AC_CONFIG_FILES([Makefile filters/Makefile doc/Makefile src/Makefile doc/rlwrap.man]) 
 
@@ -409,7 +412,7 @@ fi
 
 test x$opt_spy_on_readline = xyes && AC_DEFINE(SPY_ON_READLINE,1 ,Define to 1 to use private _rl_horizontal_scroll_mode)
 
-test x$opt_multibyte_aware  = xyes && AC_DEFINE(MULTIBYTE_AWARE,1 ,Define to 1 to be aware of  wide chars in prompts)
+
 
 # check for existence of myself under $opt_proc_mountpoint/$$/cwd If the user specified --disable-proc-mountpoint we'll still do these tests
 # but they wil fail unless /no is a procfs mountpoint ;-)
