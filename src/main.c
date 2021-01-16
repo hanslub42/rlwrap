@@ -173,8 +173,8 @@ main(int argc, char **argv)
 {
   char *command_name;
 
-  setlocale (LC_ALL, ""); /* ANSI C says that all programs start by default in the standard `C' locale. 
-                             To use the locales specified by the environment, we must call  setlocale. */
+  if (!setlocale (LC_ALL, ""))                          /* ANSI C says that all programs start by default in the standard `C' locale...   */ 
+    myerror(WARNING|NOERRNO, "could not set locale");   /* ... To use the locales specified by the environment, we must call  setlocale.  */
 
   run_unit_test(argc, argv,TEST_AT_PROGRAM_START);
   rlwrap_command_line = unsplit_with(argc, argv, " ");     
