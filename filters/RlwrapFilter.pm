@@ -199,7 +199,7 @@ sub add_interests {
     next if $interested[$tag] eq 'y'; # a preceding filter in the pipeline has already shown interest
     $interested[$tag] = 'y'
       if ($tag == TAG_INPUT      and $self -> input_handler)
-      or ($tag == TAG_OUTPUT     and $self -> output_handler or $self -> echo_handler)
+      or ($tag == TAG_OUTPUT     and ($self -> output_handler or $self -> echo_handler))
       or ($tag == TAG_HISTORY    and $self -> history_handler)
       or ($tag == TAG_COMPLETION and $self -> completion_handler)
       or ($tag == TAG_PROMPT     and $self -> prompt_handler)
