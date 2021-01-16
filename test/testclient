@@ -6,7 +6,8 @@
 
 
 use utf8;      # so literals and identifiers can be in UTF-8
-use v5.12;     # or later to get "unicode_strings" feature
+eval "require 5.012_001";     # or later to get "unicode_strings" feature
+$@ and warn "Your perl version is rather qantique; expect some problems.\n";
 use strict;    # quote strings, declare variables
 use warnings;  # on by default
 use warnings  qw(FATAL utf8);    # fatalize encoding glitches
@@ -100,8 +101,8 @@ sub init {
 sub help {
   print <<EOF;
 This program accepts input lines and reports what you typed.  Input
- lines that start with : or !  are special, and are useful to (stress-)test
- rlwraps behaviour when the client does things like:
+lines that start with : or !  are special, and are useful to (stress-)test
+rlwraps behaviour when the client does things like:
 
 ! <cmd> run <cmd> in shell
 !!<exp> evaluate Perl expression <exp>

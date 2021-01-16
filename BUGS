@@ -24,34 +24,9 @@ reaches end-of-line
 
 ---
 
-Christoffer Dam Bruun reported:
-
-  "I have just installed rlwrap along with readline on Solaris 8 and
-  found that rlwrap did not work properly with readline 4.3. After
-  linking rlwrap with readline 4.2 it works correctly.
-
-  What happended using readline 4.3 was that an extra prompt would be 
-  written after the first letter on a line, e.g. with a sqlplus prompt:
-  SQL>
-  (now writing select )
-  SQL> sSQL> select"
-
-I (HL) have not been able to reproduce this, but there have been a few
-more reports about this. In a few cases, the display was even more
-garbled, like
-
-  SQL> sSQL> se>SQL> selSQL> sele>SQL> selec> .... 
-
-Remedy: first make sure that your readline headers and runtime
-libraries are in sync. May people have a readline-dev package that is
-older than their runtime libraries. If this doesn't help: configure
-rlwrap with --enable-homegrown-redisplay and recompile.
-
-
----
-Readline 5.0 has a slight bug where scrolling up through history and
-then back again ends on a non-empty line (the first history line, in
-fact). 
+older QNX: If 'configure' complains "Oops! Your 'rm' program seems unable to run
+without file operands specified", export
+ACCEPT_INFERIOR_RM_PROGRAM=yes before running 'configure'
 
 ---
 
@@ -61,23 +36,6 @@ TSTP an WINCH (and "system" is a difficult name to Google for...)
 Re-sizing the terminal may confuse the editor
 
 --
-
-Paolo Casaschi reported that his rlwrap failed with the message
-  
-  rlwrap: error: Could not open slave pty: Permission denied
-
-This turned out to be a problem with /etc/fstab, where the entry for
-/dev/pty was:
-
-  none    /dev/pts    devpts  gid=5,mode=20            0 0 
-
-instead of 
-
-  none   /dev/pts     devpts  gid=5,mode=620           0 0
-  
-which fixed the problem
-
--- 
 
 The code that determines whether a cooked prompt should be overwritten
 (when it turns out to not have been a prompt) is needlessly complex

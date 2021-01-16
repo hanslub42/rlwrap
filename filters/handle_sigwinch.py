@@ -24,7 +24,8 @@ filter.help_text = "Usage: rlwrap [-rlwrap-options] -z 'handle_sigwinch [options
                    + "outputs <format> to <command>'s stdin, where %L is replaced by the new height, \n"\
                    + "and %C with the new width (default: 'export LINES=%L COLUMNS=%C')\n\nFilter options:\n" \
                    + parser.format_help()
-                   
+
+filter.minimal_rlwrap_version = 0.44
 
 args = parser.parse_args()
 
