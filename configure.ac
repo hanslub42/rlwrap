@@ -111,7 +111,7 @@ AC_CHECK_PROG(STRIP,strip,strip,true)
 AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
 AC_CHECK_HEADERS([errno.h fcntl.h libgen.h libutil.h stdlib.h string.h sched.h sys/ioctl.h sys/wait.h sys/resource.h stddef.h ])
-AC_CHECK_HEADERS([termios.h unistd.h stdint.h time.h getopt.h regex.h curses.h termcap.h util.h])
+AC_CHECK_HEADERS([termios.h unistd.h stdint.h time.h getopt.h regex.h curses.h stropts.h termcap.h util.h])
 
 AC_CHECK_HEADERS([ term.h  ncurses/term.h], , ,
     [#ifdef HAVE_CURSES_H
@@ -441,7 +441,7 @@ AC_MSG_CHECKING([whether we can find command line under <opt_proc_mountpoint>/<p
 random_nonsense1="fymaytskjqhjeeimtmjqvqbnrnfutgnkehkmqqealklsoswyepxugcckimqdwbwfqdhdsdxfxiagqbnm"
 random_nonsense2="iraliuuklajcorjfunavdsytdiydjaoaeauiapidtoxogfplrxfmfcmajikwenafwcownmoodxjljhsv"
 
-AC_DEFINE_UNQUOTED(RANDOM_NONSENSE2, "\"$random_nonsense2\"", nonsense arg to overwrite conftest argv with)
+AC_DEFINE_UNQUOTED(RANDOM_NONSENSE2, "$random_nonsense2", nonsense arg to overwrite conftest argv with)
 
 if test $cross_compiling = "yes"; then
    AC_DEFINE(ENABLE_MIRROR_ARGS, 0, [Define if overwriting argv changes args visible in ps (1)])

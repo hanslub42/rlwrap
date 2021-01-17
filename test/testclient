@@ -7,7 +7,7 @@
 
 use utf8;      # so literals and identifiers can be in UTF-8
 eval "require 5.012_001";     # or later to get "unicode_strings" feature
-$@ and warn "Your perl version is rather qantique; expect some problems.\n";
+$@ and warn "Your perl version is rather antique; expect some problems.\n";
 use strict;    # quote strings, declare variables
 use warnings;  # on by default
 use warnings  qw(FATAL utf8);    # fatalize encoding glitches

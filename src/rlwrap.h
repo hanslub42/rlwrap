@@ -74,6 +74,11 @@
 #  include <getopt.h>
 #endif
 
+#ifdef HAVE_STROPTS_H
+#  include <stropts.h>
+#endif
+
+
 
 #ifdef HAVE_LIBGEN_H
 #  include <libgen.h>

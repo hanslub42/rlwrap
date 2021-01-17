@@ -363,9 +363,9 @@ int dont_wrap_command_waits() {
   wchan_fd =  open(command_wchan, O_RDONLY);
   if (wchan_fd < 0) { 
     if (been_warned++ == 0) {
-      myerror(WARNING|USE_ERRNO, "you probably specified the -N (--no-children) option"
-                                 " - but spying\non %s's wait status does not work on"
-                                 " your system, as we cannot read %s", command_name, command_wchan);
+      myerror(WARNING|USE_ERRNO, "you specified the -N (--no-children) option"
+                                 " - but spying\non %s's wait status doesn't work on"
+                                 " your system, as rlwrap cannot read %s", command_name, command_wchan);
     }
     return FALSE;
   }     
