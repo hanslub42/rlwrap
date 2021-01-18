@@ -103,11 +103,11 @@ void spawn_filter(const char *filter_command) {
   if ((filter_pid = fork()) < 0)
     myerror(FATAL|USE_ERRNO, "Cannot spawn filter '%s'", filter_command); 
   else if (filter_pid == 0) { /* child */
-    i_am_filter = TRUE;
-    my_fopen(&debug_fp, DEBUG_FILENAME, "a+", "debug log");
-
     int signals_to_allow[] = {SIGPIPE, SIGCHLD, SIGALRM, SIGUSR1, SIGUSR2, 0}; 
     char **argv;
+
+    i_am_filter = TRUE;
+    my_fopen(&debug_fp, DEBUG_FILENAME, "a+", "debug log");
     unblock_signals(signals_to_allow);  /* when we run a pager from a filter we want to catch these */
 
 

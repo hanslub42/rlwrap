@@ -900,7 +900,7 @@ colour_name_to_ansi_code(const char *colour_name) {
   Only used for the --forget-regexp and the --prompt-regexp options
 */
 int match_regexp (const char *string, const char *regexp, int case_insensitive) {
-  int result;
+  int result = FALSE;
   
   if (!regexp || !string)
     return FALSE;

@@ -629,6 +629,8 @@ munge_line_in_editor(int UNUSED(count), int UNUSED(key))
 static int
 direct_keypress(int UNUSED(count), int key)
 {
+  MAYBE_UNUSED(key);
+  
 #ifdef HAVE_RL_EXECUTING_KEYSEQ /* i.e. if readline version is >= 6.3 */
   DPRINTF1(DEBUG_READLINE,"direct keypress: %s", mangle_string_for_debug_log(rl_executing_keyseq, MANGLE_LENGTH));
   put_in_output_queue(rl_executing_keyseq);
@@ -646,12 +648,12 @@ direct_keypress(int UNUSED(count), int key)
 static int
 direct_prefix(int count, int key)
 {
+  char *key_as_str = mysavestring("?"); /* ? is just a placeholder */
+  
   /* process the keypress used to invoke the function */
   direct_keypress(count, key);
-
   /* read an extra key to pass on */
   key = rl_read_key();
-  char *key_as_str = mysavestring("?");
   *key_as_str = key;
   DPRINTF1(DEBUG_READLINE,"read key: %s", mangle_char_for_debug_log(key, TRUE));
   put_in_output_queue(key_as_str);

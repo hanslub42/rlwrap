@@ -685,8 +685,10 @@ init_rlwrap(char *command_line)
  */
 
 static char *
-check_optarg(char UNUSED(opt), int UNUSED(remaining))
+check_optarg(char opt, int remaining)
 {
+
+  MAYBE_UNUSED(opt); MAYBE_UNUSED(remaining);
   
   if (!optarg)
     last_option_didnt_have_optional_argument = TRUE; /* if this variable is set, and  if command is not found,

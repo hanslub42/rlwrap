@@ -580,6 +580,8 @@ size_t mbc_strnlen(const char *mb_string, size_t maxlen, MBSTATE *st);
 # endif
 
 
+#define MAYBE_UNUSED(x) (void) (x)
+
 #ifdef  DEBUG
 
 

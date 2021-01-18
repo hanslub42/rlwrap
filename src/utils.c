@@ -364,6 +364,7 @@ myerror(int error_flags, const char *message_format, ...)
   int is_warning = !(error_flags & FATAL);
   char *warning_or_error = is_warning ? "warning: " : "error: ";
   char *coloured_warning_or_error = markup(is_warning? "Magenta" : "Red", warning_or_error);
+  char *message_for_debug_log;
   static int warnings_given = 0;  
   char *message = add2strings(program_name, ": ");
 
@@ -383,8 +384,10 @@ myerror(int error_flags, const char *message_format, ...)
   message = append_and_free_old(message,"\n");                            
     
   fflush(stdout);
-  DPRINTF2(DEBUG_ALL, "%s %s", warning_or_error, contents);
- 
+
+  message_for_debug_log = search_and_replace("\n", "; ", contents, 0, NULL, NULL); 
+  DPRINTF2(DEBUG_ALL, "%s %s", warning_or_error, message_for_debug_log);
+  free(message_for_debug_log);
 
   if (! (is_warning && nowarn))
     fputs(message, stderr); /* @@@ error reporting (still) uses buffered I/O */
