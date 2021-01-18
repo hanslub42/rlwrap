@@ -1102,7 +1102,7 @@ split_filter_message(char *message, int *counter)
 
 /* ------------------------- Unit tests: */
 
-void test_split(int UNUSED(argc), char** UNUSED(argv), enum test_stage stage) {
+void test_split(int UNUSED(argc), char** UNUSED(argv), test_stage stage) {
   char buf[BUFFSIZE];
   if (stage != TEST_AT_PROGRAM_START)
     return;

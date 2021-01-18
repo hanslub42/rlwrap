@@ -260,7 +260,7 @@ extern int commands_children_not_wrapped;
 extern int accepted_lines;
 extern char *filter_command;
 extern int polling;
-enum test_stage {TEST_AT_PROGRAM_START, TEST_AFTER_OPTION_PARSING, TEST_AFTER_SPAWNING_SLAVE_COMMAND};
+typedef enum  {TEST_AT_PROGRAM_START, TEST_AFTER_OPTION_PARSING, TEST_AFTER_SPAWNING_SLAVE_COMMAND,TEST_AFTER_READLINE_INIT} test_stage;
 
 
 void cleanup_rlwrap_and_exit(int status);
@@ -647,7 +647,7 @@ size_t mbc_strnlen(const char *mb_string, size_t maxlen, MBSTATE *st);
 
 #  define ERRMSG(b)              (b && (errno != 0) ? add3strings("(", strerror(errno), ")") : "" )
 
-#  define SHOWCURSOR(c)          if (debug & DEBUG_READLINE) {my_putchar(c); mymicrosleep(1200); curs_left();} /* (may work incorrectly at last column!)*/
+#  define SHOWCURSOR(c)          if (debug & DEBUG_READLINE) {my_putchar(c); mymicrosleep(1000); curs_left();} /* (may work incorrectly at last column!)*/
 
 #  define DEBUG_RANDOM_SLEEP        if (debug & DEBUG_RACES) {int sleeptime=rand()&31; DPRINTF1(DEBUG_RACES,"sleeping for %d msecs", sleeptime); mymicrosleep(sleeptime);}
 

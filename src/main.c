@@ -150,8 +150,8 @@ static struct option longopts[] = {
 /* helper function to run a unit test whenever UNIT_TEST is #defined, e.g. by "make clean; make CFLAGS='-DUNIT_TEST=my_test'" */
 
 #ifdef UNIT_TEST
-  static void run_unit_test(int argc, char **argv, enum test_stage stage) {
-    extern void UNIT_TEST(int argc, char **argv, enum test_stage stage);
+  static void run_unit_test(int argc, char **argv, test_stage stage) {
+    extern void UNIT_TEST(int argc, char **argv, test_stage stage);
     #define VALUE_AS_STRING(v) NAME_AS_STRING(v)
     #define NAME_AS_STRING(n) #n
   
@@ -160,7 +160,7 @@ static struct option longopts[] = {
     UNIT_TEST(argc, argv, stage);
   }
 #else
-  static void run_unit_test(int UNUSED(argc), char ** UNUSED(argv), enum test_stage UNUSED(stage)) {
+  static void run_unit_test(int UNUSED(argc), char ** UNUSED(argv), test_stage UNUSED(stage)) {
     /*do nothing */
   }
 #endif
@@ -276,11 +276,10 @@ main_loop()
 
   init_readline("");
   last_minute_checks();
+  run_unit_test(0,NULL, TEST_AFTER_READLINE_INIT); 
+
   pass_through_filter(TAG_OUTPUT,""); /* If something is wrong with filter, get the error NOW */
   set_echo(FALSE);		      /* This will also put the terminal in CBREAK mode */
-  #ifdef TEST
-  test_main();                        /* when TESTing some new functionality, call this function (which should never return) */
-  #endif
   /* ------------------------------  main loop  -------------------------------*/
   while (TRUE) {
     /* listen on both stdin and pty_fd */
@@ -309,14 +308,22 @@ main_loop()
       timeoutstr = "forever";
     }
      
-    DPRINTF1(DEBUG_TERMIO, "calling select() with timeout %s",  timeoutstr);
+    DPRINTF2(DEBUG_TERMIO, "calling select() with timeout %s %s ...",  timeoutstr, within_line_edit ? "(within line edit)" : "");
     
 
     nfds = my_pselect(1 + master_pty_fd, &readfds, &writefds, NULL, select_timeoutptr, &no_signals_blocked);
 
-    DPRINTF3(DEBUG_TERMIO, "select() returned  %d (stdin|pty in|pty out = %03d), within_line_edit=%d", nfds,
-	     100*(FD_ISSET(STDIN_FILENO, &readfds)?1:0) + 10*(FD_ISSET(master_pty_fd, &readfds)?1:0) + (FD_ISSET(master_pty_fd, &writefds)?1:0), 
-	     within_line_edit);
+    /* DPRINTF3(DEBUG_TERMIO, "select() returned  %d (stdin|pty in|pty out = %03d), within_line_edit=%d", nfds, */
+    /*          100*(FD_ISSET(STDIN_FILENO, &readfds)?1:0) + 10*(FD_ISSET(master_pty_fd, &readfds)?1:0) + (FD_ISSET(master_pty_fd, &writefds)?1:0),  */
+    /*          within_line_edit); */
+
+    
+    DPRINTF5(DEBUG_TERMIO, "... returning %d%s %s %s %s"
+             , nfds
+             , nfds > 0 ? ": " : "."
+	     , nfds > 0 && FD_ISSET(STDIN_FILENO, &readfds)   ? "stdin ready for input" : ""
+             , nfds > 0 && FD_ISSET(master_pty_fd, &readfds)  ? "pty master ready for input": ""
+             , nfds > 0 && FD_ISSET(master_pty_fd, &writefds) ? "pty master ready for output" : "");
 
     assert(!filter_pid || filter_is_dead || kill(filter_pid,0) == 0); 
     assert(command_is_dead || kill(command_pid,0) == 0);
@@ -667,6 +674,7 @@ init_rlwrap(char *command_line)
     add3strings(DATADIR, "/rlwrap/completions/", command_name);
 
   rl_readline_name = command_name;
+  DPRINTF1(DEBUG_READLINE, "Setting readline command name to '%s'", command_name);
 
   /* Initialise completion list (if <completion_filename> is readable) */
   if (access(completion_filename, R_OK) == 0) {

@@ -179,7 +179,7 @@ mbc_strnlen(const char *string, size_t maxlen, MBSTATE *st)
 
 
 
-void test_mbc_strnlen(int UNUSED(argc), char** UNUSED(argv), enum test_stage stage) {
+void test_mbc_strnlen(int UNUSED(argc), char** UNUSED(argv), test_stage stage) {
   MBSTATE st; 
   const char *p, teststring[] = "hihi אני יכול לאכול זכוכית וזה לא מזיק לי jaja!";
 
@@ -193,7 +193,7 @@ void test_mbc_strnlen(int UNUSED(argc), char** UNUSED(argv), enum test_stage sta
   exit(0);
 }       
 
-void test_utf8(int argc, char**argv, enum test_stage stage) {
+void test_utf8(int argc, char**argv, test_stage stage) {
   char buf[BUFFSIZE];
   MBSTATE st;
   int i;
@@ -236,7 +236,7 @@ static char *repeat(const char *repetendum, int times) {
   return result;
 }
 
-void test_colourless_strnlen(int UNUSED(argc), char** UNUSED(argv), enum test_stage stage) {
+void test_colourless_strnlen(int UNUSED(argc), char** UNUSED(argv), test_stage stage) {
   char buf[BUFFSIZE], *copy;
   if (stage != TEST_AFTER_OPTION_PARSING)
     return;

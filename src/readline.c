@@ -88,7 +88,7 @@ init_readline(char *UNUSED(prompt))
   bindkey('\r', RL_COMMAND_FUN(my_accept_line), "emacs-standard; vi-insert; vi-command"); 
   bindkey(15, RL_COMMAND_FUN(my_accept_line_and_forget), "emacs-standard; vi-insert; vi-command");	/* ascii #15 (Control-O) is unused in readline's emacs and vi keymaps */
   if (multiline_separator) 
-    bindkey(30, RL_COMMAND_FUN(munge_line_in_editor), "emacs-standard;vi-insert;vi-command");            /* CTRL-^: unused in vi-insert-mode, hardly used in emacs  (doubles arrow-up) */
+    bindkey(30, RL_COMMAND_FUN(munge_line_in_editor), "emacs-standard;vi-insert;vi-command");           /* CTRL-^: unused in vi-insert-mode, hardly used in emacs  (doubles arrow-up) */
 
   
   
@@ -141,7 +141,6 @@ save_rl_state()
   my_redisplay();               /* and redisplay (this time without user input, cf the comments for the line_handler() function below) */
   rl_callback_handler_remove(); /* restore original terminal settings */
   rl_deprep_terminal();
-
 }
 
 
@@ -224,11 +223,10 @@ line_handler(char *line)
           
        O.K, we know for sure that cursor is at start of line. When clients output arrives, it will be printed at
        just the right place - but first we 'll erase the user input (as it may be about to be changed by the filter) */
-    
+
     rl_delete_text(0, rl_end);  /* clear line  (after prompt) */
     rl_point = 0;
     my_redisplay();             /* and redisplay (this time without user input, cf the comments for the line_handler() function below) */
-
     rewritten_line =
       (multiline_separator ? 
        search_and_replace(multiline_separator, "\n", line, 0, NULL,
@@ -629,14 +627,12 @@ munge_line_in_editor(int UNUSED(count), int UNUSED(key))
 static int
 direct_keypress(int UNUSED(count), int key)
 {
-  MAYBE_UNUSED(key);
-  
 #ifdef HAVE_RL_EXECUTING_KEYSEQ /* i.e. if readline version is >= 6.3 */
+  MAYBE_UNUSED(key);
   DPRINTF1(DEBUG_READLINE,"direct keypress: %s", mangle_string_for_debug_log(rl_executing_keyseq, MANGLE_LENGTH));
   put_in_output_queue(rl_executing_keyseq);
 #else
-  char *key_as_str = mysavestring("?");
-  /* put the key in the output queue    */
+  char *key_as_str = mysavestring("?"); /* ? is just a placeholder */
   *key_as_str = key;
   DPRINTF1(DEBUG_READLINE,"direct keypress: %s", mangle_char_for_debug_log(key, TRUE));
   put_in_output_queue(key_as_str);
@@ -1045,4 +1041,6 @@ static void bindkey(int key, rl_command_func_t *function, const char *function_n
         myerror(FATAL|NOERRNO, "Could not bind key %d (%s) in keymap '%s'", key, mangle_char_for_debug_log(key,TRUE), *mapname);
     }
 }       
+
+
 
