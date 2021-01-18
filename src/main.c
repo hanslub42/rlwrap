@@ -323,7 +323,7 @@ main_loop()
              , nfds > 0 ? ": " : "."
 	     , nfds > 0 && FD_ISSET(STDIN_FILENO, &readfds)   ? "stdin ready for input" : ""
              , nfds > 0 && FD_ISSET(master_pty_fd, &readfds)  ? "pty master ready for input": ""
-             , nfds > 0 && FD_ISSET(master_pty_fd, &writefds) ? "pty master ready for output" : "");
+             , nfds > 0 && FD_ISSET(master_pty_fd, &writefds) ? "output queue nonempty and pty master ready for output" : "");
 
     assert(!filter_pid || filter_is_dead || kill(filter_pid,0) == 0); 
     assert(command_is_dead || kill(command_pid,0) == 0);
