@@ -55,12 +55,12 @@ static char *term_clear_line;
 char *term_name;
 
 
-static char *my_tgetstr (char *id) {
+static char *my_tgetstr (char *id, const char *capability_name) {
 #ifdef HAVE_TERMCAP_H
   char *term_string_buf = (char *)mymalloc(2048), *tb = term_string_buf;
   char *stringcap = tgetstr(id, &tb); /*  rl_get_termcap(id) only gets capabilities used by readline */
   char *retval = stringcap ? mysavestring(stringcap) : NULL; 
-  DPRINTF2(DEBUG_TERMIO, "tgetstr(\"%s\") = %s", id, (stringcap ? mangle_string_for_debug_log(stringcap,20) : "NULL"));
+  DPRINTF3(DEBUG_TERMIO, "tgetstr(\"%s\") = %s (%s)", id, (stringcap ? mangle_string_for_debug_log(stringcap,20) : "NULL"), capability_name);
   free(term_string_buf);
   return retval;
 #else
@@ -68,7 +68,7 @@ static char *my_tgetstr (char *id) {
 #endif
 }
 
-static char *my_tigetstr (char *tid) {
+static char *my_tigetstr (char *tid, const char *capability_name) {
 #ifdef HAVE_CURSES_H
   static int term_has_been_setup = FALSE;
   char *stringcap, *retval;
@@ -78,7 +78,7 @@ static char *my_tigetstr (char *tid) {
   }     
   stringcap = tigetstr(tid); 
   retval = stringcap ? mysavestring(stringcap) : NULL;
-  DPRINTF2(DEBUG_TERMIO, "tigetstr(\"%s\") = %s", tid, (stringcap ? mangle_string_for_debug_log(stringcap,20) : "NULL"));
+  DPRINTF3(DEBUG_TERMIO, "tigetstr(\"%s\") = %s (%s)", tid, (stringcap ? mangle_string_for_debug_log(stringcap,20) : "NULL"), capability_name);
   return retval;
 #else
   return NULL;
@@ -87,12 +87,12 @@ static char *my_tigetstr (char *tid) {
 
 /* Get (copies of) escape codes ("string capabilities") by name. First try terminfo name, then termcap name  */
 static char *
-tigetstr_or_else_tgetstr(char *capname, char *tcap_code)
+tigetstr_or_else_tgetstr(char *capname, char *tcap_code, const char *capability_name)
 {
   char *retval;
-  retval = my_tigetstr(capname);
+  retval = my_tigetstr(capname, capability_name);
   if (!retval)
-    retval = my_tgetstr(tcap_code);
+    retval = my_tgetstr(tcap_code, capability_name);
   return retval;
 }
   
@@ -114,7 +114,7 @@ init_terminal(void)
   if (ioctl(STDIN_FILENO, TIOCGWINSZ, &winsize) < 0)
     myerror(FATAL|USE_ERRNO, "Could not get terminal size");
   
-  DPRINTF2(DEBUG_TERMIO, "winsize.ws_col: %d; winsize.ws_row: %d", winsize.ws_col, winsize.ws_row);
+  DPRINTF2(DEBUG_TERMIO, "winsize.ws_col (term width): %d; winsize.ws_row (term height): %d", winsize.ws_col, winsize.ws_row);
   if (winsize.ws_col == 0)
     myerror(FATAL|NOERRNO, "My terminal reports width=0 (is it emacs?)  I can't handle this, sorry!");
 
@@ -156,20 +156,20 @@ init_terminal(void)
 
   
   if (we_have_stringcaps)  { 
-    term_backspace      = tigetstr_or_else_tgetstr("cub1",   "le");
-    term_cr             = tigetstr_or_else_tgetstr("cr",     "cr");
-    term_clear_line     = tigetstr_or_else_tgetstr("el",     "ce");
-    term_clear_screen   = tigetstr_or_else_tgetstr("clear",  "cl");
-    term_cursor_hpos    = tigetstr_or_else_tgetstr("hpa",    "ch"); 
-    term_cursor_left    = tigetstr_or_else_tgetstr("cub1",   "le");
-    term_cursor_right   = tigetstr_or_else_tgetstr("cuf1",   "nd");
-    term_cursor_up      = tigetstr_or_else_tgetstr("cuu1",   "up");
-    term_cursor_down    = tigetstr_or_else_tgetstr("cud1",   "do");
-    term_has_colours    = tigetstr_or_else_tgetstr("initc", "Ic") ? TRUE : FALSE; 
+    term_backspace      = tigetstr_or_else_tgetstr("cub1",   "le", "backspace");
+    term_cr             = tigetstr_or_else_tgetstr("cr",     "cr", "carriage return");
+    term_clear_line     = tigetstr_or_else_tgetstr("el",     "ce", "clear line");
+    term_clear_screen   = tigetstr_or_else_tgetstr("clear",  "cl", "clear screen");
+    term_cursor_hpos    = tigetstr_or_else_tgetstr("hpa",    "ch", "set cursor horizontal position"); 
+    term_cursor_left    = tigetstr_or_else_tgetstr("cub1",   "le", "move cursor left");
+    term_cursor_right   = tigetstr_or_else_tgetstr("cuf1",   "nd", "move cursor right");
+    term_cursor_up      = tigetstr_or_else_tgetstr("cuu1",   "up", "move cursor up");
+    term_cursor_down    = tigetstr_or_else_tgetstr("cud1",   "do", "move cursor down");
+    term_has_colours    = tigetstr_or_else_tgetstr("initc", "Ic",  "initialise colour") ? TRUE : FALSE; 
     
     /* the following codes are never output by rlwrap, but used to filter out "garbage" that is coming from commands that use them */ 
-    term_rmcup          = tigetstr_or_else_tgetstr("rmcup",  "te"); 
-    term_rmkx           = tigetstr_or_else_tgetstr("rmkx",   "ke");
+    term_rmcup          = tigetstr_or_else_tgetstr("rmcup",  "te", "exit alternate screen"); 
+    term_rmkx           = tigetstr_or_else_tgetstr("rmkx",   "ke", "leave keypad-transmit mode");
 
     if (!term_cursor_right) /* probably only on 'dumb' terminal */
       term_cursor_right = " ";

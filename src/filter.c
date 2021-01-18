@@ -98,17 +98,20 @@ void spawn_filter(const char *filter_command) {
   filter_output_fd = output_pipe_fds[0]; /* rlwrap  reads filter output from here */
   DPRINTF1(DEBUG_FILTERING, "preparing to spawn filter <%s>", filter_command);
   assert(!command_pid || signal_handlers_were_installed);  /* if there is a command, then signal handlers are installed */
-  
+
+  fflush(NULL);
   if ((filter_pid = fork()) < 0)
     myerror(FATAL|USE_ERRNO, "Cannot spawn filter '%s'", filter_command); 
-  else if (filter_pid == 0) {           /* child */
+  else if (filter_pid == 0) { /* child */
+    i_am_filter = TRUE;
+    my_fopen(&debug_fp, DEBUG_FILENAME, "a+", "debug log");
+
     int signals_to_allow[] = {SIGPIPE, SIGCHLD, SIGALRM, SIGUSR1, SIGUSR2, 0}; 
     char **argv;
     unblock_signals(signals_to_allow);  /* when we run a pager from a filter we want to catch these */
 
 
     DEBUG_RANDOM_SLEEP;
-    i_am_child =  TRUE;
     /* set environment for filter (it needs to know at least the file descriptors for its input and output) */
    
     if (!getenv("RLWRAP_FILTERDIR"))
@@ -147,9 +150,9 @@ void spawn_filter(const char *filter_command) {
     }
     assert(!"not reached");
     
-  } else {
+  } else { /* parent */
     DEBUG_RANDOM_SLEEP;
-    signal(SIGPIPE, SIG_IGN); /* ignore SIGPIPE - we have othere ways to deal with filter death */
+    mysignal(SIGPIPE, SIG_IGN, NULL); /* ignore SIGPIPE - we have othere ways to deal with filter death */
     DPRINTF1(DEBUG_FILTERING, "spawned filter with pid %d", filter_pid);
     close (input_pipe_fds[0]);
     close (output_pipe_fds[1]);

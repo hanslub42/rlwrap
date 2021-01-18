@@ -407,17 +407,25 @@ myerror(int error_flags, const char *message_format, ...)
   
 }
 
-
-    
+/* fopen with error handling. Will close and re-open if *fp != NULL; */
+void my_fopen(FILE  **pfp, const char *path, const char *mode, const char *description ) {
+  char *what = "open";
+  char *how = mode[0] == 'w' ? "writing" : mode[0] == 'a' ? "appending" : "reading";
+  if (*pfp) {
+    fclose(*pfp);
+    what = "re-open";
+  }   
+  *pfp = fopen(path, mode);
+  if (!*pfp)
+    myerror(FATAL|USE_ERRNO, "Cannot %s  %s %s for %s", what, description, path, how);
+}
 
 void
 open_logfile(const char *filename)
 {
   time_t now;
 
-  log_fp = fopen(filename, "a");
-  if (!log_fp)
-    myerror(FATAL|USE_ERRNO, "Cannot write to logfile %s", filename);
+  my_fopen(&log_fp, filename, "a", "logfile");
   now = time(NULL);
   fprintf(log_fp, "\n\n[rlwrap] %s\n", ctime(&now));
 }
@@ -439,6 +447,8 @@ filesize(const char *filename)
     myerror(FATAL|USE_ERRNO, "couldn't stat file %s", filename);
   return (size_t) buf.st_size;
 }
+
+
 
 void
 close_logfile()

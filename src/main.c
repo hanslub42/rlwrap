@@ -60,6 +60,7 @@ char *command_line = "";                     /* command <command_args> */
 int within_line_edit = FALSE;	             /* TRUE while user is editing input */
 pid_t command_pid = 0;		             /* pid of child (client), or 0 before child is born */
 int i_am_child = FALSE;		             /* Am I child or parent? after forking, child will set this to TRUE */
+int i_am_filter = FALSE;		     /* After forking, filter will set this to TRUE */
 int ignore_queued_input = FALSE;             /* read and then ignore all characters in input queue until it is empty (i.e. read would block) */
 int received_WINCH = FALSE;                  /* flag set in SIGWINCH signal handler: start line edit as soon as possible */
 int prompt_is_still_uncooked = TRUE;         /* The main loop consults this variable to determine the select() timeout: when TRUE, it is
@@ -684,9 +685,8 @@ init_rlwrap(char *command_line)
  */
 
 static char *
-check_optarg(char opt, int remaining)
+check_optarg(char UNUSED(opt), int UNUSED(remaining))
 {
-  MAYBE_UNUSED2(opt, remaining);
   
   if (!optarg)
     last_option_didnt_have_optional_argument = TRUE; /* if this variable is set, and  if command is not found,
@@ -780,10 +780,7 @@ read_options_and_command_name(int argc, char **argv)
         myerror(FATAL|NOERRNO, "-d or --debug option has to be the *first* rlwrap option\n"
                                "in order to be able to follow the processing  of all subsequent options");
       debug = check_optarg('d', remaining) ? my_atoi(optarg) : DEBUG_DEFAULT;
-      debug_fp = fopen(DEBUG_FILENAME, "w");
-      if (!debug_fp)
-         myerror(FATAL|USE_ERRNO, "Couldn't open debug file %s", DEBUG_FILENAME);
-      setbuf(debug_fp, NULL); /* always write debug messages to disk at once */
+      my_fopen(&debug_fp, DEBUG_FILENAME, "w+", "debug log"); /* w+, not w: both parent and child write to the same logfile, and need to fseek beyond where the other may have written stuff */
 #else
       myerror(FATAL|NOERRNO, "To use -d( for debugging), configure %s with --enable-debug and rebuild",program_name);
 #endif
@@ -889,7 +886,7 @@ read_options_and_command_name(int argc, char **argv)
   
   if (optind >= argc) { /* rlwrap -a -b -c with no command specified */
     if (filter_command) { /* rlwrap -z filter with no command specified */
-      mysignal(SIGALRM, &handle_sigALRM); /* needed for read_patiently2 */
+      mysignal(SIGALRM, HANDLER(handle_sigALRM)); /* needed for read_patiently2 */
       spawn_filter(filter_command);
       pass_through_filter(TAG_OUTPUT,""); /* ignore result but allow TAG_OUTPUT_OUT_OF_BAND */
       cleanup_rlwrap_and_exit(EXIT_SUCCESS);

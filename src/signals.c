@@ -62,11 +62,17 @@ int sigterm_received = FALSE;
 
 
 void
-mysignal(int sig, sighandler_type handler) {
+mysignal(int sig, sighandler_type handler, const char *handler_name) {
   
 #ifdef HAVE_SIGACTION
   struct sigaction action;
-  DPRINTF3(DEBUG_SIGNALS,"Setting handler for signal %d (%s) to <0x%lx>", sig, signal_name(sig), (long) handler); 
+  if (handler == SIG_DFL)
+    DPRINTF2(DEBUG_SIGNALS,"Re-setting handler for signal %d (%s) to its default", sig, signal_name(sig));
+  else if (handler == SIG_IGN)
+    DPRINTF2(DEBUG_SIGNALS,"Ignoring signal %d (%s)", sig, signal_name(sig)); 
+  else
+    DPRINTF3(DEBUG_SIGNALS,"Setting handler for signal %d (%s) to %s()", sig, signal_name(sig), handler_name);
+    
   action.sa_handler = handler;
   sigfillset(&action.sa_mask); /* don't bother making our signal handlers re-entrant (they aren't) */
   action.sa_flags = (sig == SIGCHLD ? SA_NOCLDSTOP : 0); /* no SA_RESTART */
@@ -83,17 +89,17 @@ void
 install_signal_handlers()
 {
   int i;
-  mysignal(SIGCHLD, &child_died);
-  mysignal(SIGTSTP, &handle_sigTSTP);
+  mysignal(SIGCHLD, HANDLER(child_died));
+  mysignal(SIGTSTP, HANDLER(handle_sigTSTP));
 #ifndef DEBUG          /* we want core dumps when debugging, no polite excuses! */
   for (i = 1; i<MAX_SIG; i++)
     if (signals_program_error(i))
-      mysignal(i, &handle_program_error_signal); /* make polite excuse */
+      mysignal(i, HANDLER(handle_program_error_signal)); /* make polite excuse */
 #endif
-  mysignal(SIGALRM, &handle_sigALRM);
+  mysignal(SIGALRM, HANDLER(handle_sigALRM));
   for (i = 1;  signals_to_be_passed_on[i]; i++) {
     assert(!signals_program_error(signals_to_be_passed_on[i]));
-    mysignal(signals_to_be_passed_on[i], &pass_on_signal);
+    mysignal(signals_to_be_passed_on[i], HANDLER(pass_on_signal));
   }   
   signal_handlers_were_installed = TRUE;
 }
@@ -102,7 +108,7 @@ install_signal_handlers()
 static void uninstall_signal_handlers() {
   int i;
   for(i=1; i<MAX_SIG; i++)
-    mysignal(i, SIG_DFL);
+    mysignal(i, SIG_DFL, NULL);
   signal_handlers_were_installed = FALSE;
 }
 
@@ -110,7 +116,7 @@ static void uninstall_signal_handlers() {
 void
 ignore_sigchld()
 {
-  mysignal(SIGCHLD, &do_nothing);
+  mysignal(SIGCHLD, HANDLER(do_nothing));
 }
 
 
@@ -144,10 +150,12 @@ change_signalmask(int how, int *sigs)
 {                               /* sigs should point to a *zero-terminated* list of signals */
   int i;
   sigset_t mask;
-
+  
   sigemptyset(&mask);
-  for (i = 0; sigs[i]; i++)
+  for (i = 0; sigs[i]; i++) {
+    DPRINTF2(DEBUG_SIGNALS, "%sblocking signal %s", how == SIG_UNBLOCK ? "un-" : "", signal_name(sigs[i]));
     sigaddset(&mask, sigs[i]);
+  }     
   sigprocmask(how, &mask, NULL);
 }
 
@@ -193,7 +201,7 @@ handle_sigTSTP(int signo)
     save_rl_state();
 
   
-  mysignal(SIGTSTP, SIG_DFL);   /* reset disposition to default (i.e. suspend) */
+  mysignal(SIGTSTP, SIG_DFL, NULL);   /* reset disposition to default (i.e. suspend) */
   sigprocmask(SIG_UNBLOCK, &all_signals, NULL); /* respond to sleep- and wake-up signals  */  
   kill(getpid(), SIGTSTP); /* suspend */
   /* keyboard gathers dust, kingdoms crumble,.... */
@@ -202,7 +210,7 @@ handle_sigTSTP(int signo)
 
   /* Beautiful princess types "fg", (or her father tries to kill us...) and we wake up HERE: */
   sigprocmask(SIG_BLOCK, &all_signals, NULL);
-  mysignal(SIGTSTP, &handle_sigTSTP); 
+  mysignal(SIGTSTP, HANDLER(handle_sigTSTP)); 
   DPRINTF0(DEBUG_SIGNALS, "woken up");
 
   /* On most systems, command's process group will have been woken up by the handler of

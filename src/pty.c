@@ -51,15 +51,16 @@ my_pty_fork(int *ptr_master_fd,
 
 
   block_signals(only_sigchld);  /* block SIGCHLD until we have had a chance to install a handler for it after the fork() */
-
+  fflush(NULL);
   if ((pid = fork()) < 0) {
     myerror(FATAL|USE_ERRNO, "Cannot fork");
     return(42); /* the compiler may not know that myerror() won't return */
   } else if (pid == 0) {                /* child */
     DEBUG_RANDOM_SLEEP;
     i_am_child = TRUE;          /* remember who I am */
-    unblock_all_signals();
-    
+    my_fopen(&debug_fp, DEBUG_FILENAME, "a+", "debug log");
+
+    unblock_all_signals();    
     close(fdm);                 /* fdm not used in child */
     ptytty_control_tty(fds, slave_name);
 
@@ -82,10 +83,8 @@ my_pty_fork(int *ptr_master_fd,
   } else {                      /* parent */
     srand(pid); DEBUG_RANDOM_SLEEP;
     command_pid = pid;            /* the SIGCHLD signal handler needs this global variable */
- 
     *ptr_master_fd = fdm;
 
-    
     /* Try to find a suitable file descriptor to sense the state of the slave pty                                              */
     /* At least on Solaris, we have to use the slave pty itself, but this works only after it has been set up in the child     */
     /* This may take some time, hence the (increasing) timeout below                                                           */

@@ -39,8 +39,8 @@ static int my_accept_line(int, int);
 static int my_accept_line_and_forget(int, int);
 static void munge_file_in_editor(const char *filename, int lineno, int colno);
 static Keymap getmap(const char *name);
-static void bindkey(int key, rl_command_func_t *function, const char *maplist);
-
+static void bindkey(int key, rl_command_func_t *function, const char *function_name, const char *maplist);
+#define RL_COMMAND_FUN(f) f, #f
 
 /* readline bindable functions: */
 static int munge_line_in_editor(int, int);
@@ -84,11 +84,11 @@ init_readline(char *UNUSED(prompt))
   rl_variable_bind("blink-matching-paren","on"); 
 
   
-  bindkey('\n', my_accept_line, "emacs-standard; vi-insert; vi-command"); 
-  bindkey('\r', my_accept_line, "emacs-standard; vi-insert; vi-command"); 
-  bindkey(15, my_accept_line_and_forget, "emacs-standard; vi-insert; vi-command");	/* ascii #15 (Control-O) is unused in readline's emacs and vi keymaps */
+  bindkey('\n', RL_COMMAND_FUN(my_accept_line), "emacs-standard; vi-insert; vi-command"); 
+  bindkey('\r', RL_COMMAND_FUN(my_accept_line), "emacs-standard; vi-insert; vi-command"); 
+  bindkey(15, RL_COMMAND_FUN(my_accept_line_and_forget), "emacs-standard; vi-insert; vi-command");	/* ascii #15 (Control-O) is unused in readline's emacs and vi keymaps */
   if (multiline_separator) 
-    bindkey(30, munge_line_in_editor, "emacs-standard;vi-insert;vi-command");            /* CTRL-^: unused in vi-insert-mode, hardly used in emacs  (doubles arrow-up) */
+    bindkey(30, RL_COMMAND_FUN(munge_line_in_editor), "emacs-standard;vi-insert;vi-command");            /* CTRL-^: unused in vi-insert-mode, hardly used in emacs  (doubles arrow-up) */
 
   
   
@@ -1032,13 +1032,13 @@ static Keymap getmap(const char *name) {
   return km;
 }
 
-static void bindkey(int key, rl_command_func_t *function, const char *maplist) {
+static void bindkey(int key, rl_command_func_t *function, const char *function_name, const char *maplist) {
   char *mapnames[] = {"emacs-standard","emacs-ctlx","emacs-meta","vi-insert","vi-move","vi-command",NULL};
   char **mapname;
   for (mapname = mapnames; *mapname; mapname++) 
     if(strstr(maplist, *mapname)) {
       Keymap kmap = getmap(*mapname);
-      DPRINTF4(DEBUG_READLINE,"Binding key %d (%s) in keymap '%s' to <0x%lx>", key, mangle_char_for_debug_log(key,TRUE), *mapname, (long) function);
+      DPRINTF4(DEBUG_READLINE,"Binding key %d (%s) in keymap '%s' to %s()", key, mangle_char_for_debug_log(key,TRUE), *mapname, function_name);
       if (rl_bind_key_in_map(key, function, kmap))
         myerror(FATAL|NOERRNO, "Could not bind key %d (%s) in keymap '%s'", key, mangle_char_for_debug_log(key,TRUE), *mapname);
     }

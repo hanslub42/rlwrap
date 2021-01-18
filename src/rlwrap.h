@@ -69,6 +69,9 @@
 # endif
 #endif
 
+#if HAVE_SYS_FILE_H
+#include <sys/file.h>
+#endif
 
 #ifdef HAVE_GETOPT_H
 #  include <getopt.h>
@@ -226,6 +229,7 @@ extern char **unit_test_argv;
 extern char *command_line;
 extern char *extra_char_after_completion;
 extern int i_am_child;
+extern int i_am_filter;
 extern int nowarn;
 extern int debug;
 extern char *password_prompt_search_string;
@@ -311,8 +315,10 @@ extern int received_sigALRM;
 #endif
 typedef RETSIGTYPE (*sighandler_type)(int);       
 
+/* we'll install signal handlers with mysignal(SIGBLAH, HANDLER(handler)), to improve debug log readabilty */
+void mysignal(int sig, sighandler_type handler, const char *handler_name);
+#define HANDLER(f) &f, #f
 
-void mysignal(int sig, sighandler_type handler);
 void install_signal_handlers(void);
 void block_signals(int *sigs);
 void unblock_signals(int *sigs);
@@ -358,6 +364,7 @@ void  free_multiple(void *ptr, ...);
 void  mysetsid(void);
 void  close_open_files_without_writing_buffers(void);
 size_t filesize(const char *filename);
+void  my_fopen(FILE  **pfp, const char *path, const char *mode, const char *description);
 void  open_logfile(const char *filename);
 void  write_logfile(const char *str);
 void  close_logfile(void);
@@ -561,6 +568,18 @@ size_t mbc_strnlen(const char *mb_string, size_t maxlen, MBSTATE *st);
 /* Use a superfluous "break" (withn a switch) to prevent "this statement may fall through" warnings when we know that a statement will end the program anyway */
 #define WONTRETURN(statement) statement;break
 
+
+# ifdef __GNUC__
+#   define __MYFUNCTION__ __extension__ __FUNCTION__
+#   define UNUSED(x) UNUSED_ ## x __attribute__((__unused__))
+#   define UNUSED_FUNCTION(f) __attribute__((__unused__)) UNUSED_ ## f
+# else
+#   define __MYFUNCTION__ ""
+#   define UNUSED(x) UNUSED_ ## x
+#   define UNUSED_FUNCTION(f) UNUSED_ ## f  
+# endif
+
+
 #ifdef  DEBUG
 
 
@@ -583,43 +602,46 @@ size_t mbc_strnlen(const char *mb_string, size_t maxlen, MBSTATE *st);
 #  define DEBUG_DEFAULT                          (DEBUG_TERMIO | DEBUG_SIGNALS | DEBUG_READLINE)
 #  define DEBUG_ALL                              (2*DEBUG_MAX-1)
 
-# define MAYBE_UNUSED(x)                         (void) (x)
-# define MAYBE_UNUSED2(x,y)                      (void) (x); (void) (y)
 
-# ifdef __GNUC__
-#   define __MYFUNCTION__ __extension__ __FUNCTION__
-#   define UNUSED(x) UNUSED_ ## x __attribute__((__unused__))
-#   define UNUSED_FUNCTION(f) __attribute__((__unused__)) UNUSED_ ## f
-# else
-#   define __MYFUNCTION__ ""
-#   define UNUSED(x) UNUSED_ ## x
-#   define UNUSED_FUNCTION(f) UNUSED_ ## f  
-# endif
+
+#  define ONLY_USED_FOR_DEBUGGING(x) x
+
+
+#  ifndef HAVE_FLOCK
+#    define flock(x,y)
+#  endif
+
 
 # define WHERE_AND_WHEN \
-  int debug_saved = debug; char file_line[100], when[100];              \
+  int debug_saved = debug; char file_line[100], when[100];                          \
   if(debug & DEBUG_WITH_TIMESTAMPS) timestamp(when, sizeof(when)); else *when='\0'; \
-  debug = 0; /* don't debug while evaluating the DPRINTF arguments */ \
-  snprintf2(file_line, sizeof(file_line),"%.15s:%d:",__FILE__,__LINE__); \
-  fprintf(debug_fp, "%-20s %s %-25.25s ", file_line, when, __MYFUNCTION__);\
+  debug = 0; /* don't debug while evaluating the DPRINTF arguments */               \
+  snprintf2(file_line, sizeof(file_line), "%.15s:%d:", __FILE__, __LINE__);         \
+  flock(fileno(debug_fp), LOCK_EX);                                                 \
+  fseek(debug_fp, 0, SEEK_END);                                                     \
+  fprintf(debug_fp, "%-20s %s %-7s %-25.25s ", file_line, when, (i_am_child ? "child" : i_am_filter? "filter" :"parent"), __MYFUNCTION__);
 
 
-#  define NL_AND_FLUSH           fputc('\n', debug_fp) ; fflush(debug_fp); debug = debug_saved;
+#  define NL_AND_FLUSH           fputc('\n', debug_fp) ; fflush(debug_fp); flock(fileno(debug_fp), LOCK_UN); debug = debug_saved
 
 #  define DPRINTF0(mask, format)                                        \
-  if ((debug & mask) && debug_fp) {WHERE_AND_WHEN; fprintf(debug_fp, format); NL_AND_FLUSH; }
+  do {if ((debug & mask) && debug_fp) {WHERE_AND_WHEN; fprintf(debug_fp, format); NL_AND_FLUSH; }} while(FALSE)
 
 #  define DPRINTF1(mask, format,arg)                                    \
-  if ((debug & mask) && debug_fp) {WHERE_AND_WHEN; fprintf(debug_fp, format, arg); NL_AND_FLUSH; }
+  do {if ((debug & mask) && debug_fp) {WHERE_AND_WHEN; fprintf(debug_fp, format, arg); NL_AND_FLUSH; }} while(FALSE)
 
 #  define DPRINTF2(mask, format,arg1, arg2)                             \
-  if ((debug & mask) && debug_fp) {WHERE_AND_WHEN; fprintf(debug_fp, format, arg1, arg2); NL_AND_FLUSH; }
+  do {if ((debug & mask) && debug_fp) {WHERE_AND_WHEN; fprintf(debug_fp, format, arg1, arg2); NL_AND_FLUSH; }} while (FALSE)
 
 #  define DPRINTF3(mask, format,arg1, arg2, arg3)                       \
-  if ((debug & mask) && debug_fp) {WHERE_AND_WHEN; fprintf(debug_fp, format, arg1, arg2, arg3); NL_AND_FLUSH; }
+  do {if ((debug & mask) && debug_fp) {WHERE_AND_WHEN; fprintf(debug_fp, format, arg1, arg2, arg3); NL_AND_FLUSH; }} while (FALSE)
 
 #  define DPRINTF4(mask, format,arg1, arg2, arg3, arg4)                 \
-  if ((debug & mask) && debug_fp) {WHERE_AND_WHEN; fprintf(debug_fp, format, arg1, arg2, arg3,arg4); NL_AND_FLUSH; }
+  do {if ((debug & mask) && debug_fp) {WHERE_AND_WHEN; fprintf(debug_fp, format, arg1, arg2, arg3, arg4); NL_AND_FLUSH; }} while (FALSE)
+
+#  define DPRINTF5(mask, format,arg1, arg2, arg3, arg4, arg5)                \
+  do {if ((debug & mask) && debug_fp) {WHERE_AND_WHEN; fprintf(debug_fp, format, arg1, arg2, arg3, arg4, arg5); NL_AND_FLUSH; }} while (FALSE)
+
 
 #  define ERRMSG(b)              (b && (errno != 0) ? add3strings("(", strerror(errno), ")") : "" )
 
@@ -629,18 +651,14 @@ size_t mbc_strnlen(const char *mb_string, size_t maxlen, MBSTATE *st);
 
 
 #else
-#  define UNUSED(x) x
-#  define UNUSED_FUNCTION(f) f
-#  define MAYBE_UNUSED(x)
-#  define MAYBE_UNUSED2(x,y)
+#  define ONLY_USED_FOR_DEBUGGING(x) UNUSED(x)
 #  define MANGLE_LENGTH          0
-#  define MAYBE_UNUSED(x)           
-#  define MAYBE_UNUSED2(x,y)                     
 #  define DPRINTF0(mask, format)
 #  define DPRINTF1(mask, format,arg) {}
 #  define DPRINTF2(mask, format,arg1, arg2) {}
 #  define DPRINTF3(mask, format,arg1, arg2, arg3) {}
 #  define DPRINTF4(mask, format,arg1, arg2, arg3, arg4) {}
+#  define DPRINTF5(mask, format,arg1, arg2, arg3, arg4, arg5) {}
 #  define ERRMSG(b)
 #  define SHOWCURSOR
 #  define DEBUG_RANDOM_SLEEP  

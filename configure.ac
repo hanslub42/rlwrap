@@ -110,7 +110,7 @@ AC_CHECK_PROG(STRIP,strip,strip,true)
 # Checks for header files.
 AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
-AC_CHECK_HEADERS([errno.h fcntl.h libgen.h libutil.h stdlib.h string.h sched.h sys/ioctl.h sys/wait.h sys/resource.h stddef.h ])
+AC_CHECK_HEADERS([errno.h fcntl.h libgen.h libutil.h stdlib.h string.h sched.h sys/file.h sys/ioctl.h sys/wait.h sys/resource.h stddef.h ])
 AC_CHECK_HEADERS([termios.h unistd.h stdint.h time.h getopt.h regex.h curses.h stropts.h termcap.h util.h])
 
 AC_CHECK_HEADERS([ term.h  ncurses/term.h], , ,
@@ -205,7 +205,7 @@ AC_TYPE_SIGNAL
 # Let groff -Tman know whether we have long options
 AC_CHECK_FUNC([getopt_long], [AC_SUBST(HAVE_LONG_OPTS,[yes])],[AC_SUBST(HAVE_LONG_OPTS,[no])])
 
-AC_CHECK_FUNCS(basename dirname getopt_long isastream  mkstemps pselect putenv readlink sched_yield )
+AC_CHECK_FUNCS(basename dirname flock getopt_long isastream  mkstemps pselect putenv readlink sched_yield )
 AC_CHECK_FUNCS(setenv setitimer setsid setrlimit sigaction snprintf strlcpy strlcat strnlen system)
 
 # Try to determine the kind of pty support on this system
