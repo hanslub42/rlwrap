@@ -1,4 +1,4 @@
-.TH rlwrap 1 "July 19, 2016"
+.TH rlwrap 1 "Januari 19, 2021"
 .SH NAME
 rlwrap \- readline wrapper
 .de OP
@@ -7,7 +7,7 @@ rlwrap \- readline wrapper
 ..
 .de OA
 .ie '@HAVE_OPTIONAL_ARGS@'yes' The argument is optional; if given, it has to \
-directly follow the option  without an
+directly follow the option without an
 intervening space.
 .el On this system, you \fBmust\fP give a (dummy) argument.
 ..
@@ -29,7 +29,7 @@ and completion.
 command\fP \- except the added readline functionality, of course.
 This should even hold true when you are re\-directing, piping and
 sending signals from and to \fIcommand\fP, and when \fIcommand\fP
-manipulates its terminal settings or working directory.
+manipulates its terminal settings, working directory or (with the \fB-U\fP option) command line.
 
 There are many options to add
 (programmable) completion, handle multi\-line input, colour and
@@ -39,21 +39,16 @@ you can skip the rest of this manpage.
 .TP
 .OL \-a \-\-always\-readline [\fIpassword_prompt\fP] 
 Always remain in "readline mode", regardless of \fIcommand\fP's terminal settings.
-Use this option if you want to use \fBrlwrap\fP with \fIcommand\fPs that already
-do some line editing.  
+If \fBrlwrap\fP "does nothing" this is the option to use, as \fIcommand\fP is apparently already
+doing its own line editing. 
 \fBNB\fP: With this
 option, rlwrap will echo (and save) passwords, unless you give \fIcommand\fP's
 password prompt as an argument.
 .OA \-a \-\-always\-readline Password:
 
-On a linux machine you can use the \fB\-N\fP (\fB\-\-no\-children\fP) option to avoid wrapping  
+On most linux machines you can use the \fB\-N\fP (\fB\-\-no\-children\fP) option to avoid wrapping 
 pagers and editors called from \fIcommand\fP; this should make them much more usable
 
-Many commands that need \fB\-\-always\-readline\fP may also need
-\fB\-t dumb\fP to prevent terminal control sequences from confusing
-\fBrlwrap\fP (although this will annoy the above\-mentioned pagers and
-editors) 
- 
 .TP
 .OL \-A \-\-ansi\-colour\-aware
 Prompts that use colour will confuse rlwrap, especially at the end of
@@ -94,15 +89,15 @@ option to change this to '' (don't insert anything) or some other character.
 .TP
 .OL \-f \-\-file \fIfile\fP
 Split \fIfile\fP into words (using the default word-breaking characters, or those specified by \-\-break\-chars), and add them to the completion word list. This option can be given more than once, and \fIadds\fP to the default
-completion list in  $RLWRAP_HOME or @DATADIR@/rlwrap/completions.
+completion list in $RLWRAP_HOME or @DATADIR@/rlwrap/completions.
 
 Specifying \fB\-f .\fP will make \fBrlwrap\fP use the current history file as a
 completion word list.
 .TP
 .OL \-g \-\-forget\-matching \fIregexp\fP
-Forget (i.e. never put into the history list) all input lines that match 
+Forget (i.e. never put into the history list) input lines that match 
 the POSIX 1003.2 regular expression \fIregexp\fP.
-The match is always case\-insensitive.  \fBperl\fP-style character classes like '\\d' are not recognised, use '[:digit:]'. For more about regular expressions, see  \fBregex (7)\fP
+The match is always case\-insensitive. \fBperl\fP-style character classes like '\\d' are not recognised, use '[:digit:]'. For more about regular expressions, see \fBregex (7)\fP
 .TP
 .OL \-h \-\-help
 Print a short help message.
@@ -136,7 +131,7 @@ This option needs /proc/\fIcommand\fP_pid/wchan, so it only works with linux ker
 Enable multi\-line input using a "newline substitute" character
 sequence (" \\ ", [space\-backslash\-space] by default). Newline
 substitutes are translated to newlines before sending the input to
-\fIcommand\fP.  With this option, you can call an external editor
+\fIcommand\fP. With this option, you can call an external editor
 $RLWRAP_EDITOR on the (expanded) current input with the
 \fIrlwrap_call_editor\fP key (CTRL\-^ by default)
 .OA \-m \-\-multi\-line ';;'
@@ -152,7 +147,7 @@ Only ever "cook" prompts that match \fIregexp\fP
 .TP
 .OL \-p \-\-prompt\-colour [\fIcolour_name|Colour_name|colour_spec\fP]
 Use one of the colour names \fIblack, red, green, yellow, blue, cyan, purple (=magenta)\fP or \fIwhite\fP, or an ANSI\-conformant <colour_spec> to colour any prompt displayed by
-\fIcommand\fP. An uppercase colour name (\fIYellow\fP or \fIYELLOW\fP ) gives a bold prompt.  Prompts that already contain
+\fIcommand\fP. An uppercase colour name (\fIYellow\fP or \fIYELLOW\fP ) gives a bold prompt. Prompts that already contain
 (colour) escape sequences or one of the readline "ignore markers" (ASCII 0x01 and 0x02) are not coloured. This option implies \-\-ansi\-colour\-aware.
 \fIcolour spec\fP has the form
 <attr>;<fg>[;<bg>] Example: \-p'1;31' will give a bold red prompt on the
@@ -161,7 +156,7 @@ given). Google for 'ANSI color' to learn more about colour codes.
 .OA \-p \-\-prompt\-colour '0;31' 
 .TP
 .OL \-P \-\-pre\-given \fItext\fP
-Start \fBrlwrap\fP with  \fItext\fP in its edit buffer (this will automatically
+Start \fBrlwrap\fP with \fItext\fP in its edit buffer (this will automatically
 set the \-\-always\-readline option). 
 .TP
 .OL \-q \-\-quote\-characters \fIlist_of_characters\fP
@@ -170,7 +165,7 @@ parentheses. Take care to escape the list properly for your shell (example: \-q 
 default, or \-q "\\"" which will be better for lisp-like input) 
 .TP
 .OL \-r \-\-remember
-Put all words seen on in\- and output on the completion list.  
+Put all words seen on in\- and output on the completion list. 
 .TP
 .OL \-R \-\-renice
 Make \fBrlwrap\fP nicer than \fIcommand\fP (cf \fBnice (1)\fP). This may prevent \fBrlwrap\fP from 
@@ -181,7 +176,7 @@ Limit the history list to N entries, truncating the history file
 (default: 300). A negative size \-N (even \-0) means the same as N, but treats the history file as read\-only.
 .TP
 .OL \-S \-\-substitute\-prompt \fIprompt\fP
-Substitute the specified prompt for  \fIcommand\fP's own prompt. Mainly useful when  \fIcommand\fP doesn't have a prompt.
+Substitute the specified prompt for \fIcommand\fP's own prompt. Mainly useful when \fIcommand\fP doesn't have a prompt.
 .TP
 .OL \-t \-\-set\-term\-name \fIname\fP
 Set \fIcommand\fP's TERM to \fIname\fP. Programs that confuse \fBrlwrap\fP with fancy screen control codes can sometimes be tamed by specifying \fB\-t dumb\fP 
@@ -194,18 +189,18 @@ This is mainly useful for commands that overwrite command-line password argument
 Print rlwrap version.
 .TP
 .OL \-w \-\-wait\-before\-prompt \fItimeout\fP
-In order to determine if  \fIcommand\fP's last output is a prompt, \fBrlwrap\fP waits \fItimeout\fP milliseconds after receiving it.
+In order to determine if \fIcommand\fP's last output is a prompt, \fBrlwrap\fP waits \fItimeout\fP milliseconds after receiving it.
 Only when no more output has arrived, it is cooked (coloured, filtered and/or replaced by a substitute prompt) and displayed as a prompt.
 Before this the prompt is displayed "uncooked". Most users won't notice, but heavy cookers can prepend the timeout with a minus sign,
-making rlwrap hold back the prompt until it has been cooked ("patient mode"). This will prevent flashing of the prompt, but it will also interfere with long output lines and make switches from direct to readline mode less reliable. Default timeout: 40 ms  
+making rlwrap hold back the prompt until it has been cooked ("patient mode"). This will prevent flashing of the prompt, but it will also interfere with long output lines and make switches from direct to readline mode less reliable. Default timeout: 40 ms 
 .TP
 .OL \-W \-\-polling 
-EXPERIMENTAL: Wake up every \fItimeout\fP millisecs, where \fItimeout\fP is the same as for the \-w (\-\-wait\-before\-prompt) option, 40 ms by default. This is used to sense the slave's interrupt character and ISIG flag and to adjust stdin's terminal settings accordingly, even before you press a key. Try this option e.g. when CTRL-C acts differently on  \fIcommand\fP  with, and without, rlwrap. 
+EXPERIMENTAL: Wake up every \fItimeout\fP millisecs, where \fItimeout\fP is the same as for the \-w (\-\-wait\-before\-prompt) option, 40 ms by default. This is used to sense the slave's interrupt character and ISIG flag and to adjust stdin's terminal settings accordingly, even before you press a key. Try this option e.g. when CTRL-C acts differently on \fIcommand\fP with, and without, rlwrap. 
 .TP
-.OL \-z \-\-filter  \fIfilter\fP
+.OL \-z \-\-filter \fIfilter\fP
 Use a filter to change \fBrlwrap\fP's behaviour. A filter can be used to keep certain input out of the history, 
 to change the prompt, to implement simple macros or programmable completion.. \fBrlwrap\fP comes with a \fBperl\fP and a \fBPython 3\fP module
-to make filter writing easy. (cf. \fBRlwrapFilter(3pm)\fP for the perl module, the python one is very similar) A number of example filters are installed in the directory  @DATADIR@/rlwrap/filters. "rlwrap \-z \fIfilter\fP" displays information about a filter, "rlwrap \-z listing" lists all currently installed filters.
+to make filter writing easy. (cf. \fBRlwrapFilter(3pm)\fP for the perl module, the python one is very similar) A number of example filters are installed in the directory @DATADIR@/rlwrap/filters. "rlwrap \-z \fIfilter\fP" displays information about a filter, "rlwrap \-z listing" lists all currently installed filters.
 If \fIfilter\fP needs arguments, you should quote the whole filter command line: 
 .nf
 
@@ -213,7 +208,7 @@ If \fIfilter\fP needs arguments, you should quote the whole filter command line:
     rlwrap \-z 'pipeline filter1 ... : filter2 ... : ...' command ... 
     
 .fi
-If  this command line contains shell metacharacters, \fBrlwrap\fP passes it to the system shell for parsing. 
+If this command line contains shell metacharacters, \fBrlwrap\fP passes it to the system shell for parsing. 
 .SH EXAMPLES
 .TP 3
 Run \fBnc\fP (netcat) with command\-line editing and history
@@ -221,8 +216,11 @@ Run \fBnc\fP (netcat) with command\-line editing and history
 .TP
 Wrap \fBsmbclient\fP (which uses readline itself), keep passwords out of the history and don't wrap commands launched from smbclient (like \fBmore\fP)
 .B rlwrap\ \-aPassword:\ \-N\ smbclient //PEANUT/C
+.TP
+Wrap \fBsensitive_app\fP, hide password from \fBps\fP (if \fBsensitive_app\fP does that) and keep all input that starts with a space out of history:
+.B rlwrap -g '^ ' -U sensitive_app --password MySeCrEt
 .TP 
-Wrap \fBgauche\fP (a Scheme interpreter) with a bold blue prompt, enable multi\-line editing (using .scm as filename extension) and don't consider single quotes as quotes (so that the parentheses in e.g. (print 'q) match)   
+Wrap \fBgauche\fP (a Scheme interpreter) with a bold blue prompt, enable multi\-line editing (using .scm as filename extension) and don't consider single quotes as quotes (so that the parentheses in e.g. (print 'q) match)  
 .B rlwrap\ \-pBlue \-m\ \-M\ .scm\ \-q'\"' gosh
 .TP
 Get a list of all currently installed filters
@@ -266,7 +264,7 @@ Normally \fBrlwrap\fP writes the suspected prompt as soon as it is
 received, replacing it with a "cooked" version after the wait
 time. This is called "impatient" mode. If you don't like the flashing
 effect (which can become annoying when you "cook" the prompt heavily) you
-can put \fBrlwrap\fP in "patient mode" by  specifying a negative value with \fB\-w\fP (e.g. \-w \-40). Rlwrap 
+can put \fBrlwrap\fP in "patient mode" by specifying a negative value with \fB\-w\fP (e.g. \-w \-40). Rlwrap 
 will then hold back the prompt and only print if after cooking.
 .SH COOKING PROMPTS
 If and when \fBrlwrap\fP decides that it has a prompt, it will
@@ -278,35 +276,41 @@ printed (after erasing the "raw" prompt, if necessary)
 .TP
 .B Control + O
 Accept the current line, but don't put it in the history list. This action
-has a \fBreadline\fP command name  \fIrlwrap\-accept\-line\-and\-forget\fP
+has a \fBreadline\fP command name \fIrlwrap\-accept\-line\-and\-forget\fP
 .TP
 .B Control + ^
 Use an external editor (see RLWRAP_EDITOR below) to edit the current input (this will only work if the \-m
-option is set). This action has a \fBreadline\fP command name  \fIrlwrap\-call\-editor\fP
+option is set). This action has a \fBreadline\fP command name \fIrlwrap\-call\-editor\fP
 .TP
 .B (Not currently bound)
-Any key can be bound to the \fBreadline\fP command \fIrlwrap-direct-keypress\fP. This key will then always
-be sent directly to \fIcommand\fP,  even when \fBrlwrap\fP is not in direct mode. 
+Any key (or key sequence, see below) can be bound to the \fBreadline\fP command \fIrlwrap-direct-keypress\fP. This key (or keys) will then always
+be sent directly to \fIcommand\fP, even when \fBrlwrap\fP is not in direct mode. 
+.TP
+.B (Not currently bound)
+Any key can be bound to the \fBreadline\fP command \fIrlwrap-direct-prefix\fP. This makes it possible to
+define multi-key direct keypresses by defining their first key(s) as a 'direct prefix'
 .TP
 .B (Not currently bound)
 Any key can be bound to the \fBreadline\fP command \fIrlwrap-hotkey\fP. This key will then cause the current
 input line and the current history to be filtered (cf. \fBRlwrapFilter(3pm)\fP) through the current filter (hence be a no-op when there is no filter), which then can re-write the input line, move the cursor and update the history. After that, the user can still edit the resulting input.
 .TP
 .B (Not currently bound)
-\fIrlwrap-hotkey-without-history\fP acts like  \fIrlwrap-hotkey\fP, but the history (which can be quite large) is not passed to the filter. This is more efficient if the filter wouldn't do anything useful with the history anyway.
+\fIrlwrap-hotkey-without-history\fP acts like \fIrlwrap-hotkey\fP, but the history (which can be quite large) is not passed to the filter. This is more efficient if the filter wouldn't do anything useful with the history anyway.
 .PP
-The special keys were chosen for no other reason than that they  are not currently bound to any
-readline action. If you don't like them, (or your window manager swallows them) they (and the other 3 commands)
+The special keys were chosen for no other reason than that they are not currently bound to any
+readline action. If you don't like them, (or your window manager swallows them) they (and the other 4 commands)
 can be re\-bound more sensibly by including lines like the
 following in your \fB~/.inputrc\fP:
 .PP
 .nf
-   "\eM\-\eC\-m": rlwrap\-accept\-line\-and\-forget         # ESC\-ENTER to accept but keep out of history
-   "\eC\-xe":   rlwrap\-call\-editor                    # CTRL\-x e to edit (multi-line) input in editor of your choice 
-    $if erl                                         # (only) for the Erlang shell:
-       "\eC\-g": rlwrap\-direct\-keypress               # pass CTRL\-g directly to enter 'user switch' command
-    $endif
-    "\eC\-y": rlwrap\-hotkey\-without\-history            # CTRL\-y to filter input line (and e.g. insert X selection) 
+   "\eM\-\eC\-m" : rlwrap\-accept\-line\-and\-forget         # ESC\-ENTER to accept but keep out of history
+   "\eC\-x"    : rlwrap\-call\-editor                    # CTRL\-x e to edit (multi-line) input in editor of your choice 
+    $if erl                                          # (only) for the Erlang shell:
+       "\eC\-g": rlwrap\-direct\-keypress                # pass CTRL\-g directly to enter 'user switch' command
+    $endif 
+    "\eC\-t"   : rlwrap\-direct\-prefix                  # make it possible to define direct keypresses that start with CTRL\-t
+    "\eC\-tx"  : rlwrap\-direct\-keypress                # pass CTRL\-t + x directly.
+    "\eC\-y"   : rlwrap\-hotkey\-without\-history         # CTRL\-y to filter input line (and e.g. insert X selection)
 .fi
 .PP
 cf. the \fBreadline(3)\fP manpage. (NB: take care to not use keys that are already caught by the terminal driver, like CTRL+S, as \fBrlwrap\fP will never see those)
@@ -333,8 +337,8 @@ If %F is not used, this name is put after the (expanded) $RLWAP_EDITOR
 Any executable along your PATH can in theory
 be used as a filter, but because filters have to follow a rather outlandish
 protocol (cf. \fBRlwrapFilter (3)\fP) it is a good idea to keep them
-separate. This is why \fBrlwrap\fP adds a special filter directory in front of $PATH just before launching a filter. By default, this is  
-@DATADIR@/rlwrap/filters, but $RLWRAP_FILTERDIR is used if set.
+separate. This is why \fBrlwrap\fP adds a special filter directory in front of $PATH just before launching a filter. By default, this is 
+@DATADIR@/rlwrap/filters, but $RLWRAP_FILTERDIR is used instead, if set.
 .SH SIGNALS
 .PP
 A number of signals are forwarded to \fIcommand\fP:
@@ -405,7 +409,7 @@ One could e.g. put the following lines in \fB~/.inputrc\fP:
 making \fBrlwrap\fP show all completions whenever it runs \fBcoqtop\fP
 .SH BUGS and LIMITATIONS 
 Though it is flexible, delivers the goods (readline functionality), and adheres to the Unix
-"many small tools" paradigm, \fBrlwrap\fP  is a kludge. It cannot know anything about
+"many small tools" paradigm, \fBrlwrap\fP is a kludge. It cannot know anything about
 \fIcommand\fP's internal state, which makes context\-sensitive completion
 impossible. Using the readline library from within \fIcommand\fP is
 still the best option.
@@ -418,11 +422,11 @@ changed the state of its terminal before \fBrlwrap\fP has read
 will notice these races especially on a busy machine and with heavy
 "cooking" and filtering, when suddenly (and unpredictably) prompts or
 command output are garbled or incorrectly coloured.
-  
+ 
 \fBrlwrap\fP can try, but often fails to, handle prompts that contain
-control characters.  A filter may be used to clean up the prompt.
+control characters. A filter may be used to clean up the prompt.
 
-\fBrlwap\fP cannot (yet) handle bracketed-paste mode (which is on by default in \fBreadline\fP 8.1 and higher), and ignores it even if specified in \fB~/.inputrc\fP
+\fBrlwrap\fP cannot (yet) handle bracketed-paste mode (which is the default in \fBreadline\fP 8.1 and higher), and ignores it even if specified in \fB~/.inputrc\fP
 
 
 .SH VERSION
