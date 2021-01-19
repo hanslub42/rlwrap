@@ -1,3 +1,33 @@
+0.44  rlwrap doesn't (yet) work with bracketed-paste. As this is
+      enabled by default from readline-8.1 onwards, rlwrap disables
+      it, even if specified in .inputrc. A multi-line paste will
+      therefore (still) behave as multiple 1-line pastes
+
+      rlwrap is now aware of multi-byte characters and correctly
+      handles prompts (or things that look like prompts, e.g.
+      progress indicators) that contain them, according to your
+      locale.
+      
+      rlwrap filters can now also filter signals (see
+      RlwrapFilter(3pm)), changing them, or providing extra input to
+      the rlwrapped command.
+
+      Key *sequences* can now be bound to rlwrap-direct-keypress
+      (using a new readline command rlwrap-direct-prefix) (contributed
+      by Yuri d'Elia)
+
+      configure will correctly identify whether --mirror-arguments
+      will work, even on 1-processor systems
+
+      the handle_hotkey filter has a handler definition that enables
+      fuzzy history search using fzf
+
+      binding accept-line to a key would make that key mess up the
+      display
+
+      The debug log is more readable (e.g. by marking debug lines
+      with "parent", "child" or "filter")
+
 0.43  Added Hisanobu Okuda's rlwrapfilter.py python3 module
       and example filters. Filters can now be written in python
       as well as perl.
