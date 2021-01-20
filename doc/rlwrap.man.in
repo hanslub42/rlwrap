@@ -183,7 +183,8 @@ Set \fIcommand\fP's TERM to \fIname\fP. Programs that confuse \fBrlwrap\fP with 
 .TP
 .OL \-U \-\-mirror-arguments
 (linux only) Keep track of \fIcommand\fP's arguments as seen by the \fBps (1)\fP command, and mirror them in \fBrlwrap\fP's own arguments
-This is mainly useful for commands that overwrite command-line password arguments that would be exposed by \fBrlwrap\fP without this option.
+This is mainly useful for commands that overwrite command-line password arguments that would be exposed by \fBrlwrap\fP without this option. The mirroring takes place
+after the first user input, or immediately, if you use the \fB\-\-polling\fp option.
 .TP
 .OL \-v \-\-version
 Print rlwrap version.
@@ -313,7 +314,7 @@ following in your \fB~/.inputrc\fP:
     "\eC\-y"   : rlwrap\-hotkey\-without\-history         # CTRL\-y to filter input line (and e.g. insert X selection)
 .fi
 .PP
-cf. the \fBreadline(3)\fP manpage. (NB: take care to not use keys that are already caught by the terminal driver, like CTRL+S, as \fBrlwrap\fP will never see those)
+cf. the \fBreadline(3)\fP manpage. (NB: take care to not use keys that are already caught by your window manager, or by the terminal driver, like CTRL+S, as \fBrlwrap\fP will never see those)
 .SH ENVIRONMENT 
 .TP
 \fBRLWRAP_HOME\fP: 
@@ -346,7 +347,7 @@ HUP INT QUIT USR1 USR2 TERM and (by way of resizing
 \fIcommand\fP's terminal) WINCH. Some care is taken to handle
 TSTP (usually a result of a CTRL\-Z from the terminal) sensibly \- for example, after suspending \fBrlwrap\fP in the middle of a line edit, continuing (by typing 'fg') will land you at the exact spot where you suspended it.
 
-Filters that take more than 1 second to respond can be
+Filters (except those that filter signals) that take more than 1 second to respond can be
 interrupted by a CTRL\-C from the terminal (although \fBrlwrap\fP will not survive this) 
 
 If \fIcommand\fP changes the keystrokes that send a particular signal

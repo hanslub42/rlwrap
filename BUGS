@@ -9,13 +9,31 @@ development packages (e.g. readline and readline-dev). For some reason
 it can happen that the devel package is out of sync with the main
 package, and then really strange things may happen. So: always update your 
 {readline, ncurses}-devel packages before you complain to me!
-* General inadequacy and weak spots:
+
+
+* Gotcha's
+
+If rlwrap doesn't seem to do anything, chances are that the rlwrapped
+program already does its own line editing. Using the -a (--always-readline)
+option will make rlwrap use its own line editor.
+
+If such programs do their own completion, it will be unusable under rlwrap
+
+
+* General inadequacy and weak spots
+
+
+Bracketed-paste mode doesn't work on rlwrap. rlwrap will disable it even
+if specified in your .inputrc, or if it's the default on your system.
+
+---
 
 The more sophisticated the terminal handling of rlwrapped program (the
 "client") gets, the less rlwrap will be able to maintain its
 transparency.  Of course, more sophisticated programs generally have
 less need for rlwrap.
 
+---
 
 rlwrap cannot handle prompts that contain control characters (except
 ANSI colour), though you may not notice this until your cursor almost
