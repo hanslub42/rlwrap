@@ -655,12 +655,12 @@ size_t mbc_strnlen(const char *mb_string, size_t maxlen, MBSTATE *st);
 #else
 #  define ONLY_USED_FOR_DEBUGGING(x) UNUSED(x)
 #  define MANGLE_LENGTH          0
-#  define DPRINTF0(mask, format)
-#  define DPRINTF1(mask, format,arg) {}
-#  define DPRINTF2(mask, format,arg1, arg2) {}
-#  define DPRINTF3(mask, format,arg1, arg2, arg3) {}
-#  define DPRINTF4(mask, format,arg1, arg2, arg3, arg4) {}
-#  define DPRINTF5(mask, format,arg1, arg2, arg3, arg4, arg5) {}
+#  define DPRINTF0(mask, format)  do {;} while(FALSE)
+#  define DPRINTF1(mask, format,arg) do {;} while(FALSE)
+#  define DPRINTF2(mask, format,arg1, arg2) do {;} while(FALSE)
+#  define DPRINTF3(mask, format,arg1, arg2, arg3) do {;} while(FALSE)
+#  define DPRINTF4(mask, format,arg1, arg2, arg3, arg4) do {;} while(FALSE)
+#  define DPRINTF5(mask, format,arg1, arg2, arg3, arg4, arg5) do {;} while(FALSE)
 #  define ERRMSG(b)
 #  define SHOWCURSOR
 #  define DEBUG_RANDOM_SLEEP  

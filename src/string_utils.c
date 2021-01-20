@@ -1099,15 +1099,3 @@ split_filter_message(char *message, int *counter)
 }
 
 
-
-/* ------------------------- Unit tests: */
-
-void test_split(int UNUSED(argc), char** UNUSED(argv), test_stage stage) {
-  char buf[BUFFSIZE];
-  if (stage != TEST_AT_PROGRAM_START)
-    return;
-  while(fgets(buf, BUFFSIZE, stdin) && strlen(buf) > 0) {
-      buf[strlen(buf)-1]='\0';
-      printf("Result: <%s>\n", unsplit_with(-1, split_with(buf," \""), "+"));
-  }
-}       
