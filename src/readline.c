@@ -100,7 +100,8 @@ init_readline(char *UNUSED(prompt))
 				   in .inputrc */
 
   /* put the next variable binding(s) *after* rl_initialize(), so they cannot be overridden */
-  rl_variable_bind("enable-bracketed-paste","off");     /* enable-bracketed-paste changes cursor positioning after printing the prompt ...
+  myerror(WARNING|NOERRNO, "Enabling bracketed-paste!");
+  rl_variable_bind("enable-bracketed-paste","on");     /* enable-bracketed-paste changes cursor positioning after printing the prompt ...
                                                            ... causing rlwrap to overwrite it after accepting input                        */
  
   using_history();
@@ -223,10 +224,12 @@ line_handler(char *line)
           
        O.K, we know for sure that cursor is at start of line. When clients output arrives, it will be printed at
        just the right place - but first we 'll erase the user input (as it may be about to be changed by the filter) */
-
+    SHOWCURSOR('1');
     rl_delete_text(0, rl_end);  /* clear line  (after prompt) */
     rl_point = 0;
+    SHOWCURSOR('2');
     my_redisplay();             /* and redisplay (this time without user input, cf the comments for the line_handler() function below) */
+    SHOWCURSOR('3');
     rewritten_line =
       (multiline_separator ? 
        search_and_replace(multiline_separator, "\n", line, 0, NULL,
