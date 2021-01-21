@@ -86,7 +86,7 @@ readline) and you are sure that Xyz is installed on your system,
 consider installing Xyz-devel
 
 completion.c is made from completion.rb by the program rbgen
-(http://libredblack.sourceforge.net/), but both files are included in
+(https://github.com/hanslub42/libredblack), but both files are included in
 the tarball and the repository; rbgen is only needed when you change
 completion.rb. Sometimes, however, after a 'git pull', make will try to
 recompile completion.rb and complain about not finding rbgen. A fresh
