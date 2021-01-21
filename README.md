@@ -1,4 +1,4 @@
-rlwrap v 0.43  July 19 2016
+rlwrap v 0.44 January 2021
 
 ## WHAT IT IS: 
 
@@ -8,11 +8,13 @@ command. I couldn't find anything like it when I needed it, so I wrote
 this one back in 1999.  By now, there are (and, in hindsight, even
 then there were) a number of good readline wrappers around, like rlfe,
 distributed as part of the GNU readline library, and the amazing socat
-(http://freecode.com/projects/socat). You should consider rlwrap 
-especially when you need user-defined completion (by way of completion word
-lists) and persistent history, or if you want to program 'special
-effects' using the filter mechanism. rlwrap compiles and runs on a 
-fairly wide range of Unix-like systems.
+(http://freecode.com/projects/socat). You should consider rlwrap
+especially when you need user-defined completion (by way of completion
+word lists) and persistent history, or if you want to program 'special
+effects' using the filter mechanism. As it is especially useful with
+older or even obsolete software,rlwrap compiles and runs on a fairly
+wide range of Unix-like systems (FreeBSD, OSX, AIX, Solaris, QNX,
+cygwin, linux and probably quite a few more)
 
 ## HOW TO USE IT:
 If 
@@ -66,14 +68,13 @@ See the INSTALL file for more information.
 
 ## PARENTHESIS MATCHING 
 This can be controlled by putting "set blink-matching-paren (off|on)"
-in your .inputrc. This setting is mentioned, but not clearly
-documented in readline's info or manpages; it should be on by default.
+in your .inputrc. It is "on" by default.
 
 ## FILTERS 
 Filters are "plug-in" scripts that give you complete control
 over rlwrap's input and output, history and completion. They are 
-somewhat experimental, and their implementation and the example
-filters still are of slightly dubious ('alpha') quality.
+not much used,and their implementation and the example
+filters are therefore still somewhat untested.
 
 ## AUTHOR
 Hans Lub, hanslub42@gmail.com
