@@ -27,12 +27,14 @@ int remember_for_completion = FALSE;    /* whether we should put al words from i
 char *multiline_separator = NULL;       /* character sequence to use in lieu of newline when storing multi-line input in a single history line */
 char *pre_given = NULL;                 /* pre-given user input when rlwrap starts up */
 struct rl_state saved_rl_state = { "", "", 0, 0, 0 };      /* saved state of readline */
+static bool bracketed_paste_enabled = FALSE;
 static char return_key;                 /* Key pressed to enter line */
 static int forget_line;
 static char *colour_start, *colour_end;        /* colour codes */
 int multiline_prompts = TRUE;
 
 /* forward declarations */
+static void maybe_enable_bracketed_paste(void);
 static void line_handler(char *);
 static void my_add_history(char *);
 static int my_accept_line(int, int);
@@ -54,6 +56,9 @@ static int please_update_ce(int,int);
 /* only useful while debugging: */
 static int debug_ad_hoc(int,int);
 static int dump_all_keybindings(int,int);
+
+#define ENABLE_BRACKETED_PASTE "\e[?2004h"
+
 
 void
 init_readline(char *UNUSED(prompt))
@@ -81,8 +86,7 @@ init_readline(char *UNUSED(prompt))
   rl_add_defun("rlwrap_call_editor", please_update_ce,-1);
   
   /* put the next variable binding(s) *before* rl_initialize(), so they can be overridden */
-  rl_variable_bind("blink-matching-paren","on"); 
-
+  rl_variable_bind("blink-matching-paren","on");  
   
   bindkey('\n', RL_COMMAND_FUN(my_accept_line), "emacs-standard; vi-insert; vi-command"); 
   bindkey('\r', RL_COMMAND_FUN(my_accept_line), "emacs-standard; vi-insert; vi-command"); 
@@ -100,8 +104,7 @@ init_readline(char *UNUSED(prompt))
 				   in .inputrc */
 
   /* put the next variable binding(s) *after* rl_initialize(), so they cannot be overridden */
-  myerror(WARNING|NOERRNO, "Enabling bracketed-paste!");
-  rl_variable_bind("enable-bracketed-paste","on");     /* enable-bracketed-paste changes cursor positioning after printing the prompt ...
+  /* rl_variable_bind("enable-bracketed-paste","off"); */     /* enable-bracketed-paste changes cursor positioning after printing the prompt ...
                                                            ... causing rlwrap to overwrite it after accepting input                        */
  
   using_history();
@@ -119,7 +122,11 @@ init_readline(char *UNUSED(prompt))
   saved_rl_state.point = strlen(saved_rl_state.input_buffer);
   saved_rl_state.raw_prompt = mysavestring("");
   saved_rl_state.cooked_prompt = NULL;
-  
+
+  bracketed_paste_enabled = !strings_are_equal(term_name, "dumb") && strings_are_equal(rl_variable_value("enable-bracketed-paste"),"on");
+
+  if (bracketed_paste_enabled)
+    my_putstr(ENABLE_BRACKETED_PASTE);
 }
 
 
@@ -193,6 +200,11 @@ message_in_echo_area(char *message)
   }     
 } 
 
+#ifndef HAVE_RL_VARIABLE_VALUE /* very ancient readline? */
+#  define rl_variable_value(s) "off"
+#endif
+
+
 static void
 line_handler(char *line)
 {
@@ -224,6 +236,13 @@ line_handler(char *line)
           
        O.K, we know for sure that cursor is at start of line. When clients output arrives, it will be printed at
        just the right place - but first we 'll erase the user input (as it may be about to be changed by the filter) */
+
+    SHOWCURSOR('0');
+    if (strcmp(rl_variable_value("enable-bracketed-paste"),"on")==0) {
+      DPRINTF0(DEBUG_READLINE, "bracketed paste mode enabled");
+      /* we're at start of line and the prompt has just been erased */
+      my_putstr(saved_rl_state.cooked_prompt);
+    }  
     SHOWCURSOR('1');
     rl_delete_text(0, rl_end);  /* clear line  (after prompt) */
     rl_point = 0;
@@ -286,6 +305,9 @@ line_handler(char *line)
 
     if (one_shot_rlwrap)
       write_EOF_to_master_pty();
+  
+    if (bracketed_paste_enabled)
+      my_putstr(ENABLE_BRACKETED_PASTE);
   }
 }
 
@@ -295,6 +317,7 @@ line_handler(char *line)
 static int
 my_accept_line(int UNUSED(count), int key)
 {
+  SHOWCURSOR('0');
   rl_point = 0;			/* leave cursor on predictable place */
   my_redisplay();
   rl_done = 1;
@@ -874,10 +897,6 @@ prompt_is_single_line(void)
 #ifndef SPY_ON_READLINE
 #  define _rl_horizontal_scroll_mode FALSE
 #  define rl_variable_value(s) "off"
-#else
-#  ifndef HAVE_RL_VARIABLE_VALUE
-#    define rl_variable_value(s) "off"
-#  endif
 #endif
   
 #ifdef HOMEGROWN_REDISPLAY
@@ -1046,4 +1065,41 @@ static void bindkey(int key, rl_command_func_t *function, const char *function_n
 }       
 
 
+#ifdef UNIT_TEST
 
+void my_line_handler(char *line) { /* This function (callback) gets called by readline
+                                   whenever rl_callback_read_char sees an ENTER */ 
+  printf("\nYou typed: '%s'\n", line);
+  if (!line)
+    exit(0);
+}
+      
+
+TESTFUNC(simple_callback, argc, argv, stage) {
+  char byte_read;
+  ONLY_AT_STAGE(TEST_AFTER_OPTION_PARSING);
+  init_readline("Weh! ");
+  set_echo(FALSE);
+  rl_callback_handler_install("Type anything: ", &my_line_handler);
+  while (TRUE) {
+    if (!read(STDIN_FILENO, &byte_read, 1))
+      exit(0);
+    DPRINTF1(DEBUG_READLINE, "Byte read: %s", mangle_char_for_debug_log(byte_read, TRUE));
+    rl_stuff_char(byte_read);
+    rl_callback_read_char();
+  }
+ }    
+
+TESTFUNC(standard_readline, argc, argv, stage) {
+  ONLY_AT_STAGE(TEST_AFTER_OPTION_PARSING);
+  while(TRUE) {
+     char *line_read = readline ("go ahead: ");
+     printf("\nYou typed: '%s'\n", line_read);
+     if (!line_read || !*line_read)
+       break;
+     free(line_read);
+  }
+  exit(0);
+}       
+
+#endif /* UNIT_TEST */

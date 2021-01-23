@@ -80,6 +80,11 @@ mystrndup(const char *string, int len)
 }
 
 
+/* compare strings for equality. fail if either of them is NULL */
+bool
+strings_are_equal(const char *s1, const char *s2) {
+  return s1 && s2 && strcmp(s1,s2)== 0;
+}
 
 /* mysavestring: allocate a copy of a string on the heap */
 

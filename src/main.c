@@ -86,6 +86,18 @@ static int  last_opt = -1;
 static char *client_term_name = NULL; /* we'll set TERM to this before exec'ing client command */
 static int feed_history_into_completion_list = FALSE;
 
+
+/*
+ * Since version 0.24, rlwrap only writes to master_pty
+ * asynchronously, keeping a queue of pending output. The readline
+ * line handler calls put_in_output_queue(user_input) , while
+ * main_loop calls flush_output_queue() as long as there is something
+ * in the queue.
+ */
+
+static char *output_queue; /* NULL when empty */
+
+
 /* private functions */
 static void init_rlwrap(char *command_line);
 static void fork_child(char *command_name, char **argv);
@@ -582,9 +594,11 @@ main_loop()
       /* -------------------------- write pty --------------------------------- */
       if (FD_ISSET(master_pty_fd, &writefds)) {
 	flush_output_queue();
-	yield(); /*  give  slave command time to respond. If we don't do this,
-		     nothing bad will happen, but the "dialogue" on screen will be
-		     out of order   */
+        if(output_queue) {   /* there was more than one line in the queue - probably pasted input    */
+          mymicrosleep(10);  /* give slave some time to respond                                      */
+	  yield();           /*  If we woudn't do this, nothing bad would happen, but the            */
+                             /*  "dialogue" on screen will be out of order (which can still happen)  */
+        }
       }
     }				/* if (ndfs > 0)         */
   }				/* while (1)             */
@@ -939,16 +953,6 @@ read_options_and_command_name(int argc, char **argv)
   return command_name;
 }
 
-
-/*
- * Since version 0.24, rlwrap only writes to master_pty
- * asynchronously, keeping a queue of pending output. The readline
- * line handler calls put_in_output_queue(user_input) , while
- * main_loop calls flush_output_queue() as long as there is something
- * in the queue.
- */
-
-static char *output_queue; /* NULL when empty */
 
 int
 output_queue_is_nonempty()

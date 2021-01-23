@@ -260,8 +260,6 @@ extern int commands_children_not_wrapped;
 extern int accepted_lines;
 extern char *filter_command;
 extern int polling;
-typedef enum  {TEST_AT_PROGRAM_START, TEST_AFTER_OPTION_PARSING, TEST_AFTER_SPAWNING_SLAVE_COMMAND,TEST_AFTER_READLINE_INIT} test_stage;
-
 
 void cleanup_rlwrap_and_exit(int status);
 void put_in_output_queue(char *stuff);
@@ -384,6 +382,7 @@ char *mybasename(const char *filename);
 char *mydirname(const char *filename);
 void  mystrlcpy(char *dst, const char *src, size_t size);
 void  mystrlcat(char *dst, const char *src, size_t size);
+bool strings_are_equal(const char *s1, const char *s2);
 char *mystrstr(const char *haystack, const char *needle);
 char *mysavestring(const char *string);
 char *add3strings(const char *str1, const char *str2, const char *str3);
@@ -545,6 +544,8 @@ size_t mbc_strnlen(const char *mb_string, size_t maxlen, MBSTATE *st);
 #  define FALSE 0
 #endif
 
+
+
 #ifndef min
 # define min(a,b) ((a) < (b) ? (a) : (b))
 #endif
@@ -553,6 +554,11 @@ size_t mbc_strnlen(const char *mb_string, size_t maxlen, MBSTATE *st);
 # define max(a,b) ((a) < (b) ? (b) : (a))
 #endif
 
+
+/* macros for writing unit tests */
+typedef enum  {TEST_AT_PROGRAM_START, TEST_AFTER_OPTION_PARSING, TEST_AFTER_SPAWNING_SLAVE_COMMAND,TEST_AFTER_READLINE_INIT} test_stage;
+#define TESTFUNC(f, argc, argv, stage)   void f(int argc, char **argv, test_stage stage)
+#define ONLY_AT_STAGE(s) if(stage != s) return
 
 
 
@@ -597,9 +603,9 @@ size_t mbc_strnlen(const char *mb_string, size_t maxlen, MBSTATE *st);
 #  define DEBUG_LONG_STRINGS                     512 /* log all strings completely, however long they are */ 
 #  define DEBUG_RACES                            1024 /* introduce random delays */  
 #  define DEBUG_RANDOM_FAIL                      2048 /* fail tests randomly */
-#  define DEBUG_TEST_MAIN                        4096 /* run test_main and exit  */
+#  define DEBUG_SHOWCURSOR                       4096 /* run test_main and exit  */
 
-#  define DEBUG_MAX                              DEBUG_TEST_MAIN
+#  define DEBUG_MAX                              DEBUG_SHOWCURSOR
 #  define MANGLE_LENGTH                          ((debug_saved & DEBUG_LONG_STRINGS) ? 0 : 20) /* debug_saved is defined within DPRINTF macro */ 
 #  define DEBUG_DEFAULT                          (DEBUG_TERMIO | DEBUG_SIGNALS | DEBUG_READLINE)
 #  define DEBUG_ALL                              (2*DEBUG_MAX-1)
@@ -647,7 +653,7 @@ size_t mbc_strnlen(const char *mb_string, size_t maxlen, MBSTATE *st);
 
 #  define ERRMSG(b)              (b && (errno != 0) ? add3strings("(", strerror(errno), ")") : "" )
 
-#  define SHOWCURSOR(c)          if (debug & DEBUG_READLINE) {my_putchar(c); mymicrosleep(1000); curs_left();} /* (may work incorrectly at last column!)*/
+#  define SHOWCURSOR(c)          if (debug & DEBUG_SHOWCURSOR) {my_putchar(c); mymicrosleep(1000); curs_left();} /* (may work incorrectly at last column!)*/
 
 #  define DEBUG_RANDOM_SLEEP        if (debug & DEBUG_RACES) {int sleeptime=rand()&31; DPRINTF1(DEBUG_RACES,"sleeping for %d msecs", sleeptime); mymicrosleep(sleeptime);}
 
