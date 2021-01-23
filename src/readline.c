@@ -348,39 +348,47 @@ static void
 my_add_history(char *line)
 {       
   int lookback, count, here;
-  char *new_entry, *filtered_line;
+  char *new_entry, *filtered_line, **lineptr, **list;
 
-  filtered_line =  pass_through_filter(TAG_HISTORY, line);
+  /* with bracketed-paste mode, line may actually be multiple lines. We'll treat each of those lines */
+  /* as a separate history item (I believe that is what bash does as well).                          */
+
+  list = split_with(line,"\n"); 
+  for (lineptr = list; *lineptr; lineptr++) {
+    filtered_line =  pass_through_filter(TAG_HISTORY, *lineptr);
  
   
-  switch (history_duplicate_avoidance_policy) { 
-  case KEEP_ALL_DOUBLES:
-    lookback = 0; break;
-  case ELIMINATE_SUCCESIVE_DOUBLES:
-    lookback = 1; break;
-  case ELIMINATE_ALL_DOUBLES:
-    lookback = history_length; break;
-  }
-
-  
-  new_entry = filtered_line;    
-  
-  lookback = min(history_length, lookback);      
-  for (count = 0, here = history_length - 1;
-       count < lookback ;
-       count++, here--) {
-    DPRINTF4(DEBUG_READLINE, "strcmping <%s> and <%s> (count = %d, here = %d)", line, history_get(history_base + here)->line ,count, here);
-    if (strncmp(new_entry, history_get(history_base + here) -> line, 10000) == 0) { /* history_get uses the logical offset history_base .. */
-       HIST_ENTRY *entry = remove_history (here);                                   /* .. but remove_history doesn't!                      */
-      DPRINTF2(DEBUG_READLINE, "removing duplicate entry #%d (%s)", here, entry->line);
-      free_foreign(entry->line);
-      free_foreign(entry);
+    switch (history_duplicate_avoidance_policy) { 
+    case KEEP_ALL_DOUBLES:
+      lookback = 0; break;
+    case ELIMINATE_SUCCESIVE_DOUBLES:
+      lookback = 1; break;
+    case ELIMINATE_ALL_DOUBLES:
+      lookback = history_length; break;
     }
-  }
-  add_history(new_entry);
-  free(new_entry);
-}
 
+  
+    new_entry = filtered_line;    
+  
+    lookback = min(history_length, lookback);      
+    for (count = 0, here = history_length - 1;
+         count < lookback ;
+         count++, here--) {
+      DPRINTF4(DEBUG_READLINE, "comparing <%s> and <%s> (count = %d, here = %d)", line
+             , history_get(history_base + here)->line ,count, here);
+      if (strncmp(new_entry, history_get(history_base + here) -> line, 10000) == 0) { /* history_get uses the logical offset history_base .. */
+        HIST_ENTRY *entry = remove_history (here);                                   /* .. but remove_history doesn't!                      */
+        DPRINTF2(DEBUG_READLINE, "removing duplicate entry #%d (%s)", here, entry->line);
+        free_foreign(entry->line);
+        free_foreign(entry);
+      }
+    }
+    add_history(new_entry);
+    free(new_entry);
+  }
+  free_splitlist(list);
+}
+  
 /* Homegrown redisplay function - erases current line and prints the
    new one.  Used for passwords (where we want to show **** instead of
    user input) and whenever HOMEGROWN_REDISPLAY is defined (for
