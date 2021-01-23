@@ -31,8 +31,7 @@ int ansi_colour_aware = FALSE;               /* -A option: make readline aware o
 int complete_filenames = FALSE;	             /* -c option: whether to complete file names        */
 int debug = 0;			             /* -d option: debugging mask                        */
 char *extra_char_after_completion = " ";     /* -e option: override readlines's default completion_append_char (space) */
-int history_duplicate_avoidance_policy =
-  ELIMINATE_SUCCESIVE_DOUBLES;               /* -D option: whether and how to avoid duplicate history entries */
+int history_duplicate_avoidance_policy =  ELIMINATE_SUCCESIVE_DOUBLES;               /* -D option: whether and how to avoid duplicate history entries */
 char *history_format = NULL;                 /* -F option: format to append to history entries            */
 char *forget_regexp = NULL;                  /* -g option: keep matching input out of history           */
 int pass_on_sigINT_as_sigTERM =  FALSE;      /* -I option: send a SIGTERM to client when a SIGINT is received */
@@ -41,6 +40,7 @@ int nowarn = FALSE;		             /* -n option: suppress warnings */
 int commands_children_not_wrapped =  FALSE;  /* -N option: always use direct mode when <command> is waiting */
 int one_shot_rlwrap = FALSE;                 /* -o option: whether to close the pty after writing the first line to <command> */
 char *prompt_regexp = NULL;		     /* -O option: only ever "cook" prompts matching this regexp */
+bool regexp_means_prompt = FALSE;            /* -O! all candidate prompts that match rhe regexp are prompts */
 int colour_the_prompt = FALSE;	             /* -p option: whether we should paint the prompt */
 int renice = FALSE;                          /* -R option: whether to be nicer than command */
 int mirror_arguments = FALSE;                /* -U option: whether to mirror command's arguments */
@@ -513,8 +513,16 @@ main_loop()
             my_putstr(old_raw_prompt);
             free(old_raw_prompt);
           }
+
 	  my_putstr(filtered);
 	  free (filtered);
+          if (regexp_means_prompt && prompt_regexp && match_regexp(saved_rl_state.raw_prompt, prompt_regexp, FALSE)) {
+            /* user specified -O!.... so any natching candidate prompt will be cooked immediately: */
+            move_cursor_to_start_of_prompt(ERASE);  /* erase already printed raw prompt */
+            cook_prompt_if_necessary();             
+            my_putstr(saved_rl_state.cooked_prompt);
+          }     
+            
 	  rlwrap_already_prompted = TRUE;
 	} else {
 	  my_putstr(new_output_minus_prompt);
@@ -829,7 +837,7 @@ read_options_and_command_name(int argc, char **argv)
       opt_f = TRUE;
       break;
     case 'F': WONTRETURN(myerror(FATAL|NOERRNO, "The -F (--history-format) option is obsolete. Use -z \"history_format '%s'\" instead", optarg));
-    case 'g': forget_regexp = mysavestring(optarg); match_regexp("just testing", forget_regexp, 1); break;
+    case 'g': forget_regexp = mysavestring(optarg);  match_regexp("complain NOW if regexp is wrong", forget_regexp, 1); break;
     case 'h': WONTRETURN(usage(EXIT_SUCCESS));	  
     case 'H': history_filename = mysavestring(optarg); break;
     case 'i': 
@@ -851,7 +859,13 @@ read_options_and_command_name(int argc, char **argv)
     case 'N': commands_children_not_wrapped = TRUE; break;
     case 'o': 
       one_shot_rlwrap = TRUE; break;
-    case 'O': prompt_regexp = mysavestring(optarg); match_regexp("just testing", prompt_regexp, 1); break;
+    case 'O': prompt_regexp = mysavestring(optarg);
+      if (*prompt_regexp == '!') {
+        regexp_means_prompt = TRUE;
+        prompt_regexp += 1;
+      }
+      match_regexp("complain NOW if regexp is wrong", prompt_regexp, 1);
+      break;
     case 'p':
       colour_the_prompt = TRUE;
       initialise_colour_codes(check_optarg('p', remaining) ?

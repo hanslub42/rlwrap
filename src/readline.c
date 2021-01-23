@@ -953,6 +953,7 @@ char *process_new_output(const char* buffer, struct rl_state* UNUSED(state)) {
 }
 
 
+
 int cook_prompt_if_necessary () {
   char *pre_cooked, *rubbish_from_alternate_screen,  *filtered, *uncoloured, *cooked, *p, *non_rubbish = NULL;
   static char **term_ctrl_seqs[] 
