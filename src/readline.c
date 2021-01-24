@@ -854,10 +854,10 @@ colourise (const char *prompt)
 {
   char *prompt_copy, *trailing_space, *colour_end_with_space, *result, *p;
   prompt_copy = mysavestring(prompt);
-  if (strchr(prompt_copy, '\033') || strchr(prompt_copy, RL_PROMPT_START_IGNORE) ) {     /* prompt contains escape codes? */
-    DPRINTF1(DEBUG_READLINE, "colourise %s: left as-is", prompt);
-    return prompt_copy; /* if so, leave prompt alone  */
-  }
+  /* if (strchr(prompt_copy, '\033') || strchr(prompt_copy, RL_PROMPT_START_IGNORE) ) {     /\* prompt contains escape codes? *\/ */
+  /*   DPRINTF1(DEBUG_READLINE, "colourise %s: left as-is", prompt); */
+  /*   return prompt_copy; /\* if so, leave prompt alone  *\/ */
+  /* } */
   for (p = prompt_copy + strlen(prompt_copy); p > prompt_copy && *(p-1) == ' '; p--)
     ; /* skip back over trailing space */
   trailing_space = mysavestring(p); /* p now points at first trailing space, or else the final NULL */

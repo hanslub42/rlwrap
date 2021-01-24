@@ -143,7 +143,8 @@ Call multi-line-editor on temporary files with filename extension \fI.ext\fP (us
 Send an EOF to \fIcommand\fP after accepting the first line of input
 .TP
 .OL \-O \-\-only\-cook \fIregexp\fP
-Only ever "cook" prompts that match \fIregexp\fP 
+Only ever "cook" prompts that match \fIregexp\fP, which can be preceded by  '!', meaning that  \fBall\fP matching candidate prompts will be cooked
+immediately ("confident mode").
 .TP
 .OL \-p \-\-prompt\-colour [\fIcolour_name|Colour_name|colour_spec\fP]
 Use one of the colour names \fIblack, red, green, yellow, blue, cyan, purple (=magenta)\fP or \fIwhite\fP, or an ANSI\-conformant <colour_spec> to colour any prompt displayed by
@@ -254,10 +255,10 @@ cooked mode. In the first case, \fBrlwrap\fP will copy all input
 and output directly between \fIcommand\fP and your terminal ("direct
 mode"). In the second case, \fBrlwrap\fP will use readline to edit your input ("readline mode"), and monitor 
 \fBcommand\fP's output \- every last line that doesn't end with a newline is a potential prompt. How it handles such a candidate prompt depends on its being in "patient" or "impatient" mode:
-.SH PATIENT AND IMPATIENT MODE
+.SH PATIENT, IMPATIENT AND CONFIDENT MODE
 If \fIcommand\fP writes a lot of output, it tends to be written (and
 read) in "chunks". Not all chunks will end with a newline, and we need
-to distinguish their last lines from real prompts, especially if we
+to distinguish their last lines ("candidate prompts") from real prompts, especially if we
 want to re\-write ("cook") prompts. \fBrlwrap\fP solves this (almost)
 by waiting a little, to see if there is more to come. "A little" is 40
 msec by default, but this can be changed with the \fB\-w\fP option.
@@ -267,6 +268,10 @@ time. This is called "impatient" mode. If you don't like the flashing
 effect (which can become annoying when you "cook" the prompt heavily) you
 can put \fBrlwrap\fP in "patient mode" by specifying a negative value with \fB\-w\fP (e.g. \-w \-40). Rlwrap 
 will then hold back the prompt and only print if after cooking.
+If prompts always match some regular expression you can specify "confident mode" with \fB--only-cook='!<regexp>'\fP (note the exclamation mark).
+Then all candidate prompts that match will be cooked immediately. They will, however, not be "uncooked" if more output arrives, which can happen
+if they weren't prompts after all.
+
 .SH COOKING PROMPTS
 If and when \fBrlwrap\fP decides that it has a prompt, it will
 perform a number of actions on it, depending on the given options:
@@ -346,6 +351,8 @@ A number of signals are forwarded to \fIcommand\fP:
 HUP INT QUIT USR1 USR2 TERM and (by way of resizing 
 \fIcommand\fP's terminal) WINCH. Some care is taken to handle
 TSTP (usually a result of a CTRL\-Z from the terminal) sensibly \- for example, after suspending \fBrlwrap\fP in the middle of a line edit, continuing (by typing 'fg') will land you at the exact spot where you suspended it.
+
+A filter can be used to modify/ignore signals, or send output "out of band" to the rlwrapped command.
 
 Filters (except those that filter signals) that take more than 1 second to respond can be
 interrupted by a CTRL\-C from the terminal (although \fBrlwrap\fP will not survive this) 

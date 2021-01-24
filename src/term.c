@@ -175,7 +175,7 @@ init_terminal(void)
 
     /* there is no way to determine whether a terminal knows about bracketed paste. "Dumb" terminals do not, of course.            */
 
-    term_enable_bracketed_paste = strings_are_equal(term_name, "dumb") ? NULL : "\e[?2004h";
+    term_enable_bracketed_paste = strings_are_equal(term_name, "dumb") ? NULL : "\033[?2004h";
 
     
     if (!term_cursor_right) /* probably only on 'dumb' terminal */
