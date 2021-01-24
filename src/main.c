@@ -1042,7 +1042,7 @@ cleanup_rlwrap_and_exit(int status)
     write_history(history_filename);	/* ignore errors */
 
   close_logfile();
-
+  
   DPRINTF4(DEBUG_SIGNALS, "command_pid: %d, commands_exit_status: %x, filter_pid: %d, filters_exit_status: %x",
            command_pid, commands_exit_status, filter_pid, filters_exit_status);
   mymicrosleep(10); /* we may have got an EOF or EPIPE because the filter or command died, but this doesn't mean that
