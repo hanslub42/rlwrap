@@ -23,11 +23,6 @@ If such programs do their own completion, it will be unusable under rlwrap
 * General inadequacy and weak spots
 
 
-Bracketed-paste mode doesn't work on rlwrap. rlwrap will disable it even
-if specified in your .inputrc, or if it's the default on your system.
-
----
-
 The more sophisticated the terminal handling of rlwrapped program (the
 "client") gets, the less rlwrap will be able to maintain its
 transparency.  Of course, more sophisticated programs generally have

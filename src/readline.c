@@ -57,7 +57,6 @@ static int please_update_ce(int,int);
 static int debug_ad_hoc(int,int);
 static int dump_all_keybindings(int,int);
 
-#define ENABLE_BRACKETED_PASTE "\e[?2004h"
 
 
 void
@@ -123,10 +122,10 @@ init_readline(char *UNUSED(prompt))
   saved_rl_state.raw_prompt = mysavestring("");
   saved_rl_state.cooked_prompt = NULL;
 
-  bracketed_paste_enabled = !strings_are_equal(term_name, "dumb") && strings_are_equal(rl_variable_value("enable-bracketed-paste"),"on");
+  bracketed_paste_enabled = term_enable_bracketed_paste != NULL && strings_are_equal(rl_variable_value("enable-bracketed-paste"),"on");
 
   if (bracketed_paste_enabled)
-    my_putstr(ENABLE_BRACKETED_PASTE);
+    my_putstr(term_enable_bracketed_paste);
 }
 
 
@@ -305,9 +304,11 @@ line_handler(char *line)
 
     if (one_shot_rlwrap)
       write_EOF_to_master_pty();
-  
+
+    /* readline only outputs term_enable_bracketed_paste when we call rl_prep_terminal(). That's too   */
+    /* late for us, as we only call rl_prep_terminal *after* we have received user input               */
     if (bracketed_paste_enabled)
-      my_putstr(ENABLE_BRACKETED_PASTE);
+      my_putstr(term_enable_bracketed_paste);
   }
 }
 

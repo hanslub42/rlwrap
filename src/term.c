@@ -30,17 +30,19 @@ In the future it will also use terminfo or even ncurses. But the fall-back to ol
 to be especially needed on older machines                                                                                            */ 
 
 /*global vars */
-char term_eof;                  /* end_of_file char */
-char term_stop;                 /* stop (suspend) key */
-char *term_backspace;           /* backspace control seq  (or 0, if none defined in terminfo) */
-char *term_cursor_hpos;         /* control seq to position cursor st given position on current line */ 
+char term_eof;                       /* end_of_file char */
+char term_stop;                      /* stop (suspend) key */
+char *term_backspace;                /* backspace control seq  (or 0, if none defined in terminfo) */
+char *term_cursor_hpos;              /* control seq to position cursor st given position on current line */ 
 char *term_clear_screen;
 char *term_cursor_up;
 char *term_cursor_down;
-char *term_cursor_left;         /* only used for debugging (the SHOWCURSOR macro)                */
-char *term_cursor_right;        /* only used to emulate a missing term_cursor_hpos               */
-char *term_rmcup;               /* rmcup - char sequence to return from alternate screen         */
-char *term_rmkx;                /* rmkx - char sequence to return from keyboard application mode */
+char *term_cursor_left;              /* only used for debugging (the SHOWCURSOR macro)                */
+char *term_cursor_right;             /* only used to emulate a missing term_cursor_hpos               */
+char *term_rmcup;                    /* rmcup - char sequence to return from alternate screen         */
+char *term_rmkx;                     /* rmkx - char sequence to return from keyboard application mode */
+char *term_enable_bracketed_paste;   /* If we write this to some terminals (xterm etc.) they  will    */
+                                     /* "bracket" pasted input with \e[200 and \e201                  */ 
 int term_has_colours;
 
 int redisplay = 1;
@@ -171,6 +173,11 @@ init_terminal(void)
     term_rmcup          = tigetstr_or_else_tgetstr("rmcup",  "te", "exit alternate screen"); 
     term_rmkx           = tigetstr_or_else_tgetstr("rmkx",   "ke", "leave keypad-transmit mode");
 
+    /* there is no way to determine whether a terminal knows about bracketed paste. "Dumb" terminals do not, of course.            */
+
+    term_enable_bracketed_paste = strings_are_equal(term_name, "dumb") ? NULL : "\e[?2004h";
+
+    
     if (!term_cursor_right) /* probably only on 'dumb' terminal */
       term_cursor_right = " ";
     
