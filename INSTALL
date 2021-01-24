@@ -51,6 +51,9 @@ following:
 --enable-proc-mountpoint (default: /proc) mountpoint for Linux-style
   procfs, used for determination of slave command's working directory.
 
+--enable-multibyte-aware (default: YES) Prevent rlwrap from seeing
+  multibyte characters as multiple  characters. 
+
 
 UNINSTALLATION
 
