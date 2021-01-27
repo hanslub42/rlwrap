@@ -452,7 +452,7 @@ else
         [AC_LANG_SOURCE([[#include <unistd.h>
                           #include <string.h>
                           int main(int argc, char **argv) {
-                                       memcpy(*argv, "a\0" RANDOM_NONSENSE2, strlen(RANDOM_NONSENSE2) + 3);
+                                       memcpy(*argv, "a\0" RANDOM_NONSENSE2, strlen(RANDOM_NONSENSE2) + 2);
                                        return(sleep(10));
                                    }
                          ]])])
