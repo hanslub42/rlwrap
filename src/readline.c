@@ -161,7 +161,7 @@ restore_rl_state()
 
   
   if (debug & DEBUG_AD_HOC) { /* for our stamp collection of prompts */
-    printf("Raw prompt of %s: %s\n", command_name, mangle_string_for_debug_log(saved_rl_state.raw_prompt, 80));
+    printf("Raw prompt of %s: %s\n", command_name, mangle_string_for_debug_log(saved_rl_state.raw_prompt,200));
     cleanup_rlwrap_and_exit(EXIT_SUCCESS);
   }     
     
@@ -996,7 +996,9 @@ int cook_prompt_if_necessary () {
     rubbish_from_alternate_screen = mysavestring("");
   }
   
-
+  if (ansi_colour_aware)
+    pre_cooked = protect_or_cleanup(pre_cooked, TRUE);
+  
   unbackspace(pre_cooked); /* programs that display a running counter would otherwise make rlwrap keep prompts
                               like " 1%\r 2%\r 3%\ ......" */
 

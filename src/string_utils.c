@@ -909,7 +909,7 @@ int match_regexp (const char *string, const char *regexp, int case_insensitive) 
   
   if (!regexp || !string)
     return FALSE;
-  
+
 #ifndef HAVE_REGEX_H
   {
     static int been_warned = 0;
@@ -1104,3 +1104,168 @@ split_filter_message(char *message, int *counter)
 }
 
 
+
+#ifndef HAVE_REGEX_H
+char *protect_or_cleanup(const char *prompt) {
+  return mysavestring(prompt); /*essentially a NOP */
+}       
+
+#else
+
+/* regcomp with error checking (and simpler signature) */
+static regex_t *my_regcomp(const char*regex, int flags) {
+  regex_t *compiled_regexp = mymalloc(sizeof(regex_t));
+  int compile_error = regcomp(compiled_regexp, regex, flags);     
+  if (compile_error) {
+    int size = regerror(compile_error, compiled_regexp, NULL, 0);
+    char *error_message =  mymalloc(size);
+    regerror(compile_error, compiled_regexp, error_message, size);
+    myerror(FATAL|NOERRNO, "(Internal error:) in regexp \"%s\": %s", mangle_string_for_debug_log(regex,256), error_message);  
+  }
+  return compiled_regexp;
+}       
+ 
+
+#define TOKEN '@'
+#define MAXGROUPS 2
+
+/* protect_pattern("foo", 'a', 'b) = "(a[^b]*b)|(foo)" */
+char *protect(const char *pattern, char protect_start, char protect_end) {
+  char *alternative_pattern = mymalloc(strlen(pattern) + 14);
+  sprintf(alternative_pattern,"(%c[^%c]*%c)|(%s)", protect_start, protect_end, protect_end, pattern); 
+  return alternative_pattern;
+}
+
+
+
+/* Substitute all occurences of the second group in <compiled_pattern> within <source>  with <replacement>, skipping everything within the first group */
+char *replace_special(const char *source, regex_t *compiled_pattern, const char*replacement) {
+  assert(source != NULL);
+  
+  const char *source_cursor;
+  char *copy_with_replacements, *copy_cursor;
+  int max_copylen = 1 + max(1, strlen(replacement))*strlen(source);
+  copy_with_replacements = mymalloc(max_copylen); /* worst case: replace every char in source by replacement (+ 1 final zero byte)  */
+  source_cursor = source;
+  copy_cursor = copy_with_replacements;
+    
+  while(TRUE) {
+    regmatch_t matches[MAXGROUPS + 1];          /* whole match + MAXGROUPS groups */
+    if ((regexec(compiled_pattern, source_cursor, MAXGROUPS + 1, matches , 0) == REG_NOMATCH)) {   /* no (more) matches ...   */
+      strcpy(copy_cursor,source_cursor);        /* .. copy remainder of source (may be empty), and we're done      */
+      break;                                    /* 0-terminates copy, even if last match consumed source copletely */
+    } else {
+      int i; const char *p;
+      int protected_end = matches[1].rm_eo;
+      int match_start   = matches[2].rm_so;  
+      int match_end     = matches[2].rm_eo;
+      int match_length  = match_end - match_start;      /* Either the first ("protected") group in alternative_pattern matches, */
+      assert(!(protected_end > -1 && match_end > -1));  /*  ... or the second (never both - that is the assertion here)         */
+      if (protected_end > -1)                   /* If it is the first ...                                                       */
+        for (i = 0; i< protected_end; i++)      /* copy until protected match ends                                              */
+          *copy_cursor++ =  *source_cursor++;
+      else {                                    /* if it is the second (the original pattern) ...    */
+        for (i = 0; i< match_start; i++)        /* ... copy until match starts                       */
+          *copy_cursor++ =  *source_cursor++;
+        for(p = replacement; *p; p++)           /* splice replacement                                */
+          if (*p == TOKEN) {                    /* where there is a TOKEN (may be more than one) ... */
+            assert(copy_cursor + match_length - copy_with_replacements < max_copylen);
+            for(i=0; i< match_length ; i++)     /* ... splice matched group                          */
+              *copy_cursor++ = *(source_cursor + i);
+          } else                                  /* otherwise, just copy replacement                  */
+            *copy_cursor++ = *p;
+        source_cursor += match_length;          /* finished replacing this match, try again          */
+      }
+    }
+    *copy_cursor = '\0';
+  }
+  return copy_with_replacements;
+}
+      
+
+/* Al the codes we want to preserve (i.e. keep and put between RL_PROMPT_{START,END}_IGNORE ) */
+static
+char *protected_codes[]  = {"(\x1B\\[[0-9;]*m)"           /* colour codes           */
+                           ,"(\x1B\\[?1h\x1B=)"           /* smkx keypad            */
+                           ,"(\x1B\\]0;[[:print:]]*\x07)" /* tsl <window title> fsl */
+                           , NULL};
+
+
+
+
+/* All the codes we want to get rid of. cf.                                                                        */
+/* https://stackoverflow.com/questions/14693701/how-can-i-remove-the-ansi-escape-sequences-from-a-string-in-python */
+/* We only cover 7-bit C1 ANSI sequences; the 8-bit are not much used as they interfere with UTF-8, and we         */
+/* don't need to absolutely catch everything anyway                                                                */
+static
+char *unwanted_codes[] = { "(\x1B[ -/]*[0-Z\\\\-~])"           /* ANSI X3.41: ESC + I-pattern + F-pattern (except [, which is covered below) */
+                           ,"(\x1B[@-Z\\]-_])"                 /* C1_Fe */
+                           ,"(\x1B\\[[0-9:;<>=?]*[-/]*[@-~])"  /* CSI   (overlaps with "protected" codes!) (is the meaning of [@-~] locale-dependent?) */
+                         ,NULL};
+
+
+
+
+/* mark protected codes between RL_PROMPT_{START,END}_IGNORE and erase unwanted codes */
+char *protect_or_cleanup(char *prompt, bool free_prompt) {
+  char *result1, *result, **pc, ***reptr;
+  static char *protected_codes_regexp ;
+  static regex_t *compiled_and_protected_protected_codes_regexp;
+  static char *protected_token;
+  static char *unwanted_codes_regexp;
+  static regex_t *compiled_and_protected_unwanted_codes_regexp;
+  
+  /* protect stuff we want to keep: */
+  
+  /* (once)construct the regexp for the protected codes: */
+  if (!protected_codes_regexp) {
+    protected_codes_regexp = unsplit_with(-1, &protected_codes[0], "|");
+    compiled_and_protected_protected_codes_regexp = my_regcomp(protect(protected_codes_regexp, RL_PROMPT_START_IGNORE, RL_PROMPT_END_IGNORE), REG_EXTENDED);
+  }
+  /* (once) construct the replacement pattern */
+  if (!protected_token) {
+     protected_token = mymalloc(4); /* "\x01@\x02" */
+     sprintf(protected_token,"%c%c%c",RL_PROMPT_START_IGNORE, TOKEN, RL_PROMPT_END_IGNORE);
+  }
+  result1 = replace_special(prompt, compiled_and_protected_protected_codes_regexp, protected_token);
+
+  if (!unwanted_codes_regexp) {
+    unwanted_codes_regexp = unsplit_with(-1, &unwanted_codes[0], "|");
+    DPRINTF1(DEBUG_AD_HOC, "unwanted_codes_regexp: %s", mangle_string_for_debug_log(unwanted_codes_regexp, 250));
+    compiled_and_protected_unwanted_codes_regexp =  my_regcomp(protect(unwanted_codes_regexp, RL_PROMPT_START_IGNORE, RL_PROMPT_END_IGNORE), REG_EXTENDED);
+  }
+  result = replace_special(result1, compiled_and_protected_unwanted_codes_regexp, "");
+   DPRINTF2(DEBUG_READLINE, "protect_or_cleanup(%s) = %s", mangle_string_for_debug_log(prompt,1000), mangle_string_for_debug_log(result, 1000)); 
+  free(result1);
+  if (free_prompt)
+    free(prompt);
+
+  return result;
+}
+
+
+  
+#ifdef UNIT_TEST  
+
+  
+TESTFUNC(test_subst, argc, argv, stage) {
+  ONLY_AT_STAGE(TEST_AFTER_OPTION_PARSING);
+  while(TRUE) {
+     regmatch_t matches[MAXGROUPS + 1];          /* whole match + MAXGROUPS groups */
+     char *line_read = readline ("go ahead (string pattern): ");
+     if (strings_are_equal(line_read, "stop"))
+       break;
+     char**components = split_with(line_read," ");
+     if (!(components[0] && components[1]))
+       continue;
+     regex_t *re = my_regcomp(protect(components[1],'a','b'), REG_EXTENDED);
+     bool does_match = regexec(re, components[0], MAXGROUPS + 1, matches , 0) != REG_NOMATCH;
+     printf("%s\n", does_match  ? "JA" : "NEE");
+     free_foreign(line_read);
+  }
+  cleanup_rlwrap_and_exit(EXIT_SUCCESS);
+}
+
+#endif
+
+#endif /* def HAVE_REGEX_H */

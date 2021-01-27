@@ -186,9 +186,10 @@ main(int argc, char **argv)
 {
   char *command_name;
 
-  if (!setlocale (LC_ALL, ""))                          /* ANSI C says that all programs start by default in the standard `C' locale...   */ 
-    myerror(WARNING|NOERRNO, "could not set locale");   /* ... To use the locales specified by the environment, we must call  setlocale.  */
-
+  if (!(setlocale (LC_ALL, "") && setlocale(LC_COLLATE, "C")))/* ANSI C says that all programs start by default in the standard `C' locale...   */ 
+    myerror(WARNING|NOERRNO, "could not set locale");         /* ... To use the locales specified by the environment, we must call  setlocale.  */
+                                                              /* LC_COLLATE = 'C' because we use character ranges  as byte ranges in regexps    */ 
+  
   run_unit_test(argc, argv,TEST_AT_PROGRAM_START);
   rlwrap_command_line = unsplit_with(argc, argv, " ");     
   init_completer();

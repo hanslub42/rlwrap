@@ -19,6 +19,8 @@
     e-mail:  hanslub42@gmail.com
 */
 
+#define  _POSIX_C_SOURCE 2 /* be old-skool (cf. man 7 feature_test_macros) */
+
 #include "../config.h"
 #include <sys/types.h>
 #if HAVE_SYS_WAIT_H
@@ -421,6 +423,7 @@ int isnumeric(char *string);
 char *append_field_and_free_old(char *message, const char *field);
 char *merge_fields(char *field, ...);
 char **split_filter_message(char *message, int *count);
+char *protect_or_cleanup(char *prompt, bool free_prompt);
 
 /* in pty.c: */
 pid_t my_pty_fork(int *, const struct termios *, const struct winsize *);
