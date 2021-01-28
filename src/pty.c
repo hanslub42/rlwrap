@@ -337,19 +337,24 @@ completely_mirror_slaves_special_characters()
 }
 
 
-/* returns TRUE if the -N option has been specified, we can read /proc/<command_pid>/wchan,
-   (which happens only on linux, as far as I know) and what we read there contains the word "wait"
-   meaning (presumably...) that command is waiting for one of its children
-   if otherwise returns FALSE
+/* returns TRUE if the -N option has been specified, we can read
+   /proc/<command_pid>/wchan, (which happens only on linux, as far as
+   I know) and what we read there contains one of the "wait_prhases"m
+   meaning (presumably...) that command is waiting for one of its
+   children if otherwise returns FALSE
 */
+
+  
 int dont_wrap_command_waits() {
   static char command_wchan[MAXPATHLEN+1];
+  static char *wait_phrases[] = {"wait4", "suspend", "do_wait", NULL}; 
   static int initialised = FALSE;
   static int wchan_fd;
   static int been_warned = 0;
-  char buffer[BUFFSIZE];
+  char buffer[BUFFSIZE], **p;
   int nread, result = FALSE;
 
+  
   DEBUG_RANDOM_SLEEP;
   if (!commands_children_not_wrapped)
     return FALSE;
@@ -372,8 +377,13 @@ int dont_wrap_command_waits() {
 
   if (((nread = read(wchan_fd, buffer, BUFFSIZE -1)) > 0)) {
     buffer[nread] =  '\0';
-    DPRINTF1(DEBUG_READLINE, "read commands wchan: <%s> ", buffer);
-    result = (strstr(buffer, "wait") != NULL);
+    result = FALSE;
+    for (p = wait_phrases; *p; p++)
+      if (strstr(buffer, *p)) {
+        result = TRUE;
+        break;
+      }
+    DPRINTF3(DEBUG_READLINE, "read commands wchan %s: <%s>, waiting: %s", command_wchan, buffer, result ? "yes" : "no");
   }
   close(wchan_fd);
   DEBUG_RANDOM_SLEEP;

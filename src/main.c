@@ -28,6 +28,7 @@
 int always_readline = FALSE;	             /* -a option: always be in readline mode             */
 char *password_prompt_search_string = NULL;  /* (part of) password prompt (argument of -a option) */
 int ansi_colour_aware = FALSE;               /* -A option: make readline aware of ANSI colour codes in prompt */
+int bleach_the_prompt = FALSE;               /* -A!: remove all ANSI colour codes in prompt      */
 int complete_filenames = FALSE;	             /* -c option: whether to complete file names        */
 int debug = 0;			             /* -d option: debugging mask                        */
 char *extra_char_after_completion = " ";     /* -e option: override readlines's default completion_append_char (space) */
@@ -108,17 +109,17 @@ static void main_loop(void);
 
 /* options */
 #ifdef GETOPT_GROKS_OPTIONAL_ARGS
-static char optstring[] = "+:a::Ab:cC:d::D:e:f:F:g:hH:iIl:nNM:m::oO:p::P:q:rRs:S:t:TUvw:Wz:";
+static char optstring[] = "+:a::A::b:cC:d::D:e:f:F:g:hH:iIl:nNM:m::oO:p::P:q:rRs:S:t:TUvw:Wz:";
 /* +: is not really documented. configure checks wheteher it works as expected
    if not, GETOPT_GROKS_OPTIONAL_ARGS is undefined. @@@ */
 #else
-static char optstring[] = "+:a:Ab:cC:d:D:e:f:F:g:hH:iIl:nNM:m:oO:p:P:q:rRs:S:t:TUvw:Wz:";	
+static char optstring[] = "+:a:A:b:cC:d:D:e:f:F:g:hH:iIl:nNM:m:oO:p:P:q:rRs:S:t:TUvw:Wz:";	
 #endif
 
 #ifdef HAVE_GETOPT_LONG
 static struct option longopts[] = {
   {"always-readline", 		optional_argument, 	NULL, 'a'},
-  {"ansi-colour-aware",         no_argument,            NULL, 'A'},
+  {"ansi-colour-aware",         optional_argument,      NULL, 'A'},
   {"break-chars", 		required_argument, 	NULL, 'b'},
   {"complete-filenames", 	no_argument, 		NULL, 'c'},
   {"command-name", 		required_argument, 	NULL, 'C'},
@@ -795,7 +796,11 @@ read_options_and_command_name(int argc, char **argv)
       if (check_optarg('a', remaining))
         password_prompt_search_string = mysavestring(optarg);
       break;
-    case 'A':	ansi_colour_aware = TRUE; break;
+    case 'A':
+      ansi_colour_aware = TRUE;
+      if (check_optarg('A', remaining) && strings_are_equal(optarg, "!"))
+          bleach_the_prompt = TRUE;
+      break;
     case 'b':
       rl_basic_word_break_characters = add3strings("\r\n \t", optarg, "");
       opt_b = TRUE;

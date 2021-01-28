@@ -251,6 +251,7 @@ extern int pass_on_sigINT_as_sigTERM;
 #define ELIMINATE_ALL_DOUBLES           2
 extern int one_shot_rlwrap;
 extern int ansi_colour_aware;
+extern int bleach_the_prompt;
 extern int colour_the_prompt;
 extern int received_WINCH;
 extern int prompt_is_still_uncooked;
@@ -409,7 +410,6 @@ char *as_string(int i);
 char *append_and_expand_history_format(char *line);
 void remove_padding_and_terminate(char *buf, int length);
 void unbackspace(char* buf);
-void test_unbackspace (const char *input, const char *expected_result);
 char *mark_invisible(const char *buf);
 char *copy_and_unbackspace(const char *original);
 int colourless_strlen(const char *str, char **pcopy_without_ignore_markers, int termwidth);

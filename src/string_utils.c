@@ -556,7 +556,7 @@ void remove_padding_and_terminate(char *buf, int length) {
    than the original, we need not worry about writing outside buf
 
    Example: if buf="abc\bd\r\e" then, after calling unbackspace(buf),
-   buf will contain "ebd"
+   buf will contain "ebd" @@@ Should be just "e"
 
    We need this function because many commands emit "status lines"
    using backspaces and carriage returns to re-write parts of the line in-place.
@@ -565,7 +565,7 @@ void remove_padding_and_terminate(char *buf, int length) {
 */
 
 void
-unbackspace(char* buf) {
+unbackspace_old(char* buf) {
   char *readptr, *copyptr, *endptr;
   int seen_bs_or_cr;
 
@@ -595,20 +595,70 @@ unbackspace(char* buf) {
   }
   *endptr = '\0';
   if (seen_bs_or_cr) 
+      DPRINTF1(DEBUG_TERMIO,"unbackspace result: %s", mangle_string_for_debug_log(buf, MANGLE_LENGTH));  
+}
+
+
+
+
+void
+unbackspace(char* buf) {
+  char *readptr, *copyptr;
+  int seen_bs_or_cr;
+
+  DPRINTF1(DEBUG_TERMIO,"unbackspace: %s", mangle_string_for_debug_log(buf, MANGLE_LENGTH));
+  seen_bs_or_cr = FALSE;
+  
+  for (readptr = copyptr = buf; *readptr; readptr++) {
+    switch (*readptr) {
+    case BACKSPACE:
+      copyptr = (copyptr > buf ? copyptr - 1 : buf);  /* cannot backspace past beginning of buf          */
+      while (*copyptr == RL_PROMPT_END_IGNORE && copyptr > buf) {    /* skip control codes  ...          */
+        while (*copyptr != RL_PROMPT_START_IGNORE && copyptr > buf)  /* but never past buffer start      */
+          copyptr--;                                                 /* e.g. with pathological "x\002\b" */
+        if (copyptr > buf)
+          copyptr--;
+      }   
+      seen_bs_or_cr = TRUE;
+      break;
+    case CARRIAGE_RETURN:
+      copyptr = buf;  
+      seen_bs_or_cr = TRUE;
+      break;
+    default:
+      *copyptr++ = *readptr;      
+      break;
+    }
+  }
+  *copyptr = '\0';
+  if (seen_bs_or_cr) 
       DPRINTF1(DEBUG_TERMIO,"unbackspace result: %s", mangle_string_for_debug_log(buf, MANGLE_LENGTH));
   
 }
 
 
+#ifdef UNIT_TEST
+
+static
 void test_unbackspace (const char *input, const char *expected_result) {
   char *scrap = mysavestring(input);
   unbackspace(scrap);
   if (strcmp(scrap, expected_result) != 0)
-    myerror(FATAL|NOERRNO, "unbackspace %s yielded %s, expected %s",
+    myerror(FATAL|NOERRNO, "unbackspace '%s' yielded '%s', expected '%s'",
               mangle_string_for_debug_log(input,0),
               mangle_string_for_debug_log(scrap,0),
               expected_result);
 }
+
+/*  run with: make clean ; make CFLAGS='-g -DUNIT_TEST=test'; ./rlwrap <argv> */
+TESTFUNC(test, argc, argv, stage) {
+  ONLY_AT_STAGE(TEST_AT_PROGRAM_START );
+  test_unbackspace("zx\001a\002\bq","sssssssss");
+  exit(0);
+}
+
+#endif
+
 
 
 /* Readline allows to single out character sequences that take up no
@@ -1114,8 +1164,12 @@ char *protect_or_cleanup(const char *prompt) {
 
 /* regcomp with error checking (and simpler signature) */
 static regex_t *my_regcomp(const char*regex, int flags) {
-  regex_t *compiled_regexp = mymalloc(sizeof(regex_t));
-  int compile_error = regcomp(compiled_regexp, regex, flags);     
+  regex_t *compiled_regexp;
+  int compile_error;
+  if (!*regex)
+    return NULL;
+  compiled_regexp = mymalloc(sizeof(regex_t));
+  compile_error = regcomp(compiled_regexp, regex, flags);     
   if (compile_error) {
     int size = regerror(compile_error, compiled_regexp, NULL, 0);
     char *error_message =  mymalloc(size);
@@ -1145,6 +1199,9 @@ char *replace_special(const char *source, regex_t *compiled_pattern, const char*
   const char *source_cursor;
   char *copy_with_replacements, *copy_cursor;
   int max_copylen = 1 + max(1, strlen(replacement))*strlen(source);
+
+  if (!compiled_pattern) /* pattern == NULL: just return a copy */
+    return mysavestring(source);
   copy_with_replacements = mymalloc(max_copylen); /* worst case: replace every char in source by replacement (+ 1 final zero byte)  */
   source_cursor = source;
   copy_cursor = copy_with_replacements;
@@ -1156,13 +1213,16 @@ char *replace_special(const char *source, regex_t *compiled_pattern, const char*
       break;                                    /* 0-terminates copy, even if last match consumed source copletely */
     } else {
       int i; const char *p;
-      int protected_end = matches[1].rm_eo;
-      int match_start   = matches[2].rm_so;  
-      int match_end     = matches[2].rm_eo;
-      int match_length  = match_end - match_start;      /* Either the first ("protected") group in alternative_pattern matches, */
-      assert(!(protected_end > -1 && match_end > -1));  /*  ... or the second (never both - that is the assertion here)         */
-      if (protected_end > -1)                   /* If it is the first ...                                                       */
-        for (i = 0; i< protected_end; i++)      /* copy until protected match ends                                              */
+      int protected_start   = matches[1].rm_so;
+      int protected_end     = matches[1].rm_eo;
+      int protected_length  = protected_end - protected_start;
+      int match_start       = matches[2].rm_so;  
+      int match_end         = matches[2].rm_eo;
+      int match_length      = match_end - match_start;   /* Either the first ("protected") group in alternative_pattern matches, */
+      assert(!(protected_end > -1 && match_end > -1));   /*  ... or the second (never both - that is the assertion here)         */
+      assert(protected_length > 0 || match_length > 0);  /*  ... and that match cannot be empty                                  */
+      if (protected_end > -1)                   /* If it is the first ...                                                        */
+        for (i = 0; i< protected_end; i++)      /* copy until protected match ends                                               */
           *copy_cursor++ =  *source_cursor++;
       else {                                    /* if it is the second (the original pattern) ...    */
         for (i = 0; i< match_start; i++)        /* ... copy until match starts                       */
@@ -1183,13 +1243,13 @@ char *replace_special(const char *source, regex_t *compiled_pattern, const char*
 }
       
 
-/* Al the codes we want to preserve (i.e. keep and put between RL_PROMPT_{START,END}_IGNORE ) */
+/* All the codes we want to preserve (i.e. keep and put between RL_PROMPT_{START,END}_IGNORE )    */
 static
-char *protected_codes[]  = {"(\x1B\\[[0-9;]*m)"           /* colour codes           */
-                           ,"(\x1B\\[?1h\x1B=)"           /* smkx keypad            */
-                           ,"(\x1B\\]0;[[:print:]]*\x07)" /* tsl <window title> fsl */
-                           , NULL};
+char *protected_codes[]  = { "\x1B\x1B", NULL};
 
+/* As we don't protect (and hence will get rid of) ANSI colour codes when "bleaching" the prompt, */
+/* specify separately:                                                                            */ 
+static char *ansi_colour_code_regexp = "(\x1B\\[[0-9;]*m)";          /* colour codes              */
 
 
 
@@ -1201,6 +1261,9 @@ static
 char *unwanted_codes[] = { "(\x1B[ -/]*[0-Z\\\\-~])"           /* ANSI X3.41: ESC + I-pattern + F-pattern (except [, which is covered below) */
                            ,"(\x1B[@-Z\\]-_])"                 /* C1_Fe */
                            ,"(\x1B\\[[0-9:;<>=?]*[-/]*[@-~])"  /* CSI   (overlaps with "protected" codes!) (is the meaning of [@-~] locale-dependent?) */
+                           ,"(\x1B\\[?1h\x1B=)"                /* smkx keypad            */
+                           ,"(\x1B\\]0;[[:print:]]*\x07)"      /* tsl <window title> fsl */
+
                          ,NULL};
 
 
@@ -1220,6 +1283,8 @@ char *protect_or_cleanup(char *prompt, bool free_prompt) {
   /* (once)construct the regexp for the protected codes: */
   if (!protected_codes_regexp) {
     protected_codes_regexp = unsplit_with(-1, &protected_codes[0], "|");
+    if (!bleach_the_prompt)
+      protected_codes_regexp = add3strings(protected_codes_regexp, "|", ansi_colour_code_regexp);
     compiled_and_protected_protected_codes_regexp = my_regcomp(protect(protected_codes_regexp, RL_PROMPT_START_IGNORE, RL_PROMPT_END_IGNORE), REG_EXTENDED);
   }
   /* (once) construct the replacement pattern */
