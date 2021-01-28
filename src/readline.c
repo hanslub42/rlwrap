@@ -34,7 +34,6 @@ static char *colour_start, *colour_end;        /* colour codes */
 int multiline_prompts = TRUE;
 
 /* forward declarations */
-static void maybe_enable_bracketed_paste(void);
 static void line_handler(char *);
 static void my_add_history(char *);
 static int my_accept_line(int, int);
@@ -158,13 +157,6 @@ restore_rl_state()
 {
   
   char *newprompt;
-
-  
-  if (debug & DEBUG_AD_HOC) { /* for our stamp collection of prompts */
-    printf("Raw prompt of %s: %s\n", command_name, mangle_string_for_debug_log(saved_rl_state.raw_prompt,200));
-    cleanup_rlwrap_and_exit(EXIT_SUCCESS);
-  }     
-    
   move_cursor_to_start_of_prompt(impatient_prompt ? ERASE : DONT_ERASE);
 
   cook_prompt_if_necessary();
