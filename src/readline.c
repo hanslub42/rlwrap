@@ -34,7 +34,6 @@ static char *colour_start, *colour_end;        /* colour codes */
 int multiline_prompts = TRUE;
 
 /* forward declarations */
-static void maybe_enable_bracketed_paste(void);
 static void line_handler(char *);
 static void my_add_history(char *);
 static int my_accept_line(int, int);
