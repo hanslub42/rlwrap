@@ -153,6 +153,9 @@ sends text to rlwrap, but rlwrap discards it. It is useful for debugging purpose
 
 adds/removes the words in `words` to/from a list of complition candidates.
 
+##### set_completion_list_options(word_seperator)
+Sets various completion options like word seperation characters.
+
 ##### cloak_and_dagger(question, prompt, timeout)
 
 sends `question` to command's input and read back everything that comes back until `prompt` is seen at "end-of-chunk", or no new chunks arrive for `timeout` seconds, whichever comes first. Return the response (without the final $prompt). rlwrap remains completely unaware of this conversation.

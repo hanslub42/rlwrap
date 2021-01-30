@@ -35,6 +35,7 @@
 
 
 int completion_is_case_sensitive = 1;
+char* completion_word_break_characters = 0;
 
 int
 compare(const char *string1, const char *string2)
@@ -1563,7 +1564,13 @@ my_completion_function(char *prefix, int state)
   const char *completion;
   
   rl_completion_append_character = *extra_char_after_completion;
-  
+
+  if (completion_word_break_characters != 0) {
+    rl_completer_word_break_characters = completion_word_break_characters;
+    rl_completer_quote_characters = "\"\'";
+    rl_filename_completion_desired = 0;
+  }
+
   /* if (*prefix == '!')
     return my_history_completion_function(prefix + 1, state); */
 

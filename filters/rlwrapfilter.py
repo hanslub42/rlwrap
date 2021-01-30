@@ -56,6 +56,7 @@ TAG_PROMPT                      = 4
 TAG_HOTKEY                      = 5
 TAG_SIGNAL                      = 6
 TAG_WHAT_ARE_YOUR_INTERESTS     = 127
+TAG_COMPLETION_OPTIONS          = 250
 TAG_IGNORE                      = 251
 TAG_ADD_TO_COMPLETION_LIST      = 252
 TAG_REMOVE_FROM_COMPLETION_LIST = 253
@@ -227,6 +228,7 @@ def tag2name(tag):
     """
     for name in ['TAG_REMOVE_FROM_COMPLETION_LIST',
                  'TAG_ADD_TO_COMPLETION_LIST',
+                 'TAG_COMPLETION_OPTIONS',
                  'TAG_WHAT_ARE_YOUR_INTERESTS',
                  'TAG_INPUT',
                  'TAG_PROMPT',
@@ -454,6 +456,11 @@ class RlwrapFilter:
         self.cumulative_output = self.cumulative_output + message
         return handled_echo + str(nl or "") + (when_defined(self.output_handler, message))
 
+    def set_completion_list_options(self, word_break_chars=[]):
+        word_break_chars_string = (''.join(word_break_chars)).encode("ascii")
+        print(word_break_chars_string)
+        print(struct.pack("@I", len(word_break_chars)) + word_break_chars_string)
+        write_message(TAG_COMPLETION_OPTIONS, (struct.pack("@I", len(word_break_chars)) + word_break_chars_string).decode("ascii"))
 
     def add_to_completion_list(self, *args):
         write_message(TAG_ADD_TO_COMPLETION_LIST, ' '.join(args))

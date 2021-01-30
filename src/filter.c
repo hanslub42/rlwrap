@@ -76,6 +76,7 @@ static void write_to_filter(int tag, const char *string);
 static char* tag2description(int tag);
 static char *read_tagless(void);
 void handle_out_of_band(int tag, char *message);
+void handle_completion_options(char *message);
 
 
 
@@ -272,6 +273,8 @@ void handle_out_of_band(int tag, char *message) {
   case TAG_OUTPUT_OUT_OF_BAND:
     my_putstr(message);
     break;
+  case TAG_COMPLETION_OPTIONS:
+    handle_completion_options(message);
   case TAG_ADD_TO_COMPLETION_LIST:
   case TAG_REMOVE_FROM_COMPLETION_LIST:
     split_em_up = TRUE;
@@ -309,8 +312,19 @@ static void write_message(int fd, int tag,  const char *string, const char *desc
   write_patiently2(fd, "\n", 1 , 1000, description);
 }
           
+void handle_completion_options(char *message) {
+  unsigned int word_break_length = *(unsigned int*)message;
 
+  char* work_break_array = (char*)(message + sizeof(unsigned int));
 
+  if (completion_word_break_characters != 0) {
+    free(completion_word_break_characters);
+  }
+
+  completion_word_break_characters = mymalloc(word_break_length + 2);
+  memcpy(completion_word_break_characters, work_break_array, word_break_length + 2);
+  completion_word_break_characters[word_break_length + 1] = 0;
+}
 
 static char* tag2description(int tag) {
   switch (tag) {
@@ -322,6 +336,7 @@ static char* tag2description(int tag) {
   case TAG_HOTKEY:                     return "HOTKEY";
   case TAG_SIGNAL:                     return "SIGNAL";
   case TAG_WHAT_ARE_YOUR_INTERESTS:    return "WHAT_ARE_YOUR_INTERESTS";
+  case TAG_COMPLETION_OPTIONS:         return "TAG_COMPLETION_OPTIONS";
   case TAG_IGNORE:                     return "TAG_IGNORE";
   case TAG_ADD_TO_COMPLETION_LIST:     return "ADD_TO_COMPLETION_LIST";
   case TAG_REMOVE_FROM_COMPLETION_LIST:return "REMOVE_FROM_COMPLETION_LIST";

@@ -450,6 +450,7 @@ void remove_word_from_completions(const char *word);
 char *my_completion_function(char *prefix, int state);
 
 extern int completion_is_case_sensitive;
+extern char* completion_word_break_characters;
 
 
 /* in term.c: */
@@ -491,7 +492,7 @@ extern int newline_came_last;
 
 #define TAG_WHAT_ARE_YOUR_INTERESTS 127
 
-
+#define TAG_COMPLETION_OPTIONS 250
 #define TAG_IGNORE 251
 #define TAG_ADD_TO_COMPLETION_LIST 252
 #define TAG_REMOVE_FROM_COMPLETION_LIST 253
@@ -499,7 +500,6 @@ extern int newline_came_last;
 #define TAG_ERROR 255
 
 #define out_of_band(tag) (tag & 128)
-
 
 extern pid_t filter_pid;
 extern int filter_is_dead;
