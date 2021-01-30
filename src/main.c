@@ -516,10 +516,10 @@ main_loop()
             free(old_raw_prompt);
           }
 
-	  my_putstr(filtered);
+	  my_putstr(filtered); 
 	  free (filtered);
           if (regexp_means_prompt && prompt_regexp && match_regexp(saved_rl_state.raw_prompt, prompt_regexp, FALSE)) {
-            /* user specified -O!.... so any natching candidate prompt will be cooked immediately: */
+            /* user specified -O!.... so any natching candidate prompt will be cooked and output immediately: */
             move_cursor_to_start_of_prompt(ERASE);  /* erase already printed raw prompt */
             cook_prompt_if_necessary();             
             my_putstr(saved_rl_state.cooked_prompt);

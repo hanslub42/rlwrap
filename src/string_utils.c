@@ -945,56 +945,6 @@ colour_name_to_ansi_code(const char *colour_name) {
 
 
 
-/*
-  returns TRUE if 'string' matches the 'regexp' (or is a superstring
-  of it, when we don't HAVE_REGEX_H). The regexp is recompiled with
-  every call, which doesn't really hurt as this function is not called
-  often: at most twice for every prompt.  'string' and 'regexp' may be
-  NULL (in which case FALSE is returned)
-
-  Only used for the --forget-regexp and the --prompt-regexp options
-*/
-int match_regexp (const char *string, const char *regexp, int case_insensitive) {
-  int result = FALSE;
-  
-  if (!regexp || !string)
-    return FALSE;
-
-#ifndef HAVE_REGEX_H
-  {
-    static int been_warned = 0;
-    char *metachars = "*()+?";
-    char *lc_string = (case_insensitive ? lowercase(string) : mysavestring(string));
-    char *lc_regexp = (case_insensitive  ? lowercase(regexp) : mysavestring(regexp));
-
-    if (scan_metacharacters(regexp, metachars) && !been_warned++) /* warn only once if the user specifies a metacharacter */
-      myerror(WARNING|NOERRNO, "one of the regexp metacharacters \"%s\" occurs in regexp(?) \"%s\"\n"
-             "  ...but on your platform, regexp matching is not supported!", metachars, regexp);        
-    
-    result = mystrstr(lc_string, lc_regexp);
-    free(lc_string);
-    free(lc_regexp);    
-  }
-#else
-  {
-    regex_t *compiled_regexp = mymalloc(sizeof(regex_t));
-    int compile_error = regcomp(compiled_regexp, regexp, REG_EXTENDED|REG_NOSUB|(case_insensitive ? REG_ICASE : 0));
-     
-    if (compile_error) {
-      int size = regerror(compile_error, compiled_regexp, NULL, 0);
-      char *error_message =  mymalloc(size);
-      regerror(compile_error, compiled_regexp, error_message, size);
-      myerror(FATAL|NOERRNO, "in regexp \"%s\": %s", regexp, error_message);  
-    } else {
-      result = !regexec(compiled_regexp, string, 0, NULL, 0);
-      free(compiled_regexp);
-    }
-  }
-#endif
-
-  
-  return result;        
-}
 
 
 /* returns TRUE if string is numeric (i.e. positive or negative integer), otherwise FALSE */
@@ -1271,7 +1221,7 @@ char *unwanted_codes[] = { "(\x1B[ -/]*[0-Z\\\\-~])"           /* ANSI X3.41: ES
 
 /* mark protected codes between RL_PROMPT_{START,END}_IGNORE and erase unwanted codes */
 char *protect_or_cleanup(char *prompt, bool free_prompt) {
-  char *result1, *result, **pc, ***reptr;
+  char *result1, *result;
   static char *protected_codes_regexp ;
   static regex_t *compiled_and_protected_protected_codes_regexp;
   static char *protected_token;
@@ -1306,6 +1256,49 @@ char *protect_or_cleanup(char *prompt, bool free_prompt) {
     free(prompt);
 
   return result;
+}
+
+
+/*
+  returns TRUE if 'string' matches the 'regexp' (or is a superstring
+  of it, when we don't HAVE_REGEX_H). The regexp is recompiled with
+  every call, which doesn't really hurt as this function is not called
+  often: at most twice for every prompt.  'string' and 'regexp' may be
+  NULL (in which case FALSE is returned)
+
+  Only used for the --forget-regexp and the --prompt-regexp options
+*/
+int match_regexp (const char *string, const char *regexp, int case_insensitive) {
+  int result = FALSE;
+  
+  if (!regexp || !string)
+    return FALSE;
+
+#ifndef HAVE_REGEX_H
+  {
+    static int been_warned = 0;
+    char *metachars = "*()+?";
+    char *lc_string = (case_insensitive ? lowercase(string) : mysavestring(string));
+    char *lc_regexp = (case_insensitive  ? lowercase(regexp) : mysavestring(regexp));
+
+    if (scan_metacharacters(regexp, metachars) && !been_warned++) /* warn only once if the user specifies a metacharacter */
+      myerror(WARNING|NOERRNO, "one of the regexp metacharacters \"%s\" occurs in regexp(?) \"%s\"\n"
+             "  ...but on your platform, regexp matching is not supported!", metachars, regexp);        
+    
+    result = mystrstr(lc_string, lc_regexp);
+    free(lc_string);
+    free(lc_regexp);    
+  }
+#else
+  {
+    regex_t *compiled_regexp = my_regcomp(regexp, REG_EXTENDED|REG_NOSUB|(case_insensitive ? REG_ICASE : 0));
+    result = !regexec(compiled_regexp, string, 0, NULL, 0);
+    free(compiled_regexp);
+  }
+#endif
+
+  
+  return result;        
 }
 
 

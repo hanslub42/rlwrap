@@ -160,7 +160,9 @@ restore_rl_state()
   move_cursor_to_start_of_prompt(impatient_prompt ? ERASE : DONT_ERASE);
 
   cook_prompt_if_necessary();
-  newprompt =  mark_invisible(saved_rl_state.cooked_prompt); /* bracket (colour) control sequences with \001 and \002 */  
+  newprompt =  mark_invisible(saved_rl_state.cooked_prompt); /* bracket (colour) control sequences with \001 and \002 */
+  if (!strings_are_equal(newprompt, saved_rl_state.cooked_prompt))
+    DPRINTF2(DEBUG_READLINE, "newprompt: <%s>, cooked prompt: <%s>", mangle_string_for_debug_log(newprompt, MANGLE_LENGTH), mangle_string_for_debug_log(saved_rl_state.cooked_prompt, MANGLE_LENGTH));
   rl_expand_prompt(newprompt);
   mirror_slaves_echo_mode();    /* don't show passwords etc */
   
@@ -949,6 +951,7 @@ char *process_new_output(const char* buffer, struct rl_state* UNUSED(state)) {
   }     
   return result;
 }
+
 
 
 
