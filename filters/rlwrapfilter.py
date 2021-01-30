@@ -458,8 +458,6 @@ class RlwrapFilter:
 
     def set_completion_list_options(self, word_break_chars=[]):
         word_break_chars_string = (''.join(word_break_chars)).encode("ascii")
-        print(word_break_chars_string)
-        print(struct.pack("@I", len(word_break_chars)) + word_break_chars_string)
         write_message(TAG_COMPLETION_OPTIONS, (struct.pack("@I", len(word_break_chars)) + word_break_chars_string).decode("ascii"))
 
     def add_to_completion_list(self, *args):

@@ -13,7 +13,6 @@ import shlex
 import rlwrapfilter
 
 def get_files_by_prefix(path):
-        print("path=|" + path + "|")
         command = "ls -dp1 -- %s* 2>/dev/null" % shlex.quote(path)
         output = filter.cloak_and_dagger(command, "\$ ", 1)
 
