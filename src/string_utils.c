@@ -1146,11 +1146,12 @@ char *protect(const char *pattern, char protect_start, char protect_end) {
 
 /* Substitute all occurences of the second group in <compiled_pattern> within <source>  with <replacement>, skipping everything within the first group */
 char *replace_special(const char *source, regex_t *compiled_pattern, const char*replacement) {
-  assert(source != NULL);
-  
   const char *source_cursor;
   char *copy_with_replacements, *copy_cursor;
-  int max_copylen = 1 + max(1, strlen(replacement))*strlen(source);
+  int max_copylen;
+
+  assert(source != NULL);
+  max_copylen = 1 + max(1, strlen(replacement))*strlen(source);
 
   if (!compiled_pattern) /* pattern == NULL: just return a copy */
     return mysavestring(source);

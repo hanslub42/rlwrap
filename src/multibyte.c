@@ -124,25 +124,25 @@ mbc_copystate(MBSTATE st, MBSTATE *stc)
 }  
 
 int
-mbc_is_valid(const char *string, const MBSTATE *st)
+mbc_is_valid(const char *UNUSED(string), const MBSTATE *UNUSED(st))
 {
   return TRUE;
 }
 
 const char *
-mbc_next(const char *string, MBSTATE *st)
+mbc_next(const char *string, MBSTATE *UNUSED(st))
 {
   return string + 1;
 }  
 
 const char *
-mbc_inc(const char **p, MBSTATE *st)
+mbc_inc(const char **p, MBSTATE *UNUSED(st))
 {
   return (*p)++;
 }
 
 char *
-mbc_first(const char *string, const MBSTATE *st)
+mbc_first(const char *string, const MBSTATE *UNUSED(st))
 {
   char p[2] = " ";
   p[0] = string[0];
@@ -150,27 +150,27 @@ mbc_first(const char *string, const MBSTATE *st)
 }       
 
 int
-mbc_charwidth(const char *p, MBSTATE *st)
+mbc_charwidth(const char *UNUSED(p), MBSTATE *UNUSED(st))
 {
   return 1;
 }
 
 /* copy the first byte in p to *q, incrementing q */
 void
-mbc_copy(const char *p, char **q, MBSTATE *st)
+mbc_copy(const char *p, char **q, MBSTATE *UNUSED(st))
 {
   *(*q)++ = *p;
 }
 
 
 int
-is_multibyte(const char *p, const MBSTATE *st)
+is_multibyte(const char *UNUSED(p), const MBSTATE *UNUSED(st))
 {
   return FALSE;
 }
 
 size_t
-mbc_strnlen(const char *string, size_t maxlen, MBSTATE *st)
+mbc_strnlen(const char *string, size_t maxlen, MBSTATE *UNUSED(st))
 {
   return strnlen(string, maxlen);
 }
