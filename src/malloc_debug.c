@@ -1,5 +1,18 @@
 /*  malloc_debug.c: attempt at malloc/free replacement for debugging
-    configure with --enable-malloc-debugger to use it
+    configure with --enable-debug to use it. Nowadays, valgrind
+    will often be more useful.
+
+    When configured with --enable-debug, and run with the DEBUG_MALLOC
+    bit set this will log (in the debug log /tmp/rlwrap.debug) all
+    malloc() and free() calls made by rlwrap (but not those made on
+    behalf of rlwrap in library routines)
+
+    At program exit this will log a list of all unfreed() memory
+    blocks on the heap
+
+    if DEBUG_WITH_TIMESTAMPS is set in debug  , the timestamp of those
+    blocks (i.e. of their allocation) will be listed as well.
+ 
 
     
 */
@@ -42,6 +55,7 @@
 #define SLAVERY_SLOGAN "rlwrap is boss!"
 #define FREEDOM_SLOGAN "free at last!"
 #define SLOGAN_MAXLEN 20
+#define TIMESTAMP_MAXLEN 30
 
 extern int debug;
 
@@ -53,6 +67,7 @@ typedef struct freed_stamp
   char *file;                 /* source file where we were malloced/freed */ 
   int line;                   /* source line where we were malloced/freed */
   int size;
+  char timestamp[TIMESTAMP_MAXLEN];
   void *previous;             /* maintain a linked list of malloced/freed memory for post-mortem investigations*/
 } *Freed_stamp; 
 
@@ -99,6 +114,10 @@ debug_malloc(size_t size,  char *file, int line)
   stamp -> file = file;
   stamp -> line = line;
   stamp -> size = size;
+  if (debug & DEBUG_WITH_TIMESTAMPS)
+    timestamp(stamp -> timestamp, TIMESTAMP_MAXLEN);
+  else
+    stamp -> timestamp[0] = '\0';
   stamp -> previous = blocklist;
   blocklist = chunk;
   return (char *) chunk + sizeof(struct freed_stamp); 
@@ -190,8 +209,8 @@ void debug_postmortem() {
     if (strcmp(FREEDOM_SLOGAN, p -> magic) == 0)
       continue;
     else if (strcmp(SLAVERY_SLOGAN, p -> magic) == 0) {
-      block = (char *) p + sizeof(struct freed_stamp);
-      DPRINTF4(DEBUG_MEMORY_MANAGEMENT, "%d bytes malloced at %s:%d, contents: <%s>", p->size, p ->file, p ->line, mangle_string_for_debug_log(block, MANGLE_LENGTH));
+      block = (char *) p + sizeof(struct freed_stamp);   
+      DPRINTF5(DEBUG_MEMORY_MANAGEMENT, "%d bytes malloced at %s %s:%d, contents: <%s>", p->size, p -> timestamp, p ->file, p ->line, mangle_string_for_debug_log(block, MANGLE_LENGTH));
     } else {    
       DPRINTF0(DEBUG_MEMORY_MANAGEMENT, "Hmmm,  unmalloced memory, or memory not malloced by debug_malloc()");
     }

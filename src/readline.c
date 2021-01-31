@@ -956,7 +956,7 @@ char *process_new_output(const char* buffer, struct rl_state* UNUSED(state)) {
 
 
 int cook_prompt_if_necessary () {
-  char *pre_cooked, *rubbish_from_alternate_screen,  *filtered, *uncoloured, *cooked, *p, *non_rubbish = NULL;
+  char *pre_cooked, *slightly_cooked, *rubbish_from_alternate_screen,  *filtered, *uncoloured, *cooked, *p, *non_rubbish = NULL;
   static char **term_ctrl_seqs[] 
     = {&term_rmcup, &term_rmkx, NULL}; /* (NULL-terminated) list of (pointers to) term control sequences that may be
                                        used by clients to return from an 'alternate screen'. If we spot one of those,
@@ -991,24 +991,24 @@ int cook_prompt_if_necessary () {
     rubbish_from_alternate_screen = mysavestring("");
   }
   
-  if (ansi_colour_aware)
-    pre_cooked = protect_or_cleanup(pre_cooked, TRUE);
+  slightly_cooked = ansi_colour_aware ? protect_or_cleanup(pre_cooked, FALSE) : mysavestring(pre_cooked);
+  free(pre_cooked);
   
-  unbackspace(pre_cooked); /* programs that display a running counter would otherwise make rlwrap keep prompts
+  unbackspace(slightly_cooked); /* programs that display a running counter would otherwise make rlwrap keep prompts
                               like " 1%\r 2%\r 3%\ ......" */
 
   if ( /* raw prompt doesn't match '--only-cook' regexp */
-      (prompt_regexp && ! match_regexp(pre_cooked, prompt_regexp, FALSE)) ||
+      (prompt_regexp && ! match_regexp(slightly_cooked, prompt_regexp, FALSE)) ||
        /* now filter it, but filter may "refuse" the prompt */
-      (strcmp((filtered =  pass_through_filter(TAG_PROMPT, pre_cooked)), "_THIS_CANNOT_BE_A_PROMPT_")== 0)) { 
+      (strcmp((filtered =  pass_through_filter(TAG_PROMPT, slightly_cooked)), "_THIS_CANNOT_BE_A_PROMPT_")== 0)) { 
     /* don't cook, eat raw (and eat nothing if patient) */       
-    saved_rl_state.cooked_prompt =  (impatient_prompt ? mysavestring(pre_cooked) : mysavestring("")); 
+    saved_rl_state.cooked_prompt =  (impatient_prompt ? mysavestring(slightly_cooked) : mysavestring("")); 
     /* NB: if impatient, the rubbish_from_alternate_screen has been output already, no need to send it again */  
-    free(pre_cooked);
+    free(slightly_cooked);
     free(filtered); /* free(NULL) is never an error */
     return FALSE;
-  }     
-  free(pre_cooked);
+  }   
+  free(slightly_cooked);
   if(substitute_prompt) {
     uncoloured = mysavestring(substitute_prompt); 
     free(filtered);
@@ -1022,9 +1022,10 @@ int cook_prompt_if_necessary () {
     cooked = uncoloured;
   }
   if (! impatient_prompt)  /* in this case our rubbish hasn't been output yet. Output it now, but don't store
-                              it in the prompt, as this may be re-printed e.g. after resuming a suspended rlwrap */
-                              
+                              it in the prompt, as this may be re-printed e.g. after resuming a suspended rlwrap */                            
     write_patiently(STDOUT_FILENO,rubbish_from_alternate_screen, strlen(rubbish_from_alternate_screen), "to stdout");
+
+  free(rubbish_from_alternate_screen);
   saved_rl_state.cooked_prompt = cooked;
   return TRUE;
 }       

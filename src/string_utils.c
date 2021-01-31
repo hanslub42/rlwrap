@@ -1245,7 +1245,7 @@ char *protect_or_cleanup(char *prompt, bool free_prompt) {
      sprintf(protected_token,"%c%c%c",RL_PROMPT_START_IGNORE, TOKEN, RL_PROMPT_END_IGNORE);
   }
   result1 = replace_special(prompt, compiled_and_protected_protected_codes_regexp, protected_token);
-
+  
   if (!unwanted_codes_regexp) {
     unwanted_codes_regexp = unsplit_with(-1, &unwanted_codes[0], "|");
     DPRINTF1(DEBUG_AD_HOC, "unwanted_codes_regexp: %s", mangle_string_for_debug_log(unwanted_codes_regexp, 250));
@@ -1254,6 +1254,7 @@ char *protect_or_cleanup(char *prompt, bool free_prompt) {
   result = replace_special(result1, compiled_and_protected_unwanted_codes_regexp, "");
    DPRINTF2(DEBUG_READLINE, "protect_or_cleanup(%s) = %s", mangle_string_for_debug_log(prompt,1000), mangle_string_for_debug_log(result, 1000)); 
   free(result1);
+  
   if (free_prompt)
     free(prompt);
 
@@ -1295,7 +1296,7 @@ int match_regexp (const char *string, const char *regexp, int case_insensitive) 
   {
     regex_t *compiled_regexp = my_regcomp(regexp, REG_EXTENDED|REG_NOSUB|(case_insensitive ? REG_ICASE : 0));
     result = !regexec(compiled_regexp, string, 0, NULL, 0);
-    free(compiled_regexp);
+    regfree(compiled_regexp);
   }
 #endif
 
