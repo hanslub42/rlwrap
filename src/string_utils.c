@@ -697,7 +697,8 @@ mark_invisible(const char *buf)
   char *result = scratchpad;
   const char **original = &buf;
   char **copy = &scratchpad;
-
+  DPRINTF1(DEBUG_AD_HOC, "mark_invisible(%s) ...", mangle_string_for_debug_log(buf, MANGLE_LENGTH));
+  
   if (strchr(buf, RL_PROMPT_START_IGNORE))
     return mysavestring(buf); /* "invisible" parts already marked */
     
@@ -706,6 +707,7 @@ mark_invisible(const char *buf)
     assert(*copy - scratchpad < padsize);
   }
   **copy = '\0';
+  DPRINTF1(DEBUG_AD_HOC, "mark_invisible(...) = <%s>", mangle_string_for_debug_log(result, MANGLE_LENGTH));
   return(result);       
 }       
 
