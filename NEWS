@@ -1,3 +1,15 @@
+0.45  rlwrap now correctly handles  bracketed paste
+
+      --only-cook '!<regexp>' now enables "confident mode" where every
+      possible prompt that matches a regexp is cooked immediately
+      (so that even promts that get printed when handling a large
+      paste are cooked)
+
+      --ansi-colour-aware didn't do anything at all. Now it recognises
+      colour codes as well as common control codes like window titles.
+      --ansi-colour-aware="!" will "bleach" the prompt, i.e. remove
+      all colour codes
+
 0.44  rlwrap doesn't (yet) work with bracketed-paste. As this is
       enabled by default from readline-8.1 onwards, rlwrap disables
       it, even if specified in .inputrc. A multi-line paste will

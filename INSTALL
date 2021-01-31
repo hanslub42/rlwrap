@@ -11,15 +11,16 @@ INSTALLATION
 
 First, unzip the tarball or clone the git repository (git clone
 https://github.com/hanslub42/rlwrap.git). Then go to the rlwrap
-directory. After a 'git clone' you will not yet have a configure file; 
-build one using autotools (e.g. autoreconf --install, cf. the section 
-BUILD PROBLEMS below))
+directory. If there is no configure script (e.g. after a 'git clone'),
+you can generate it by running:
 
-Then:
+autoreconf --install # only if needed
+
+then:
 
 ./configure
 make
-make install
+sudo make install
 
 
 CONFIGURATION OPTIONS
@@ -90,8 +91,8 @@ consider installing Xyz-devel
 
 completion.c is made from completion.rb by the program rbgen
 (https://github.com/hanslub42/libredblack), but both files are included in
-the tarball and the repository; rbgen is only needed when you change
-completion.rb. Sometimes, however, after a 'git pull', make will try to
+the tarball and the repository; rbgen is only needed when you want to change
+completion.c. Sometimes, however, after a 'git pull', make will try to
 recompile completion.rb and complain about not finding rbgen. A fresh
 clone, or simply 'touch completion.c' will solve this.
 
