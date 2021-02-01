@@ -364,9 +364,13 @@ int dont_wrap_command_waits() {
   }
   if (command_is_dead)
     return TRUE;  /* This is lazy!! signal may not have been delivered @@@ */
+
+  if (screen_is_alternate)
+    return TRUE;  /* assume that programs that use the alternate screen never need rlwrap */
+  
   wchan_fd =  open(command_wchan, O_RDONLY);
-  if (wchan_fd < 0) { 
-    if (been_warned++ == 0) {
+  if (wchan_fd < 0) { /* don't assume that programs that don't use the alternate screen always need rlwrap */
+    if (been_warned++ == 0 && !(term_rmcup && term_smcup)) {
       myerror(WARNING|USE_ERRNO, "you specified the -N (--no-children) option"
                                  " - but spying\non %s's wait status doesn't work on"
                                  " your system, as rlwrap cannot read %s", command_name, command_wchan);
@@ -378,7 +382,8 @@ int dont_wrap_command_waits() {
   if (((nread = read(wchan_fd, buffer, BUFFSIZE -1)) > 0)) {
     buffer[nread] =  '\0';
     result = FALSE;
-    for (p = wait_phrases; *p; p++)
+    for (p = wait_phrases; *p; p++) /* Not quite watertight: I don't have a complete (and unchanging) list 
+                                       of syscalls that make client wait for one of its children */
       if (strstr(buffer, *p)) {
         result = TRUE;
         break;

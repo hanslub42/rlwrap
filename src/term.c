@@ -39,6 +39,7 @@ char *term_cursor_up;
 char *term_cursor_down;
 char *term_cursor_left;              /* only used for debugging (the SHOWCURSOR macro)                */
 char *term_cursor_right;             /* only used to emulate a missing term_cursor_hpos               */
+char *term_smcup;                    /* smcup - char sequence to switch to  alternate screen          */
 char *term_rmcup;                    /* rmcup - char sequence to return from alternate screen         */
 char *term_rmkx;                     /* rmkx - char sequence to return from keyboard application mode */
 char *term_enable_bracketed_paste;   /* If we write this to some terminals (xterm etc.) they  will    */
@@ -169,7 +170,9 @@ init_terminal(void)
     term_cursor_down    = tigetstr_or_else_tgetstr("cud1",   "do", "move cursor down");
     term_has_colours    = tigetstr_or_else_tgetstr("initc", "Ic",  "initialise colour") ? TRUE : FALSE; 
     
-    /* the following codes are never output by rlwrap, but used to filter out "garbage" that is coming from commands that use them */ 
+    /* the following codes are never output by rlwrap, but used to recognize the use of the the alternate screen by the client, and 
+       to filter out "garbage" that is coming from commands that use them */
+    term_smcup          = tigetstr_or_else_tgetstr("smcup",  "ti", "switch to alternate screen"); 
     term_rmcup          = tigetstr_or_else_tgetstr("rmcup",  "te", "exit alternate screen"); 
     term_rmkx           = tigetstr_or_else_tgetstr("rmkx",   "ke", "leave keypad-transmit mode");
 

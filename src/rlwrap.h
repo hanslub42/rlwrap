@@ -224,6 +224,8 @@ extern FILE *debug_fp;
 extern char *program_name, *command_name;
 extern int always_readline;
 extern int complete_filenames;
+extern int within_line_edit;
+extern int screen_is_alternate;
 extern pid_t command_pid;
 extern char *rlwrap_command_line;
 extern int unit_test_argc;
@@ -294,7 +296,7 @@ int prompt_is_single_line(void);
 char *process_new_output(const char* buffer, struct rl_state* state);
 int cook_prompt_if_necessary (void);
 
-extern int within_line_edit, transparent; 
+extern int transparent; 
 extern char *multiline_separator;
 extern char *pre_given;
 extern int leave_prompt_alone;
@@ -424,6 +426,7 @@ char *append_field_and_free_old(char *message, const char *field);
 char *merge_fields(char *field, ...);
 char **split_filter_message(char *message, int *count);
 char *protect_or_cleanup(char *prompt, bool free_prompt);
+void check_cupcodes(const char *client_output);
 
 /* in pty.c: */
 pid_t my_pty_fork(int *, const struct termios *, const struct winsize *);
@@ -476,7 +479,7 @@ extern int terminal_settings_saved;
 extern struct winsize winsize;
 extern char *term_name;
 extern char *term_backspace, term_eof, term_stop, *term_cursor_hpos,
-  *term_cursor_up, *term_cursor_down, *term_cursor_left, *term_rmcup, *term_rmkx, *term_enable_bracketed_paste;
+  *term_cursor_up, *term_cursor_down, *term_cursor_left, *term_smcup, *term_rmcup, *term_rmkx, *term_enable_bracketed_paste;
 extern int term_has_colours;
 extern int newline_came_last;
 

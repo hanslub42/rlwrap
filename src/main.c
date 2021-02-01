@@ -59,6 +59,7 @@ char *program_name = "rlwrap", *command_name;/* "rlwrap" (or whatever has been s
 char *rlwrap_command_line = "";              /* rlwrap command line (rlwrap -options command <command_args> */
 char *command_line = "";                     /* command <command_args> */
 int within_line_edit = FALSE;	             /* TRUE while user is editing input */
+int screen_is_alternate = FALSE;             /* TRUE after client has sent smcup, FALSE after rmcup */
 pid_t command_pid = 0;		             /* pid of child (client), or 0 before child is born */
 int i_am_child = FALSE;		             /* Am I child or parent? after forking, child will set this to TRUE */
 int i_am_filter = FALSE;		     /* After forking, filter will set this to TRUE */
@@ -446,23 +447,22 @@ main_loop()
             myerror(FATAL|USE_ERRNO, "read error on master pty"); 
           }
 	}
-	  
+        remove_padding_and_terminate(buf, nread);
 	completely_mirror_slaves_output_settings(); /* some programs (e.g. joe) need this. Gasp!! */	
         mirror_args(command_pid);        
-	
+	check_cupcodes(buf);
         if (skip_rlwrap()) { /* Race condition here! The client may just have finished an emacs session and
 			        returned to cooked mode, while its ncurses-riddled output is stil waiting for us to be processed. */
 	  write_patiently(STDOUT_FILENO, buf, nread, "to stdout");
 
 	  DPRINTF2(DEBUG_TERMIO, "read from pty and wrote to stdout  %d  bytes in direct mode  <%s>",
-                   nread, mangle_string_for_debug_log((buf[nread]='\0', buf), MANGLE_LENGTH));
+                   nread, mangle_string_for_debug_log(buf, MANGLE_LENGTH));
 	  yield();
 	  continue;
 	}
 
-	DPRINTF2(DEBUG_TERMIO, "read %d bytes from pty into buffer: %s", nread,  mangle_string_for_debug_log((buf[nread]='\0', buf), MANGLE_LENGTH));
+	DPRINTF2(DEBUG_TERMIO, "read %d bytes from pty into buffer: %s", nread,  mangle_string_for_debug_log(buf, MANGLE_LENGTH));
         
-        remove_padding_and_terminate(buf, nread);
         
 	write_logfile(buf);
 	if (within_line_edit)	/* client output arrives while we're editing keyboard input:  */

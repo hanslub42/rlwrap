@@ -31,10 +31,11 @@ This should even hold true when you are re\-directing, piping and
 sending signals from and to \fIcommand\fP, and when \fIcommand\fP
 manipulates its terminal settings, working directory or (with the \fB-U\fP option) command line.
 
-There are many options to add
-(programmable) completion, handle multi\-line input, colour and
-re\-write prompts. If you don't need them (and you probably don't),
-you can skip the rest of this manpage.
+There are many options to add (programmable) completion, handle
+multi\-line input, colour and re\-write prompts. If you don't need
+them (and you probably don't), you can skip the rest of this manpage,
+although many of those options can make your command line a bit more
+comfortable.
 .SH OPTIONS
 .TP
 .OL \-a \-\-always\-readline [\fIpassword_prompt\fP] 
@@ -133,18 +134,6 @@ When in readline mode, append \fIcommand\fP's output (including echo'ed user inp
 \fIfile\fP (creating \fIfile\fP when it doesn't exist).  
 
 .TP
-.OL \-n \-\-no\-warnings
-Don't print warnings.
-
-.TP
-.OL \-N \-\-no\-children
-Don't rlwrap \fIcommand\fP's children: whenever \fBrlwrap\fP notices that 
-\fIcommand\fP is waiting for one of its children, it switches to direct mode, handing down all keypresses immediately.
-With this option commands that need \-\-always\-readline can call editors and pagers and still be usable. 
-
-This option needs /proc/\fIcommand\fP_pid/wchan, so it only works with linux kernels configured with CONFIG_KALLSYMS. 
-
-.TP
 .OL \-m \-\-multi\-line [\fInewline_substitute\fP]
 Enable multi\-line input using a "newline substitute" character
 sequence (" \\ ", [space\-backslash\-space] by default). Newline
@@ -158,10 +147,19 @@ $RLWRAP_EDITOR on the (expanded) current input with the
 .OL \-M \-\-multi\-line\-ext \fI.ext\fP
 Call multi-line-editor on temporary files with filename extension \fI.ext\fP (useful for e.g. automatic syntax colouring)
 
+
+.TP
+.OL \-n \-\-no\-warnings
+Don't print warnings.
+
+.TP
+.OL \-N \-\-no\-children
+When \fBrlwrap\fP is invoked with the \fB--always-readline\fP option, editors and pagers that are called by the client will be pretty unusable, as
+they will see your keypresses only if you press ENTER. \fBrlwrap -N\fP will avoid this problem by switching to direct mode if it thinks \fIcommand\fP is waiting for one of its children. 
+ 
 .TP
 .OL \-o \-\-one\-shot
 Send an EOF to \fIcommand\fP after accepting the first line of input
-
 .TP
 .OL \-O \-\-only\-cook \fIregexp\fP
 Only ever "cook" prompts that match \fIregexp\fP, which can be preceded by  '!', meaning that  \fBall\fP matching candidate prompts will be cooked
@@ -214,8 +212,8 @@ Set \fIcommand\fP's TERM to \fIname\fP. Programs that confuse \fBrlwrap\fP with 
 .TP
 .OL \-U \-\-mirror-arguments
 (linux only) Keep track of \fIcommand\fP's arguments as seen by the \fBps (1)\fP command, and mirror them in \fBrlwrap\fP's own arguments
-This is mainly useful for commands that overwrite command-line password arguments that would be exposed by \fBrlwrap\fP without this option. The mirroring takes place
-after the first user input, or immediately, if you use the \fB\-\-polling\fp option.
+This can be useful for commands that overwrite command-line password arguments that would be exposed by \fBrlwrap\fP without this option. The mirroring takes place
+after the first user input, or every few milliseconds, if you use the \fB\-\-polling\fp option.
 
 .TP
 .OL \-v \-\-version
@@ -348,8 +346,8 @@ following in your \fB~/.inputrc\fP:
     $if erl                                          # (only) for the Erlang shell:
        "\eC\-g": rlwrap\-direct\-keypress                # pass CTRL\-g directly to enter 'user switch' command
     $endif 
-    "\eC\-t"   : rlwrap\-direct\-prefix                  # make it possible to define direct keypresses that start with CTRL\-t
-    "\eC\-tx"  : rlwrap\-direct\-keypress                # pass CTRL\-t + x directly.
+    "\eC\-t"   : rlwrap\-direct\-prefix                  # make it possible to define direct keypresses that start with CTRL\-t ...
+    "\eC\-tx"  : rlwrap\-direct\-keypress                # ... in that case: pass CTRL\-t + x directly.
     "\eC\-y"   : rlwrap\-hotkey\-without\-history         # CTRL\-y to filter input line (and e.g. insert X selection)
 .fi
 .PP

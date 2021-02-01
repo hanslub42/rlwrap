@@ -529,8 +529,9 @@ list4 (char *el0, char *el1, char *el2, char *el3)
    We need to call this function on everything we get from the
    inferior command because (out of sheer programmer laziness) rlwrap
    uses C strings internally. Zero bytes are only ever used as padding
-   (@@@is this true?), and padding is not used anymore on modern
-   terminals. (except maybe for things like the visual bell) */
+   (@@@ I have never seen this happen, by the way), and padding is not
+   used anymore on modern terminals. (except maybe for things like the
+   visual bell) */
  
 
 void remove_padding_and_terminate(char *buf, int length) {
@@ -1331,3 +1332,45 @@ TESTFUNC(test_subst, argc, argv, stage) {
 #endif
 
 #endif /* def HAVE_REGEX_H */
+
+void check_cupcodes(const char *client_output) {
+  static char *still_unchecked; /* to avoid missing a cupcode that spans more than 1 read buffer, we keep the last few 
+                                   bytes in a static buffer (still_unchecked) , that we will prepend to the next incoming block */
+  static int rmcup_len, smcup_len, max_cuplen;
+  char *output_copy, *outputptr;
+  int cut_here;
+  
+  if (!(term_smcup && term_rmcup && commands_children_not_wrapped))
+    return; /* check is impossible or unnecessary */
+
+  if (still_unchecked == NULL) {
+    still_unchecked = mysavestring("");
+    rmcup_len = strlen(term_rmcup);
+    smcup_len = strlen(term_smcup);
+    max_cuplen = max(rmcup_len, smcup_len);
+  }     
+  outputptr = output_copy = append_and_free_old(still_unchecked, client_output);
+  cut_here  = max(0, strlen(output_copy) - max_cuplen);
+  
+  still_unchecked = mysavestring (&output_copy[cut_here]);
+  output_copy[cut_here] = '\0';
+
+  while (TRUE) {
+    char *rmptr = strstr(outputptr, term_rmcup);
+    char *smptr = strstr(outputptr, term_smcup);
+    DPRINTF3(DEBUG_READLINE, "outputptr: %s, rmcup at %ld, smcup at %ld", mangle_string_for_debug_log(outputptr, MANGLE_LENGTH), rmptr ? rmptr-outputptr : -1, smptr ? smptr-outputptr : -1);
+    if (rmptr == smptr) {
+      assert(rmptr == NULL); /* can only happen if term_smcup is prefix of term_rmcup, or vice versa */ 
+      break;
+    } else if (rmptr > smptr) {
+      DPRINTF0(DEBUG_READLINE, "Saw rmcup");
+      screen_is_alternate = FALSE;
+      outputptr = rmptr + rmcup_len; /* 1 past match */
+    } else  {
+      DPRINTF0(DEBUG_READLINE, "Saw smcup");
+      screen_is_alternate = TRUE;
+      outputptr = smptr + smcup_len;
+    }       
+  }
+  free(output_copy);
+}
