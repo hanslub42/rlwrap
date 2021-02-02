@@ -187,7 +187,7 @@ my_atoi(const char *nptr)
   errno = 0;
   result = (int) strtol(nptr, &endptr, 10);
   if (errno || endptr == nptr || *endptr)
-    myerror(FATAL|USE_ERRNO, "Could not make sense of <%s> as an integer", mangle_string_for_debug_log(nptr, 10));
+    myerror(FATAL|USE_ERRNO, "Could not make sense of <%s> as an integer", mangle_string_for_debug_log(nptr, 20));
   return result;
 }       
 
@@ -292,7 +292,7 @@ char **split_on_single_char(const char *string, char c, int expected_count) {
   *pword++ = mysavestring(current_word);
   if (expected_count  && pword-list != expected_count) 
     myerror(FATAL|NOERRNO, "splitting <%s> on single %s yields %d components, expected %d",
-            mangle_string_for_debug_log(string, 30), mangle_char_for_debug_log(c, 1), pword -  list, expected_count); 
+            mangle_string_for_debug_log(string, 50), mangle_char_for_debug_log(c, 1), pword -  list, expected_count); 
   *pword = NULL;
   free(stringcopy);
   return list;
@@ -341,7 +341,7 @@ search_and_replace(char *patt, const char *repl, const char *string, int cursorp
 
   assert(patt && repl && string);
   DPRINTF2(DEBUG_READLINE, "string=%s, cursorpos=%d",
-           mangle_string_for_debug_log(string, 40), cursorpos);
+           M(string), cursorpos);
   scratchsize = max(stringlen, (stringlen * replen) / pattlen) + 1;     /* worst case : repleng > pattlen and string consists of only <patt> */
   DPRINTF1(DEBUG_READLINE, "Allocating %d bytes for scratchpad", (int) scratchsize);
   scratchpad = mymalloc(scratchsize);
@@ -543,7 +543,7 @@ void remove_padding_and_terminate(char *buf, int length) {
   }
   *copyptr = '\0';
   if (debug && strlen(buf) != (unsigned int) length)
-    DPRINTF2(DEBUG_TERMIO, "removed %d zero bytes (padding?) from %s", length - (int) strlen(buf), mangle_string_for_debug_log(buf, MANGLE_LENGTH));
+    DPRINTF2(DEBUG_TERMIO, "removed %d zero bytes (padding?) from %s", length - (int) strlen(buf), M(buf));
 }       
         
 #define ESCAPE  '\033'
@@ -570,7 +570,7 @@ unbackspace_old(char* buf) {
   char *readptr, *copyptr, *endptr;
   int seen_bs_or_cr;
 
-  DPRINTF1(DEBUG_TERMIO,"unbackspace: %s", mangle_string_for_debug_log(buf, MANGLE_LENGTH));
+  DPRINTF1(DEBUG_TERMIO,"unbackspace: %s", M(buf));
   seen_bs_or_cr = FALSE;
   
   for (readptr = copyptr = endptr = buf; *readptr; readptr++) {
@@ -596,7 +596,7 @@ unbackspace_old(char* buf) {
   }
   *endptr = '\0';
   if (seen_bs_or_cr) 
-      DPRINTF1(DEBUG_TERMIO,"unbackspace result: %s", mangle_string_for_debug_log(buf, MANGLE_LENGTH));  
+      DPRINTF1(DEBUG_TERMIO,"unbackspace result: %s", M(buf));  
 }
 
 
@@ -607,7 +607,7 @@ unbackspace(char* buf) {
   char *readptr, *copyptr;
   int seen_bs_or_cr;
 
-  DPRINTF1(DEBUG_TERMIO,"unbackspace: %s", mangle_string_for_debug_log(buf, MANGLE_LENGTH));
+  DPRINTF1(DEBUG_TERMIO,"unbackspace: %s", M(buf));
   seen_bs_or_cr = FALSE;
   
   for (readptr = copyptr = buf; *readptr; readptr++) {
@@ -633,7 +633,7 @@ unbackspace(char* buf) {
   }
   *copyptr = '\0';
   if (seen_bs_or_cr) 
-      DPRINTF1(DEBUG_TERMIO,"unbackspace result: %s", mangle_string_for_debug_log(buf, MANGLE_LENGTH));
+      DPRINTF1(DEBUG_TERMIO,"unbackspace result: %s", M(buf));
   
 }
 
@@ -698,7 +698,7 @@ mark_invisible(const char *buf)
   char *result = scratchpad;
   const char **original = &buf;
   char **copy = &scratchpad;
-  DPRINTF1(DEBUG_AD_HOC, "mark_invisible(%s) ...", mangle_string_for_debug_log(buf, MANGLE_LENGTH));
+  DPRINTF1(DEBUG_AD_HOC, "mark_invisible(%s) ...", M(buf));
   
   if (strchr(buf, RL_PROMPT_START_IGNORE))
     return mysavestring(buf); /* "invisible" parts already marked */
@@ -708,7 +708,7 @@ mark_invisible(const char *buf)
     assert(*copy - scratchpad < padsize);
   }
   **copy = '\0';
-  DPRINTF1(DEBUG_AD_HOC, "mark_invisible(...) = <%s>", mangle_string_for_debug_log(result, MANGLE_LENGTH));
+  DPRINTF1(DEBUG_AD_HOC, "mark_invisible(...) = <%s>", M(result));
   return(result);       
 }       
 
@@ -839,7 +839,7 @@ colourless_strlen(const char *str, char ** pcopy_without_ignore_markers, int UNU
 
 
   DPRINTF4(DEBUG_READLINE, "colourless_strlen(\"%s\", \"%s\") = %d  chars, %d  bytes",
-           mangle_string_for_debug_log(str, MANGLE_LENGTH), copy_without_ignore_markers, colourless_length, colourless_bytes);
+           M(str), copy_without_ignore_markers, colourless_length, colourless_bytes);
 
   if (pcopy_without_ignore_markers)
     *pcopy_without_ignore_markers = copy_without_ignore_markers;
@@ -1257,11 +1257,11 @@ char *protect_or_cleanup(char *prompt, bool free_prompt) {
   
   if (!unwanted_codes_regexp) {
     unwanted_codes_regexp = unsplit_with(-1, &unwanted_codes[0], "|");
-    DPRINTF1(DEBUG_AD_HOC, "unwanted_codes_regexp: %s", mangle_string_for_debug_log(unwanted_codes_regexp, 250));
+    DPRINTF1(DEBUG_AD_HOC, "unwanted_codes_regexp: %s", M(unwanted_codes_regexp));
     compiled_and_protected_unwanted_codes_regexp =  my_regcomp(protect(unwanted_codes_regexp, RL_PROMPT_START_IGNORE, RL_PROMPT_END_IGNORE), REG_EXTENDED);
   }
   result = replace_special(result1, compiled_and_protected_unwanted_codes_regexp, "");
-   DPRINTF2(DEBUG_READLINE, "protect_or_cleanup(%s) = %s", mangle_string_for_debug_log(prompt,1000), mangle_string_for_debug_log(result, 1000)); 
+   DPRINTF2(DEBUG_READLINE, "protect_or_cleanup(%s) = %s", M(prompt), M(result)); 
   free(result1);
   
   if (free_prompt)

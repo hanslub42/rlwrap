@@ -63,7 +63,7 @@ static char *my_tgetstr (char *id, const char *capability_name) {
   char *term_string_buf = (char *)mymalloc(2048), *tb = term_string_buf;
   char *stringcap = tgetstr(id, &tb); /*  rl_get_termcap(id) only gets capabilities used by readline */
   char *retval = stringcap ? mysavestring(stringcap) : NULL; 
-  DPRINTF3(DEBUG_TERMIO, "tgetstr(\"%s\") = %s (%s)", id, (stringcap ? mangle_string_for_debug_log(stringcap,20) : "NULL"), capability_name);
+  DPRINTF3(DEBUG_TERMIO, "tgetstr(\"%s\") = %s (%s)", id, (stringcap ? M(stringcap) : "NULL"), capability_name);
   free(term_string_buf);
   return retval;
 #else
@@ -81,7 +81,7 @@ static char *my_tigetstr (char *tid, const char *capability_name) {
   }     
   stringcap = tigetstr(tid); 
   retval = stringcap ? mysavestring(stringcap) : NULL;
-  DPRINTF3(DEBUG_TERMIO, "tigetstr(\"%s\") = %s (%s)", tid, (stringcap ? mangle_string_for_debug_log(stringcap,20) : "NULL"), capability_name);
+  DPRINTF3(DEBUG_TERMIO, "tigetstr(\"%s\") = %s (%s)", tid, (stringcap ? M(stringcap) : "NULL"), capability_name);
   return retval;
 #else
   return NULL;
@@ -176,7 +176,7 @@ init_terminal(void)
     term_rmcup          = tigetstr_or_else_tgetstr("rmcup",  "te", "exit alternate screen"); 
     term_rmkx           = tigetstr_or_else_tgetstr("rmkx",   "ke", "leave keypad-transmit mode");
 
-    /* there is no way to determine whether a terminal knows about bracketed paste. "Dumb" terminals do not, of course.            */
+    /* there is no way (yet) to determine whether a terminal knows about bracketed paste - we cannot use tigetstr(). "Dumb" terminals do not, of course */
 
     term_enable_bracketed_paste = strings_are_equal(term_name, "dumb") ? NULL : "\033[?2004h";
 
@@ -230,7 +230,7 @@ cursor_hpos(int col)
   if (term_cursor_hpos) {
     instantiated = tgoto(term_cursor_hpos, 0, col); /* tgoto with a command that takes one parameter: parameter goes to 2nd arg ("vertical position"). */
     assert(instantiated);
-    DPRINTF2(DEBUG_TERMIO, "tgoto(term_cursor_hpos, 0, %d) = %s", col, mangle_string_for_debug_log(instantiated, 20));
+    DPRINTF2(DEBUG_TERMIO, "tgoto(term_cursor_hpos, 0, %d) = %s", col, M(instantiated));
     tputs(instantiated, 1, my_putchar);
   } else {
     int i;
@@ -334,8 +334,7 @@ void
 my_putstr(const char *string)
 {
   int string_length = strlen(string);
-  DPRINTF2(DEBUG_TERMIO,"wrote %d bytes to stdout: %s", string_length,
-           mangle_string_for_debug_log(string, MANGLE_LENGTH));
+  DPRINTF2(DEBUG_TERMIO,"wrote %d bytes to stdout: %s", string_length, M(string));
   if (string_length == 0)
     return;
   write_patiently(STDOUT_FILENO, string, string_length, "to stdout");

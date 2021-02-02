@@ -394,9 +394,7 @@ main_loop()
 	  /* move and erase before cooking, as we need to move/erase according
 	     to the raw prompt */
           cook_prompt_if_necessary();
-	  DPRINTF2(DEBUG_READLINE,"After cooking, raw_prompt=%s, cooked=%s",
-                   mangle_string_for_debug_log(saved_rl_state.raw_prompt, MANGLE_LENGTH),
-                   mangle_string_for_debug_log(saved_rl_state.cooked_prompt, MANGLE_LENGTH));
+	  DPRINTF2(DEBUG_READLINE,"After cooking, raw_prompt=%s, cooked=%s", M(saved_rl_state.raw_prompt), M(saved_rl_state.cooked_prompt));
 	  my_putstr(saved_rl_state.cooked_prompt);
 	  rlwrap_already_prompted = TRUE;
 	}
@@ -456,13 +454,12 @@ main_loop()
 			        returned to cooked mode, while its ncurses-riddled output is stil waiting for us to be processed. */
 	  write_patiently(STDOUT_FILENO, buf, nread, "to stdout");
 
-	  DPRINTF2(DEBUG_TERMIO, "read from pty and wrote to stdout  %d  bytes in direct mode  <%s>",
-                   nread, mangle_string_for_debug_log(buf, MANGLE_LENGTH));
+	  DPRINTF2(DEBUG_TERMIO, "read from pty and wrote to stdout  %d  bytes in direct mode  <%s>",  nread, M(buf));
 	  yield();
 	  continue;
 	}
 
-	DPRINTF2(DEBUG_TERMIO, "read %d bytes from pty into buffer: %s", nread,  mangle_string_for_debug_log(buf, MANGLE_LENGTH));
+	DPRINTF2(DEBUG_TERMIO, "read %d bytes from pty into buffer: %s", nread, M(buf));
         
         
 	write_logfile(buf);
@@ -494,7 +491,7 @@ main_loop()
                                                                      response to user input, so leave the prompt alone */
 
         DPRINTF3(DEBUG_READLINE, "leave_prompt_alone: %s (raw prompt: %s, prompt_is_still_uncooked: %d)",
-                 (leave_prompt_alone? "yes" : "no"), mangle_string_for_debug_log(saved_rl_state.raw_prompt, MANGLE_LENGTH), prompt_is_still_uncooked);
+                 (leave_prompt_alone? "yes" : "no"), M(saved_rl_state.raw_prompt), prompt_is_still_uncooked);
 	
         if (!leave_prompt_alone) /* && (!impatient_prompt || !saved_rl_state.cooked_prompt)) */
 	  move_cursor_to_start_of_prompt(ERASE);  
@@ -986,8 +983,7 @@ put_in_output_queue(char *stuff)
 {
   
   output_queue = append_and_free_old(output_queue, stuff); 
-  DPRINTF3(DEBUG_TERMIO,"put %d bytes in output queue (which now has %d bytes): %s",
-	   (int) strlen(stuff), (int) strlen(output_queue), mangle_string_for_debug_log(stuff, 20));
+  DPRINTF3(DEBUG_TERMIO,"put %d bytes in output queue (which now has %d bytes): %s", (int) strlen(stuff), (int) strlen(output_queue), M(stuff));
 
 }
 
@@ -1015,8 +1011,7 @@ flush_output_queue()
   if (debug) {
     char scratch = output_queue[nwritten];
     output_queue[nwritten] = '\0'; /* temporarily replace the last written byte + 1 by a '\0' */
-    DPRINTF3(DEBUG_TERMIO,"flushed %d of %d bytes from output queue to pty: %s",
-	     nwritten, queuelen, mangle_string_for_debug_log(output_queue, MANGLE_LENGTH));
+    DPRINTF3(DEBUG_TERMIO,"flushed %d of %d bytes from output queue to pty: %s", nwritten, queuelen, M(output_queue));
     output_queue[nwritten] =  scratch;
   }	
   

@@ -615,6 +615,7 @@ typedef enum  {TEST_AT_PROGRAM_START, TEST_AFTER_OPTION_PARSING, TEST_AFTER_SPAW
 #  define DEBUG_DEFAULT                          (DEBUG_TERMIO | DEBUG_SIGNALS | DEBUG_READLINE)
 #  define DEBUG_ALL                              (2*DEBUG_MAX-1)
 
+#  define M(x)                                   mangle_string_for_debug_log(x, MANGLE_LENGTH) 
 
 
 #  define ONLY_USED_FOR_DEBUGGING(x) x

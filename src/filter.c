@@ -215,10 +215,10 @@ char *pass_through_filter(int tag, const char *buffer) {
       !filter_is_interested_in(TAG_SIGNAL))    /* signal handling filters will get an "unexpected tag" error when the signal arrives during filter processing */
     unblock_signals(user_frustration_signals); /* allow users to use CTRL-C, but only after uninterruptible_msec                                              */
 
-  DPRINTF3(DEBUG_FILTERING, "to filter (%s, %d bytes) %s", tag2description(tag), (int) strlen(buffer), mangle_string_for_debug_log(buffer, MANGLE_LENGTH)); 
+  DPRINTF3(DEBUG_FILTERING, "to filter (%s, %d bytes) %s", tag2description(tag), (int) strlen(buffer), M(buffer)); 
   write_to_filter((expected_tag = tag), buffer);
   filtered = read_from_filter(tag);
-  DPRINTF3(DEBUG_FILTERING, "from filter (%s, %d bytes) %s",  tag2description(tag), (int) strlen(filtered), mangle_string_for_debug_log(filtered, MANGLE_LENGTH));
+  DPRINTF3(DEBUG_FILTERING, "from filter (%s, %d bytes) %s",  tag2description(tag), (int) strlen(filtered), M(filtered));
 
   block_all_signals();
 
@@ -263,7 +263,7 @@ void handle_out_of_band(int tag, char *message) {
   int split_em_up = FALSE;
 
   DPRINTF3(DEBUG_FILTERING, "received out-of-band (%s, %d bytes) %s", tag2description(tag),
-           (int) strlen(message), mangle_string_for_debug_log(message, MANGLE_LENGTH)); 
+           (int) strlen(message), M(message)); 
   switch (tag) {
   case TAG_ERROR:
     if (expected_tag == TAG_COMPLETION) /* start new line when completing (looks better) */

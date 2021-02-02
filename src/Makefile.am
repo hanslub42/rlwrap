@@ -1,6 +1,6 @@
 bin_PROGRAMS = rlwrap 
 
-rlwrap_SOURCES =  main.c signals.c readline.c pty.c completion.c term.c ptytty.c  utils.c string_utils.c malloc_debug.c multibyte.c filter.c
+rlwrap_SOURCES =  main.c signals.c readline.c pty.c completion.c term.c ptytty.c  utils.c string_utils.c malloc_debug.c multibyte.c filter.c configure
 
 
 AM_CFLAGS=-DDATADIR=\"@datadir@\" 

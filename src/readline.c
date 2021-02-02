@@ -164,11 +164,11 @@ restore_rl_state()
   cook_prompt_if_necessary();
   newprompt =  mark_invisible(saved_rl_state.cooked_prompt); /* bracket (colour) control sequences with \001 and \002 */
   if (!strings_are_equal(newprompt, saved_rl_state.cooked_prompt))
-    DPRINTF2(DEBUG_READLINE, "newprompt: <%s>, cooked prompt: <%s>", mangle_string_for_debug_log(newprompt, MANGLE_LENGTH), mangle_string_for_debug_log(saved_rl_state.cooked_prompt, MANGLE_LENGTH));
+    DPRINTF2(DEBUG_READLINE, "newprompt: <%s>, cooked prompt: <%s>", M(newprompt), M(saved_rl_state.cooked_prompt));
   rl_expand_prompt(newprompt);
   mirror_slaves_echo_mode();    /* don't show passwords etc */
   
-  DPRINTF1(DEBUG_READLINE,"newprompt now %s", mangle_string_for_debug_log(newprompt,MANGLE_LENGTH));
+  DPRINTF1(DEBUG_READLINE,"newprompt now %s", M(newprompt));
   rl_callback_handler_install(newprompt, &line_handler);
   DPRINTF0(DEBUG_AD_HOC, "freeing newprompt");
   free(newprompt);             /* readline docs don't say it, but we can free newprompt now (readline apparently
@@ -187,7 +187,7 @@ void
 message_in_echo_area(char *message)
 {
   static int message_in_echo_area = FALSE;
-  DPRINTF1(DEBUG_READLINE, "message: %s", mangle_string_for_debug_log(message, MANGLE_LENGTH));
+  DPRINTF1(DEBUG_READLINE, "message: %s", M(message));
   if (message) {
     rl_save_prompt();
     message_in_echo_area = TRUE;  
@@ -273,7 +273,7 @@ line_handler(char *line)
     /*OK, now feed line to underlying command and wait for the echo to come back */
     put_in_output_queue(filtered_line);
     DPRINTF2(DEBUG_READLINE, "putting %d bytes %s in output queue", (int) strlen(rewritten_line),
-             mangle_string_for_debug_log(rewritten_line, 40));
+             M(rewritten_line));
     write_EOL_to_master_pty(return_key ? &return_key : "\n");
 
     accepted_lines++;
@@ -660,7 +660,7 @@ direct_keypress(int UNUSED(count), int key)
 {
 #ifdef HAVE_RL_EXECUTING_KEYSEQ /* i.e. if readline version is >= 6.3 */
   MAYBE_UNUSED(key);
-  DPRINTF1(DEBUG_READLINE,"direct keypress: %s", mangle_string_for_debug_log(rl_executing_keyseq, MANGLE_LENGTH));
+  DPRINTF1(DEBUG_READLINE,"direct keypress: %s", M(rl_executing_keyseq));
   put_in_output_queue(rl_executing_keyseq);
 #else
   char *key_as_str = mysavestring("?"); /* ? is just a placeholder */
@@ -738,7 +738,7 @@ handle_hotkey2(int UNUSED(count), int hotkey, int without_history)
 #endif
 
     
-  DPRINTF3(DEBUG_READLINE, "hotkey press (without_history == %d): %x (%s)", without_history, hotkey, mangle_string_for_debug_log(executing_keyseq, MANGLE_LENGTH));
+  DPRINTF3(DEBUG_READLINE, "hotkey press (without_history == %d): %x (%s)", without_history, hotkey, M(executing_keyseq));
 
   prefix = mysavestring(rl_line_buffer);
   prefix[rl_point] = '\0';                                     /* chop off just before cursor */

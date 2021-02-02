@@ -210,7 +210,7 @@ void debug_postmortem() {
       continue;
     else if (strcmp(SLAVERY_SLOGAN, p -> magic) == 0) {
       block = (char *) p + sizeof(struct freed_stamp);   
-      DPRINTF5(DEBUG_MEMORY_MANAGEMENT, "%d bytes malloced at %s %s:%d, contents: <%s>", p->size, p -> timestamp, p ->file, p ->line, mangle_string_for_debug_log(block, MANGLE_LENGTH));
+      DPRINTF5(DEBUG_MEMORY_MANAGEMENT, "%d bytes malloced at %s %s:%d, contents: <%s>", p->size, p -> timestamp, p ->file, p ->line, M(block));
     } else {    
       DPRINTF0(DEBUG_MEMORY_MANAGEMENT, "Hmmm,  unmalloced memory, or memory not malloced by debug_malloc()");
     }
