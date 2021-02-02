@@ -1145,14 +1145,21 @@ char *protect(const char *pattern, char protect_start, char protect_end) {
 
 
 
-/* Substitute all occurences of the second group in <compiled_pattern> within <source>  with <replacement>, skipping everything within the first group */
+/* Substitute all occurences of the second group in a <compiled_pattern> "(..)|(..)" within <source> with <replacement>
+   (any TOKENs within the replacement will be replaced by the match) , skipping everything that matches the first group
+   (which can be said to "protect" against replacement) E.g: 
+        
+       replace_special("a zzz b zzz", "(a[^a]*b)|(z+)", "(@)") = "a zzz b (zzz)" 
+
+   The role of a and b above will be played by the  RL_PROMPT_{START,END}_IGNORE characters                           */
+
 char *replace_special(const char *source, regex_t *compiled_pattern, const char*replacement) {
   const char *source_cursor;
   char *copy_with_replacements, *copy_cursor;
   int max_copylen;
 
   assert(source != NULL);
-  max_copylen = 1 + max(1, strlen(replacement))*strlen(source);
+  max_copylen = 1 + max(1, strlen(replacement)) * strlen(source);
 
   if (!compiled_pattern) /* pattern == NULL: just return a copy */
     return mysavestring(source);
@@ -1333,36 +1340,39 @@ TESTFUNC(test_subst, argc, argv, stage) {
 
 #endif /* def HAVE_REGEX_H */
 
+
+/* scan blocks of client output for "cupcodes" that enter and exit the "alternate screen" and set the global variable screen_is_alternate accordingly */
 void check_cupcodes(const char *client_output) {
   static char *still_unchecked; /* to avoid missing a cupcode that spans more than 1 read buffer, we keep the last few 
-                                   bytes in a static buffer (still_unchecked) , that we will prepend to the next incoming block */
+                                   bytes in a static buffer (still_unchecked) , that we always prepend to the next incoming block */
   static int rmcup_len, smcup_len, max_cuplen;
   char *output_copy, *outputptr;
   int cut_here;
   
-  if (!(term_smcup && term_rmcup && commands_children_not_wrapped))
+  if (!(commands_children_not_wrapped && term_smcup && term_rmcup))
     return; /* check is impossible or unnecessary */
 
-  if (still_unchecked == NULL) {
+  if (still_unchecked == NULL) { /* init static vars once */
     still_unchecked = mysavestring("");
     rmcup_len = strlen(term_rmcup);
     smcup_len = strlen(term_smcup);
     max_cuplen = max(rmcup_len, smcup_len);
   }     
   outputptr = output_copy = append_and_free_old(still_unchecked, client_output);
+
+  /* keep the very end for next time, as it might contain a partial cupcode */
+  /* in the worst case we will notice the shortest of the two cupcodes twice */
   cut_here  = max(0, strlen(output_copy) - max_cuplen);
-  
   still_unchecked = mysavestring (&output_copy[cut_here]);
-  output_copy[cut_here] = '\0';
+
 
   while (TRUE) {
     char *rmptr = strstr(outputptr, term_rmcup);
     char *smptr = strstr(outputptr, term_smcup);
-    DPRINTF3(DEBUG_READLINE, "outputptr: %s, rmcup at %ld, smcup at %ld", mangle_string_for_debug_log(outputptr, MANGLE_LENGTH), rmptr ? rmptr-outputptr : -1, smptr ? smptr-outputptr : -1);
     if (rmptr == smptr) {
-      assert(rmptr == NULL); /* can only happen if term_smcup is prefix of term_rmcup, or vice versa */ 
+      assert(rmptr == NULL); /* can only fail  if term_smcup is prefix of term_rmcup, or vice versa, which never happens as far as I know */ 
       break;
-    } else if (rmptr > smptr) {
+    } else if (rmptr > smptr) { /* rmcup and smcup may occur in the same block of output */
       DPRINTF0(DEBUG_READLINE, "Saw rmcup");
       screen_is_alternate = FALSE;
       outputptr = rmptr + rmcup_len; /* 1 past match */

@@ -1,8 +1,8 @@
-0.45  rlwrap now correctly handles  bracketed paste
+0.45  rlwrap now correctly handles bracketed paste
 
       --only-cook '!<regexp>' now enables "confident mode" where every
       possible prompt that matches a regexp is cooked immediately
-      (so that even promts that get printed when handling a large
+      (so that even prompts that get printed when handling a large
       paste are cooked)
 
       --ansi-colour-aware (-A) didn't do anything at all. Now it
@@ -14,6 +14,8 @@
       switches to the alternate screen. This makes it usable even on
       systems that don't have a usable /proc/<pid>/wchan
       
+      when run inside an emacs shell buffer, rlwrap will execute
+      the client in its place (just as when stdin is not a terminal)      
 
 0.44  rlwrap doesn't (yet) work with bracketed-paste. As this is
       enabled by default from readline-8.1 onwards, rlwrap disables

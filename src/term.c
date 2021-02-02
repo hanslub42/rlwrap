@@ -273,7 +273,7 @@ clear_line()
   if (term_clear_line)
     tputs(term_clear_line, 1, my_putchar);
   else {
-    spaces = (char *) mymalloc(width + 1);
+    spaces = (char *) mymalloc(width +1);
     for (i = 0, p = spaces; i < width; i++, p++)
       *p = ' ';
     *p = '\0';

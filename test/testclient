@@ -374,12 +374,14 @@ $last_words =~ s/\s+/ /g;
 
 sub print_chunky {
   my ($text) = @_;
+  binmode STDOUT, ':raw';
   local $| = undef;
   while ($text) {
     syswrite STDOUT, substr($text, 0, int(rand(20)), "");
     select(undef, undef, undef, 0.01);
 
   }
+  binmode STDOUT,':utf8';
 }
   
 sub handle_signal {

@@ -205,9 +205,10 @@ main(int argc, char **argv)
   
   run_unit_test(argc - optind, argv + optind, TEST_AFTER_OPTION_PARSING); /* argv points at the first non-option rlwrap argument */
 
-  /* if stdin is not a tty, just execute <command>: */ 
-  if (!isatty(STDIN_FILENO) && execvp(argv[optind], &argv[optind]) < 0)
-    myerror(FATAL|USE_ERRNO, "Cannot execute %s", argv[optind]);
+  /* if stdin is not a tty, or we're inside emacs, just execute <command>: */ 
+  if (!isatty(STDIN_FILENO) || getenv("INSIDE_EMACS"))
+    if (execvp(argv[optind], &argv[optind]) < 0)
+      myerror(FATAL|USE_ERRNO, "Cannot execute %s", argv[optind]);
   
   init_rlwrap(rlwrap_command_line);
   install_signal_handlers();	

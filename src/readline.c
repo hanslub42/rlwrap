@@ -123,8 +123,10 @@ init_readline(char *UNUSED(prompt))
 
   bracketed_paste_enabled = term_enable_bracketed_paste != NULL && strings_are_equal(rl_variable_value("enable-bracketed-paste"),"on");
 
-  if (bracketed_paste_enabled)
+  if (bracketed_paste_enabled) {
+    DPRINTF0(DEBUG_READLINE, "bracketed-paste is enabled");
     my_putstr(term_enable_bracketed_paste);
+  }
 }
 
 
@@ -213,11 +215,12 @@ line_handler(char *line)
     /* colour_the_prompt = FALSE; don't mess with the cruft that may come out of dying command @@@ but command may not die!*/
     write_EOF_to_master_pty();
   } else {
+    /* NB: with bracketed-paste, "line" may actually contain newline characters */
     if (*line &&                 /* forget empty lines  */
         redisplay &&             /* forget passwords    */
         !forget_line &&          /* forget lines entered by CTRL-O */
         !match_regexp(line, forget_regexp, TRUE)) {     /* forget lines (case-inseitively) matching -g option regexp */ 
-      my_add_history(line);
+      my_add_history(line); /* if line consists of multiple lines, each line is added to history separately. Is this documented somewhere? */
     }
     forget_line = FALSE; /* until CTRL-O is used again */
 
@@ -235,18 +238,12 @@ line_handler(char *line)
        O.K, we know for sure that cursor is at start of line. When clients output arrives, it will be printed at
        just the right place - but first we 'll erase the user input (as it may be about to be changed by the filter) */
 
-    SHOWCURSOR('0');
-    if (strcmp(rl_variable_value("enable-bracketed-paste"),"on")==0) {
-      DPRINTF0(DEBUG_READLINE, "bracketed paste mode enabled");
-      /* we're at start of line and the prompt has just been erased */
+    if (bracketed_paste_enabled)   /* we're at start of line and the prompt has just been erased */
       my_putstr(saved_rl_state.cooked_prompt);
-    }  
-    SHOWCURSOR('1');
+      
     rl_delete_text(0, rl_end);  /* clear line  (after prompt) */
     rl_point = 0;
-    SHOWCURSOR('2');
     my_redisplay();             /* and redisplay (this time without user input, cf the comments for the line_handler() function below) */
-    SHOWCURSOR('3');
     rewritten_line =
       (multiline_separator ? 
        search_and_replace(multiline_separator, "\n", line, 0, NULL,

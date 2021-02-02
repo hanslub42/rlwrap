@@ -19,7 +19,6 @@
     e-mail:  hanslub42@gmail.com
 */
 
-#define  _POSIX_C_SOURCE 2 /* be old-skool (cf. man 7 feature_test_macros) */
 
 #include "../config.h"
 #include <sys/types.h>
@@ -150,7 +149,7 @@ char *strchr(), *strrchr();
 #  define CAN_FOLLOW_COMMANDS_CWD 1
 #endif
 
-#define BUFFSIZE 512
+#define BUFFSIZE 2048
 
 #ifndef MAXPATHLEN
 #define MAXPATHLEN 512

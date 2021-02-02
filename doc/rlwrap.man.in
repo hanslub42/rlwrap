@@ -47,7 +47,7 @@ option, rlwrap will echo (and save) passwords, unless you give \fIcommand\fP's
 password prompt as an argument.
 .OA \-a \-\-always\-readline  Password:
 
-On most linux machines you can use the \fB\-N\fP (\fB\-\-no\-children\fP) option to avoid wrapping 
+The \fB\-N\fP (\fB\-\-no\-children\fP) option can be used to avoid wrapping 
 pagers and editors called from \fIcommand\fP; this should make them much more usable
 
 .TP
@@ -287,6 +287,8 @@ cooked mode. In the first case, \fBrlwrap\fP will copy all input
 and output directly between \fIcommand\fP and your terminal ("direct
 mode"). In the second case, \fBrlwrap\fP will use readline to edit your input ("readline mode"), and monitor 
 \fBcommand\fP's output \- every last line that doesn't end with a newline is a potential prompt. How it handles such a candidate prompt depends on its being in "patient" or "impatient" mode:
+
+
 .SH PATIENT, IMPATIENT AND CONFIDENT MODE
 If \fIcommand\fP writes a lot of output, it tends to be written (and
 read) in "chunks". Not all chunks will end with a newline, and we need
@@ -302,7 +304,7 @@ can put \fBrlwrap\fP in "patient mode" by specifying a negative value with \fB\-
 will then hold back the prompt and only print if after cooking.
 If prompts always match some regular expression you can specify "confident mode" with \fB--only-cook='!<regexp>'\fP (note the exclamation mark).
 Then all candidate prompts that match (and only those) will be cooked immediately. They will, however, not be "uncooked" if more output arrives, which can happen
-if they weren't prompts after all.
+if they weren't prompts after all. Confident mode doesn't work  with a negative value for the \fB-w\fP option.
 
 .SH COOKING PROMPTS
 If and when \fBrlwrap\fP decides that it has a prompt, it will
@@ -400,12 +402,14 @@ signal to itself.  This means that your shell sees the same exit status as it
 would have seen without \fBrlwrap\fP. 
 
 .SH REDIRECTION
-When the standard input is not a terminal, editing input doesn't make
-sense, so \fBrlwrap\fP will ignore all options and simply
-execute \fIcommand\fP. When stdout (or stderr) is not a terminal, rlwrap will re\-open
-it to /dev/tty (the users terminal) after it has started
-\fIcommand\fP,  so that \fIcommand\fP's output is redirected as
-expected, but keyboard input and \fBrlwrap\fP error messages are still visible.
+When the standard input is not a terminal (or when run inside an emacs
+buffer), editing input doesn't make sense, so \fBrlwrap\fP
+will ignore all options and simply execute \fIcommand\fP in place of
+itself. When stdout (or stderr) is not a terminal, rlwrap will
+re\-open it to /dev/tty (the users terminal) after it has started
+\fIcommand\fP, so that \fIcommand\fP's output is redirected as
+expected, but keyboard input and \fBrlwrap\fP error messages are still
+visible.
 
 The upshot of this is that \fBrlwrap\fP \fIcommand\fP behaves more or
 less like \fIcommand\fP when redirecting. 
@@ -466,6 +470,8 @@ command output are garbled or incorrectly coloured.
 \fBrlwrap\fP can try, but often fails to, handle prompts that contain
 control characters. The \fB-A\fP (\fB--ansi-colour-aware\fP) option may
 help, but if it doesn't, a filter may be needed to clean up the prompt.
+
+
 
 
 .SH VERSION

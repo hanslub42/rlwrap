@@ -675,8 +675,10 @@ accept the result.
 
 =item $handler = $f -> input_handler, $f -> input_handler(\&handler)
 
-Every input line is submitted to this handler, The handler's return
-value is written to I<command>'s pty (pseudo-terminal).
+Every input line (which may consist of multiple \n-separated lines,
+when using bracketed paste) is submitted to this handler, The
+handler's return value is written to I<command>'s pty
+(pseudo-terminal).
 
 =item $handler = $f -> echo_handler, $f -> echo_handler(\&handler)
 
