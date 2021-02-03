@@ -12,6 +12,7 @@ my $command_line = $filter -> command_line;
 $ENV{RLWRAP_FILTERDIR} or die "RLWRAP_FILTERDIR is not defined!\n";
 chdir $ENV{RLWRAP_FILTERDIR} or die "cannot chdir to $ENV{RLWRAP_FILTERDIR}: $!\n";
 
+my $debug=$ENV{RLWRAP_DEBUG}&DEBUG_FILTERING;
 
 if ($command_line =~ /\w/) {
   die("This filter is only used to get a list of filters via 'rlwrap -z listing'\n".
@@ -40,6 +41,7 @@ $filter -> run;
 
 sub get_info {
   my ($fname) = @_;
+  $filter -> send_output_oob("Nu: $fname\n") if $debug;  
   { delete $ENV{RLWRAP_COMMAND_PID}; # make filter talk over STDIN and STDOUT 
     open INFO, "cat /dev/null | ./$fname 2>/dev/null |";
   }

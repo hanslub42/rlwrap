@@ -958,7 +958,9 @@ Before calling a filter, B<rlwrap> sets the following environment variables:
 
     RLWRAP_MASTER_PTY_FD  File descriptor of command's pty.
 
-    RLWRAP_BREAK_CHARS    The characters rlwrap considers word-breaking (cf. the --break-chars option in rlwrap (1)) 
+    RLWRAP_BREAK_CHARS    The characters rlwrap considers word-breaking (cf. the --break-chars option in rlwrap (1))
+
+    RLWRAP_DEBUG          The value of the --debug (-d) option given to rlwrap
 
 =head1 DEBUGGING FILTERS
 

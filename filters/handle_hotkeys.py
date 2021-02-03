@@ -75,7 +75,7 @@ def edit_history(doc, prefix, postfix, history, histpos):
     if doc:
         return "edit current history"
     if not histpos.isdigit():
-        syst.exit("$histpos is not a number - did you bind this key to 'rlwrap-hotkey-without-history'?")
+        sys.exit("$histpos is not a number - did you bind this key to 'rlwrap-hotkey-without-history'?")
     editfile = tempfile.NamedTemporaryFile()
     editfilename = editfile.name
     lineno = int(histpos) + 1

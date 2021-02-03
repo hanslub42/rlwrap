@@ -560,7 +560,7 @@ class RlwrapFilter:
         # $RLWRAP_COMMAND_PID can be undefined (e.g. when run interactively, or under rlwrap -z listing
         # or == "0" (when rlwrap is called without a command name, like in rlwrap -z filter.py)
         # In both cases: print help text
-        if os.environ.get('RLWRAP_COMMAND_PID') == '0':
+        if os.environ.get('RLWRAP_COMMAND_PID') in [None, '0']:
             write_message(TAG_OUTPUT_OUT_OF_BAND, self.help_text + '\n')
 
         while(True):
