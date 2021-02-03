@@ -32,6 +32,7 @@ int bleach_the_prompt = FALSE;               /* -A!: remove all ANSI colour code
 int complete_filenames = FALSE;	             /* -c option: whether to complete file names        */
 int debug = 0;			             /* -d option: debugging mask                        */
 char *extra_char_after_completion = " ";     /* -e option: override readlines's default completion_append_char (space) */
+int always_echo = FALSE;                     /* -E option: always echo, even if client has ECHO off */
 int history_duplicate_avoidance_policy =  ELIMINATE_SUCCESIVE_DOUBLES;               /* -D option: whether and how to avoid duplicate history entries */
 char *history_format = NULL;                 /* -F option: format to append to history entries            */
 char *forget_regexp = NULL;                  /* -g option: keep matching input out of history           */
@@ -110,11 +111,11 @@ static void main_loop(void);
 
 /* options */
 #ifdef GETOPT_GROKS_OPTIONAL_ARGS
-static char optstring[] = "+:a::A::b:cC:d::D:e:f:F:g:hH:iIl:nNM:m::oO:p::P:q:rRs:S:t:TUvw:Wz:";
+static char optstring[] = "+:a::A::b:cC:d::D:e:Ef:F:g:hH:iIl:nNM:m::oO:p::P:q:rRs:S:t:TUvw:Wz:";
 /* +: is not really documented. configure checks wheteher it works as expected
    if not, GETOPT_GROKS_OPTIONAL_ARGS is undefined. @@@ */
 #else
-static char optstring[] = "+:a:A:b:cC:d:D:e:f:F:g:hH:iIl:nNM:m:oO:p:P:q:rRs:S:t:TUvw:Wz:";	
+static char optstring[] = "+:a:A:b:cC:d:D:e:Ef:F:g:hH:iIl:nNM:m:oO:p:P:q:rRs:S:t:TUvw:Wz:";	
 #endif
 
 #ifdef HAVE_GETOPT_LONG
@@ -126,6 +127,7 @@ static struct option longopts[] = {
   {"command-name", 		required_argument, 	NULL, 'C'},
   {"debug", 			optional_argument, 	NULL, 'd'},
   {"extra-char-after-completion", required_argument,    NULL, 'e'},
+  {"always-echo",               no_argument,            NULL, 'E'},
   {"history-no-dupes", 		required_argument, 	NULL, 'D'},
   {"file", 			required_argument, 	NULL, 'f'},
   {"history-format", 		required_argument, 	NULL, 'F'},
@@ -833,6 +835,7 @@ read_options_and_command_name(int argc, char **argv)
       if (strlen(extra_char_after_completion) > 1) 
         myerror(FATAL|NOERRNO, "-e (--extra-char-after-completion) argument should be at most one character");
       break;
+    case 'E': always_echo = TRUE; break;
     case 'f':
       if (strcmp(optarg, ".") == 0)
         feed_history_into_completion_list =  TRUE;

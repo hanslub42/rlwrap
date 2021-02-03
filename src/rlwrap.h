@@ -222,6 +222,7 @@ extern int slave_pty_sensing_fd;
 extern FILE *debug_fp;
 extern char *program_name, *command_name;
 extern int always_readline;
+extern int always_echo;
 extern int complete_filenames;
 extern int within_line_edit;
 extern int screen_is_alternate;

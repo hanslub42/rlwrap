@@ -24,8 +24,6 @@
 
 
 
-/*local vars */
-static int always_echo = FALSE;
 
 /* global vars */
 int slave_pty_sensing_fd = -1;       /* slave pty: client uses this to communicate with rlwrap,
@@ -144,9 +142,9 @@ slave_is_in_raw_mode()
   struct termios *pterm_slave;
   static int been_warned = 0;
   int in_raw_mode;
-  if (always_echo)
-    return FALSE;
 
+  
+  
   if (command_is_dead)
     return FALSE; /* filter last words  too (even if ncurses-ridden) */
   if (!(pterm_slave = my_tcgetattr(slave_pty_sensing_fd, "slave pty"))) {
