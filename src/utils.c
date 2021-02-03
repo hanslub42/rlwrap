@@ -382,7 +382,6 @@ myerror(int error_flags, const char *message_format, ...)
     message = append_and_free_old(message, strerror(saved_errno));
   }                                
   message = append_and_free_old(message,"\n");                            
-    
   fflush(stdout);
 
   message_for_debug_log = search_and_replace("\n", "; ", contents, 0, NULL, NULL); 
@@ -391,6 +390,7 @@ myerror(int error_flags, const char *message_format, ...)
 
   if (! (is_warning && nowarn))
     fputs(message, stderr); /* @@@ error reporting (still) uses buffered I/O */
+
   if (is_warning && !warnings_given++ && !nowarn) 
     fputs("warnings can be silenced by the --no-warnings (-n) option\n", stderr);
   

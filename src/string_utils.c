@@ -144,9 +144,9 @@ mybasename(const char *filename)
 {                               /* determine basename of "filename" */
 #if defined(HAVE_BASENAME) && defined(_GNU_SOURCE) /* we want only the GNU version  - but this doesn't guarantee that */
   char *filename_copy = mysavestring(filename); 
-  char *result = basename(filename_copy);
+  char *result = mysavestring(basename(filename_copy));
   free(filename_copy);
-  return mysavestring(result); /* basename on HP-UX is toxic: the result will be overwritten by subsequent invocations! */
+  return result; /* basename on HP-UX is toxic: the result will be overwritten by subsequent invocations! */
 #else
   char *p;
 
