@@ -97,6 +97,13 @@ By default, rlwrap appends a space after any inserted completion text. Use this
 option to change this to '' (don't insert anything) or some other character.
 
 .TP
+.OL \-E \-\-always-echo
+By default, \fBrlwrap\fP avoids displaying passwords by echoing '***' whenever the client
+clears the ECHO flag on its input. This option will make \fBrlwrap\fP ignore this ECHO flag
+and always echo the user's input. (\fB-aPassword:\fP will still work as expected)
+
+
+.TP
 .OL \-f \-\-file \fIfile\fP
 Split \fIfile\fP into words (using the default word-breaking characters, or those specified by \-\-break\-chars), and add them to the completion word list. This option can be given more than once, and \fIadds\fP to the default
 completion list in $RLWRAP_HOME or @DATADIR@/rlwrap/completions.

@@ -167,8 +167,7 @@ mirror_slaves_echo_mode()
   int should_echo_anyway = always_echo || (always_readline && !dont_wrap_command_waits());
 
   if ( !(pterm_slave = my_tcgetattr(slave_pty_sensing_fd, "slave pty")) ||
-       command_is_dead ||
-       always_echo 
+       command_is_dead 
        )
     /* race condition here: SIGCHLD may not yet have been caught */
     return;
