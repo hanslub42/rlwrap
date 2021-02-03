@@ -33,3 +33,4 @@ clean-local:
 
 install-data-hook:
 	chmod a+x $(DESTDIR)$(pkgdatadir)/filters/* 
+ 

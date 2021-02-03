@@ -142,10 +142,11 @@ append_and_free_old(char *str1, const char *str2)
 char *
 mybasename(const char *filename)
 {                               /* determine basename of "filename" */
-#if defined(HAVE_BASENAME) && defined(_GNU_SOURCE) /* we want only the GNU version */
-  char *filename_copy = mysavestring(filename);
+#if defined(HAVE_BASENAME) && defined(_GNU_SOURCE) /* we want only the GNU version  - but this doesn't guarantee that */
+  char *filename_copy = mysavestring(filename); 
   char *result = basename(filename_copy);
-  return result;
+  free(filename_copy);
+  return mysavestring(result); /* basename on HP-UX is toxic: the result will be overwritten by subsequent invocations! */
 #else
   char *p;
 
