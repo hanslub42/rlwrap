@@ -334,7 +334,7 @@ Any key (or key sequence, see below) can be bound to the \fBreadline\fP command 
 be sent directly to \fIcommand\fP, even when \fBrlwrap\fP is not in direct mode. 
 .TP
 .B (Not currently bound)
-Any key can be bound to the \fBreadline\fP command \fIrlwrap-direct-prefix\fP. This makes it possible to
+Any key or key combination can be bound to the \fBreadline\fP command \fIrlwrap-direct-prefix\fP. This makes it possible to
 define multi-key direct keypresses by defining their first key(s) as a 'direct prefix'
 .TP
 .B (Not currently bound)
@@ -460,7 +460,7 @@ One could e.g. put the following lines in \fB~/.inputrc\fP:
 making \fBrlwrap\fP show all completions whenever it runs \fBcoqtop\fP
 .SH BUGS and LIMITATIONS 
 Though it is flexible, delivers the goods (readline functionality), and adheres to the Unix
-"many small tools" paradigm, \fBrlwrap\fP is a kludge. It cannot know anything about
+"many small tools" paradigm, \fBrlwrap\fP is a kludge. It doesn'tknow anything about
 \fIcommand\fP's internal state, which makes context\-sensitive completion
 impossible. Using the GNU Readline library from within \fIcommand\fP is
 still the best option.
@@ -477,6 +477,8 @@ command output are garbled or incorrectly coloured.
 \fBrlwrap\fP can try, but often fails to, handle prompts that contain
 control characters. The \fB-A\fP (\fB--ansi-colour-aware\fP) option may
 help, but if it doesn't, a filter may be needed to clean up the prompt.
+Specifying \fB--set-term-name\fP with a simpler, of even dumb, terminal
+may also help.
 
 
 

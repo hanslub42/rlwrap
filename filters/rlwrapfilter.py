@@ -440,7 +440,7 @@ class RlwrapFilter:
             self.echo_has_been_handled = False
 
         if (not self.echo_has_been_handled):
-            if (re.match(r'\n', message)):
+            if (not re.search(r'\n', message)):
                 # save all output until we have one *whole* echo line
                 self.saved_output = self.saved_output + message
                 return ""
@@ -452,7 +452,7 @@ class RlwrapFilter:
                 (echo, nl, message) = re.match(r'^([^\n\r]*)(\r?\n)?(.*)?', message, re.DOTALL).groups()
                 handled_echo = when_defined(self.echo_handler, echo)
         self.cumulative_output = self.cumulative_output + message
-        return handled_echo + str(nl or "") + (when_defined(self.output_handler, message))
+        return handled_echo + str(nl or "") + str(when_defined(self.output_handler, message))
 
 
     def add_to_completion_list(self, *args):
@@ -500,8 +500,8 @@ class RlwrapFilter:
 
     def add_interests(self, message):
         interested = list(message)
-        tag2handler = {TAG_OUTPUT      : self.output_handler,
-                       TAG_INPUT       : self.input_handler,
+        tag2handler = {TAG_OUTPUT      : self.output_handler or self.echo_handler, # echo is the first OUTPUT after an INPUT
+                       TAG_INPUT       : self.input_handler or self.echo_handler,  # so to determine what is ECHO we need to see INPUT... 
                        TAG_HISTORY     : self.history_handler,
                        TAG_COMPLETION  : self.completion_handler,
                        TAG_PROMPT      : self.prompt_handler,

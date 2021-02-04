@@ -14,11 +14,15 @@
       switches to the alternate screen. This makes it usable even on
       systems that don't have a usable /proc/<pid>/wchan
       
-      when run inside an emacs shell buffer, rlwrap will execute
-      the client in its place (just as when stdin is not a terminal)
+      when run inside an emacs shell buffer, rlwrap will execute the
+      client instead of wrapping it (just as when stdin is not a
+      terminal)
 
       --always-echo echoes user input even when the client clears its
       ECHO flag
+
+      new filter "makefilter" to convert shell commands (like sed, or
+      grep) into rlwrap filters (extending/superseding "outfilter")
 
 0.44  rlwrap doesn't (yet) work with bracketed-paste. As this is
       enabled by default from readline-8.1 onwards, rlwrap disables

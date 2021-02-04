@@ -83,8 +83,14 @@ history and completion. They are not much used; their
 implementation and the example filters remain therefore  somewhat
 untested.
 
-## AUTHOR
-Hans Lub, hanslub42@gmail.com
+## AUTHORS
+
+The GNU Readline library (written by Brian Fox and Chet
+Ramey) does all the hard work behind the scenes, the pty-handling code
+has been taken practically unchanged from rxvt-2.7.10 (currently
+maintained by Geoff C. Wing), and completion word lists are managed by
+Damian Ivereigh's libredblack library. The remaining lines of code
+were written by Hans Lub (hanslub42@gmail.com).
 
 ## HOMEPAGE
 https://github.com/hanslub42/rlwrap

@@ -199,8 +199,8 @@ sub add_interests {
     next if $interested[$tag] eq 'y'; # a preceding filter in the pipeline has already shown interest
     $interested[$tag] = 'y'
       if ($tag == TAG_INPUT      and $self -> input_handler)
-      or ($tag == TAG_OUTPUT     and ($self -> output_handler or $self -> echo_handler))
-      or ($tag == TAG_HISTORY    and $self -> history_handler)
+      or ($tag == TAG_OUTPUT     and ($self -> output_handler or $self -> echo_handler)) # echo is the first OUTPUT after INPUT
+      or ($tag == TAG_HISTORY    and $self -> history_handler or $self -> echo_handler)) # to determine which OUTPUT is echo, we need to see INPUT
       or ($tag == TAG_COMPLETION and $self -> completion_handler)
       or ($tag == TAG_PROMPT     and $self -> prompt_handler)
       or ($tag == TAG_HOTKEY     and $self -> hotkey_handler)
@@ -793,7 +793,7 @@ Convert a valid tag name like "TAG_PROMPT" to a tag (an integer)
 
 =item $f -> send_output_oob($text)
 
-Make rlwrap display C<$text>. C<$text> is sent "out-of-band":
+Make rlwrap display C<$text>. C<$text> is sent "out-of-band" :
 B<rlwrap> will not see it until just  after it has sent the next
 message to the filter
 
