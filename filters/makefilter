@@ -1,0 +1,103 @@
+#!/usr/bin/env python3
+
+"""a demo for doing nothing"""
+
+import sys
+import os
+import argparse
+import pexpect
+
+
+if 'RLWRAP_FILTERDIR' in os.environ:
+    sys.path.append(os.environ['RLWRAP_FILTERDIR'])
+else:
+    sys.path.append('.')
+
+import rlwrapfilter
+
+test_without_filter_command = False # only for debuggging: make filter_command a NOP
+
+
+########## parse filter arguments #################
+parser = argparse.ArgumentParser(description='filter arguments:', add_help=False, formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+parser.add_argument('--message_type', nargs='?', help="message type to filter", choices=['input', 'output', 'history', 'prompt', 'echo'],  default="output")
+parser.add_argument('command_line', metavar='<command> [args...]', nargs=argparse.REMAINDER, help='external filter_command to turn into filter')
+args = parser.parse_args()
+
+
+######### instantiate a RlwrapFilter ############
+filter = rlwrapfilter.RlwrapFilter()
+filter.help_text = "Usage: rlwrap [-options] -z 'makefilter command [-options]' \n"\
+                   + "make shell filter into rlwrap filter (e.g. to colourise output or censor history)\n"\
+                   + parser.format_help()
+
+filter_command = None
+
+########## spawn filter_command #################
+def spawn_filter_command():
+    filter_command= pexpect.spawn(args.command_line[0], args.command_line[1:], echo=False, encoding='utf-8')
+    filter_command.delaybeforesend = None
+    return filter_command
+
+######### possible handlers #####################
+def pass_single_line_through_filter_command(line, strip=True):
+   """
+   pass one single (output, history, prompt,...) line through filter_command. 
+   use strip = True for messages that don't end in CRNL, such as prompts, history and echo '''
+   """
+   global filter_command
+   if test_without_filter_command:
+       result = line
+   else:
+       if not filter_command:
+           filter_command = spawn_filter_command()
+       filter_command.sendline(line)
+       result = filter_command.readline()
+   return result.rstrip("\r\n") if strip else result
+
+assembled_chunks = ""
+
+def pass_chunks_through_filter_command_line_by_line(chunk):
+   """
+   pass chunk through filter_command, assembling and spliting multiple chunks into lines if needed 
+   use global variable <assembled_chunks> to retain assembled chunks between invocation
+   this should probably be done in rlwrapfilter eventually: filter.present_output_as_lines = True/False 
+   """
+   global assembled_chunks
+   assembled_chunks += chunk # chunk may contain zero, one or several CRNLs"
+   lines   = assembled_chunks.split('\r\n');
+   assembled_chunks  = lines[-1] # keep last (possibly empty) non CRNL-terminated chunk (which may be a prompt, in which case erase_assembled_chunks() will be called to forget about it, cf. below)
+   output  = ""
+   for line in lines[0:-1] :
+      output += pass_single_line_through_filter_command(line, False)
+   #print(f"stream: {stream}, text: {text}, oldlines: {oldlines}, lines: {lines}, output: {output}")
+   return output
+ 
+
+def erase_assembled_chunks(prompt):
+    """
+    prompt_handler:  if we recognise a prompt, we need to clear assembled_chunks, 
+    as its content are the prompt, and should not be treated as output anymore
+    """
+    global assembled_chunks
+    assembled_chunks = ""    # .... but we have to forget the chunk that turned out to be a prompt
+    return prompt
+
+
+
+############ determine which handler to actitvate ####################
+if  args.message_type == 'output':
+    filter.output_handler = pass_chunks_through_filter_command_line_by_line #pass_through_filter
+    filter.prompt_handler = erase_assembled_chunks # last bit of assembled_chunks is prompt, not output
+elif args.message_type == 'input':
+    filter.input_handler = pass_single_line_through_filter_command
+elif args.message_type == 'prompt':
+    filter.prompt_handler = pass_single_line_through_filter_command
+elif args.message_type == 'echo':
+    filter.echo_handler = pass_single_line_through_filter_command
+elif args.message_type == 'history':
+    filter.history_handler = pass_single_line_through_filter_command
+
+
+########### let it all run ###################
+filter.run()
