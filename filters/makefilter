@@ -21,25 +21,28 @@ test_without_filter_command = False # only for debuggging: make filter_command a
 ########## parse filter arguments #################
 parser = argparse.ArgumentParser(description='filter arguments:', add_help=False, formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('--message_type', nargs='?', help="message type to filter", choices=['input', 'output', 'history', 'prompt', 'echo'],  default="output")
+parser.add_argument('--timeout', nargs='?', type=float, help="filter timeout",  default=0.5)
 parser.add_argument('command_line', metavar='<command> [args...]', nargs=argparse.REMAINDER, help='external filter_command to turn into filter')
 args = parser.parse_args()
 
 
 ######### instantiate a RlwrapFilter ############
 filter = rlwrapfilter.RlwrapFilter()
-filter.help_text = "Usage: rlwrap [-options] -z 'makefilter command [-options]' \n"\
+filter.help_text = "Usage: rlwrap [-options] -z 'makefilter <command> [-options]' \n"\
                    + "make shell filter into rlwrap filter (e.g. to colourise output or censor history)\n"\
+                   + "important: <ocommand> needs to return exactly *one* output line for each input line within 1 sec.\n"\
                    + parser.format_help()
 
 filter_command = None
 
 ########## spawn filter_command #################
 def spawn_filter_command():
-    filter_command= pexpect.spawn(args.command_line[0], args.command_line[1:], echo=False, encoding='utf-8')
+    filter_command= pexpect.spawn(args.command_line[0], args.command_line[1:], timeout = args.timeout, echo=False, encoding='utf-8')
     filter_command.delaybeforesend = None
     return filter_command
 
 ######### possible handlers #####################
+@rlwrapfilter.intercept_error
 def pass_single_line_through_filter_command(line, strip=True):
    """
    pass one single (output, history, prompt,...) line through filter_command. 

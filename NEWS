@@ -11,8 +11,9 @@
       prompt, i.e. remove all colour codes
 
       --no-children (-N) now enables direct mode whenever the client
-      switches to the alternate screen. This makes it usable even on
-      systems that don't have a usable /proc/<pid>/wchan
+      switches to the alternate screen. This makes editors and pagers
+      usable even when using --always-readline on systems that don't
+      have a usable /proc/<pid>/wchan
       
       when run inside an emacs shell buffer, rlwrap will execute the
       client instead of wrapping it (just as when stdin is not a
