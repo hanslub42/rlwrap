@@ -24,7 +24,7 @@ parser.add_argument('--message_type', nargs='?', help="message type to filter", 
 parser.add_argument('--timeout', nargs='?', type=float, help="filter timeout",  default=0.5)
 parser.add_argument('command_line', metavar='<command> [args...]', nargs=argparse.REMAINDER, help='external filter_command to turn into filter')
 args = parser.parse_args()
-
+command = args.command_line[0] if args.command_line else None
 
 ######### instantiate a RlwrapFilter ############
 filter = rlwrapfilter.RlwrapFilter()
@@ -43,7 +43,7 @@ def spawn_filter_command():
     return filter_command
 
 ######### possible handlers #####################
-@rlwrapfilter.intercept_error_with_message(f"Error in communication with {args.command_line[0]}")
+@rlwrapfilter.intercept_error_with_message(f"Error in communication with {command}")
 def pass_single_line_through_filter_command(line, strip=True):
    """
    pass one single (output, history, prompt,...) line through filter_command. 
@@ -104,4 +104,5 @@ elif args.message_type == 'history':
 
 
 ########### let it all run ###################
+print(f"PID: {os.environ.get('RLWRAP_COMMAND_PID')}")
 filter.run()

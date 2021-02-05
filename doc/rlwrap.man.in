@@ -1,4 +1,4 @@
-.TH rlwrap 1 "Januari 19, 2021"
+.TH rlwrap 1 "Fanuary 5, 2021"
 .SH NAME
 rlwrap \- readline wrapper
 .de OP
@@ -34,8 +34,8 @@ manipulates its terminal settings, working directory or (with the \fB-U\fP optio
 There are many options to add (programmable) completion, handle
 multi\-line input, colour and re\-write prompts. If you don't need
 them (and you probably don't), you can skip the rest of this manpage,
-although many of those options can make your command line a bit more
-comfortable.
+although some of those options could make your command line quite a bit more
+comfortable...
 .SH OPTIONS
 .TP
 .OL \-a \-\-always\-readline [\fIpassword_prompt\fP] 
@@ -239,8 +239,8 @@ EXPERIMENTAL: Wake up every \fItimeout\fP millisecs, where \fItimeout\fP is the 
 
 .TP
 .OL \-z \-\-filter \fIfilter\fP
-Use a filter to change \fBrlwrap\fP's behaviour. A filter can be used to keep certain input out of the history, 
-to change the prompt, to implement simple macros or programmable completion.. \fBrlwrap\fP comes with a \fBperl\fP and a \fBPython 3\fP module
+Use \fIfilter\fP to change \fBrlwrap\fP's behaviour. A filter can be used to keep certain input out of the history, 
+to change the prompt, to implement simple macros or programmable completion. \fBrlwrap\fP comes with a \fBperl\fP and a \fBpython\fP module
 to make filter writing easy. (cf. \fBRlwrapFilter(3pm)\fP for the perl module, the python one is very similar) A number of example filters are installed in the directory @DATADIR@/rlwrap/filters. "rlwrap \-z \fIfilter\fP" displays information about a filter, "rlwrap \-z listing" lists all currently installed filters.
 If \fIfilter\fP needs arguments, you should quote the whole filter command line: 
 .nf
@@ -250,6 +250,18 @@ If \fIfilter\fP needs arguments, you should quote the whole filter command line:
     
 .fi
 If this command line contains shell metacharacters, \fBrlwrap\fP passes it to the system shell for parsing. 
+
+As filters have to follow a special protocol, shell commands like \fBsed\fP and \fBgrep\fP cannot be used as \fBrwlrap\fP filters. They can, however, be \fBconverted\fP into filters by the \fBmakefilter\fP filter:
+
+    rlwrap \-z 'makefilter egrep \-i \-\-color "error|$"' command
+
+will color all occurrences of "error" (or "Error")  in \fIcommand\fP's output, while
+
+    rlwrap \-z 'makefilter --message-type history sed -e s"/whisky/lemonade/"' command
+
+sanitises your drinking history. Both filters can be combined using the \fBpipeline\fP filter, of course.
+
+
 .SH EXAMPLES
 .TP 3
 Run \fBnc\fP (netcat) with command\-line editing and history
@@ -463,7 +475,7 @@ Though it is flexible, delivers the goods (readline functionality), and adheres 
 "many small tools" paradigm, \fBrlwrap\fP is a kludge. It doesn'tknow anything about
 \fIcommand\fP's internal state, which makes context\-sensitive completion
 impossible. Using the GNU Readline library from within \fIcommand\fP is
-still the best option.
+still by far the best option.
 
 Also, as "it takes two to tango" there is no way for \fBrlwrap\fP
 to synchronise its internal state with \fIcommand\fP, resulting in a

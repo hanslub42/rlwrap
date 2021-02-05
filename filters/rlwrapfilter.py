@@ -287,6 +287,7 @@ def intercept_error(func):
 def intercept_error_with_message(message=None):
     """
     A decorator (factory)  to intercept an exception, send the message to rlwrap, print a message and exit (or re-raise the exception, if message = None)
+    N.B: decorators, hence also <message> is evaluated at compile time, so it cannot be used to print runtime info
     """
     def intercept_error_closure(func):
         def wrapper(*args, **kwargs):
@@ -569,7 +570,6 @@ class RlwrapFilter:
         # In both cases: print help text
         if os.environ.get('RLWRAP_COMMAND_PID') in [None, '0']:
             write_message(TAG_OUTPUT_OUT_OF_BAND, self.help_text + '\n')
-
         while(True):
             tag, message = read_message()
             

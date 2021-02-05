@@ -22,8 +22,11 @@
       --always-echo echoes user input even when the client clears its
       ECHO flag
 
-      new filter "makefilter" to convert shell commands (like sed, or
-      grep) into rlwrap filters (extending/superseding "outfilter")
+      new filter "makefilter" to easily employ shell commands (like sed,
+      or grep) as rlwrap filters (extending/superseding "outfilter")
+
+      a new round of testing on Polarhome to weed out
+      incompatibilities with older Unix systems 
 
 0.44  rlwrap doesn't (yet) work with bracketed-paste. As this is
       enabled by default from readline-8.1 onwards, rlwrap disables
