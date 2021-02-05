@@ -40,6 +40,7 @@ import sys
 import os
 import io
 import types
+import time
 import struct
 import select
 import re
@@ -255,13 +256,16 @@ def send_warn(message):
     write_message(TAG_OUTPUT_OUT_OF_BAND, "{0}: {1}".format(__name__, message))
 
 
-def send_error(message,e):
+def send_error(message,e = None):
     """
     send message to rlwrap, and raise e.
     """
-    write_message(TAG_OUTPUT_OUT_OF_BAND, "{0}: {1}".format(__name__, message))
-    raise e
-
+    write_message(TAG_OUTPUT_OUT_OF_BAND if e else TAG_ERROR, "{0}: {1}".format(__name__, message))
+    if e:
+       raise e
+    else:
+       time.sleep(2) # timeout doesn't matter much because rlwrap will kill us anyway
+       exit()
 
 def intercept_error(func):
     """
@@ -279,38 +283,42 @@ def intercept_error(func):
     return wrapper
 
 
+
+def intercept_error_with_message(message=None):
+    """
+    A decorator (factory)  to intercept an exception, send the message to rlwrap, print a message and exit (or re-raise the exception, if message = None)
+    """
+    def intercept_error_closure(func):
+        def wrapper(*args, **kwargs):
+            try:
+                return func(*args, **kwargs)
+            except Exception as e:
+                complete_message = "{0}: {1}".format(__name__, '/'.join(map(str,e.args))) if message == None else "{0}\n{1}".format(message, e)
+                write_message(TAG_ERROR, complete_message)
+                if message:
+                    exit()
+                else:
+                    raise e
+        return wrapper
+    return intercept_error_closure
+
 def is_string(value):
-    """
-    A decorator to intercept an exception, send the message to rlwrap, and raise an exception.
-    """
     return isinstance(value, str) or value == None
 
 
 def is_boolean(value):
-    """
-    A decorator to intercept an exception, send the message to rlwrap, and raise an exception.
-    """
     return isinstance(value, bool) or value == None
 
 
 def is_integer(value):
-    """
-    A decorator to intercept an exception, send the message to rlwrap, and raise an exception.
-    """
     return isinstance(value, int) or value == None
 
 
 def is_float(value):
-    """
-    A decorator to intercept an exception, send the message to rlwrap, and raise an exception.
-    """
     return isinstance(value, numbers.Number) or value == None
 
 
 def is_callable(value):
-    """
-    A decorator to intercept an exception, send the message to rlwrap, and raise an exception.
-    """
     return isinstance(value, collections.Callable) or value == None
 
 
@@ -368,8 +376,7 @@ class RlwrapFilter:
             self.warn("{0} should not be '{1}'\n".format(name, type(value)))
 
         if name == 'minimal_rlwrap_version' and (value > rlwrap_version):
-            self.warn("requires rlwrap version {0} or newer.\n".format(str(value)))
-
+            self.error("requires rlwrap version {0} or newer.\n".format(str(value)))
         self.__dict__[name] = value
 
 
@@ -534,7 +541,7 @@ class RlwrapFilter:
         send_warn(message)
 
 
-    def error(self, message,e):
+    def error(self, message,e = None):
         """
         send message to rlwrap, and raise e.
         """
@@ -595,14 +602,14 @@ class RlwrapFilter:
                     write_message(tag,REJECT_PROMPT);
                     # don't update <previous_tag> and don't reset <cumulative_input>
                     next
-                if (os.environ.get('RLWRAP_IMPATIENT') and not re.match('\n$', self.cumulative_output)):
+                if (os.environ.get('RLWRAP_IMPATIENT') and not re.search('\n$', self.cumulative_output)):
                     # cumulative output contains prompt: chop it off!
                     # s/[^\n]*$// takes way too long on big strings,
                     # what is the optimal regex to do this?
                     self.cumulative_output = re.sub('(?<![^\n])[^\n]*$', '', self.cumulative_output)
 
                 response = when_defined(self.prompt_handler, message)
-                if (re.match('\n', response)):
+                if (re.search('\n', response)):
                     send_error('prompts may not contain newlines!')
             elif (tag == TAG_SIGNAL):
                 response = when_defined(self.signal_handler, message)

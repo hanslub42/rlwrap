@@ -33,6 +33,7 @@ filter.help_text = "Usage: rlwrap [-options] -z 'makefilter <command> [-options]
                    + "important: <ocommand> needs to return exactly *one* output line for each input line within 1 sec.\n"\
                    + parser.format_help()
 
+filter.minimal_rlwrap_version = 0.45
 filter_command = None
 
 ########## spawn filter_command #################
@@ -42,7 +43,7 @@ def spawn_filter_command():
     return filter_command
 
 ######### possible handlers #####################
-@rlwrapfilter.intercept_error
+@rlwrapfilter.intercept_error_with_message(f"Error in communication with {args.command_line[0]}")
 def pass_single_line_through_filter_command(line, strip=True):
    """
    pass one single (output, history, prompt,...) line through filter_command. 
