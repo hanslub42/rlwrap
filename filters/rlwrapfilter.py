@@ -285,9 +285,12 @@ def intercept_error(func):
 
 
 def intercept_error_with_message(message=None):
-    """
-    A decorator (factory)  to intercept an exception, send the message to rlwrap, print a message and exit (or re-raise the exception, if message = None)
-    N.B: decorators, hence also <message> is evaluated at compile time, so it cannot be used to print runtime info
+    """  
+    A decorator (-factory) to intercept an exception, send the message
+    to rlwrap, print a message and exit (or re-raise the exception, if
+    message = None) N.B: decorators, hence also <message> are evaluated
+    at compile time. @intercept_error_with_message (f"This script
+    crashed after {sec} seconds") doesn't make sense.
     """
     def intercept_error_closure(func):
         def wrapper(*args, **kwargs):
