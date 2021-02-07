@@ -72,7 +72,7 @@ storing) passwords:
 ## INSTALLATION:
 Usually just
 
-    # ./configure; make install
+    # ./configure; make; sudo make install
 
 See the INSTALL file for more information.
 

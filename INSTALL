@@ -11,10 +11,9 @@ INSTALLATION
 
 First, unzip the tarball or clone the git repository (git clone
 https://github.com/hanslub42/rlwrap.git). Then go to the rlwrap
-directory. If there is no configure script (e.g. after a 'git clone'),
-you can generate it by running:
+directory, and:
 
-autoreconf --install # only if needed
+autoreconf --install # only needed if there is no ./configure script
 
 then:
 
