@@ -818,8 +818,11 @@ discard it, but it can be useful when debugging filters
 
 =item $f -> tweak_readline_oob($readline_function, @parameters)
 
-Send a specially formatted out-of-band message to make B<rlwrap> call a B<readline> function.
-At this moment, the following types are recognised:
+Send a specially formatted out-of-band message in order to tweak
+readline (i.e. to make B<rlwrap> call a B<readline> function or set a
+B<readline> variable). See the GNU B<Readline> documentation for details.
+
+At this moment, the following tweaks are recognised:
 
     $filter -> tweak_readline_oob("rl_variable_bind", $rl_variable_name, $value);
     # ... only for bindable readline variables like those in .inputrc
