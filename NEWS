@@ -1,6 +1,6 @@
-0.45  rlwrap now correctly handles bracketed paste
+0.45  rlwrap correctly handles bracketed paste
 
-      --only-cook '!<regexp>' now enables "confident mode" where every
+      --only-cook '!<regexp>' enables "confident mode" where every
       possible prompt that matches a regexp is cooked immediately
       (so that even prompts that get printed when handling a large
       paste are cooked)
@@ -12,37 +12,39 @@
 
       --no-children (-N) now enables direct mode whenever the client
       switches to the alternate screen. This makes editors and pagers
-      usable even when using --always-readline on systems that don't
-      have a usable /proc/<pid>/wchan
+      usable even when using --always-readline on non-linux systems
       
       when run inside an emacs shell buffer, rlwrap will execute the
       client instead of wrapping it (just as when stdin is not a
       terminal)
 
-      --always-echo echoes user input even when the client clears its
-      ECHO flag
+      --always-echo echoes user input even when the client has
+      switched off ECHO.
 
-      new filter "makefilter" to easily employ shell commands (like sed,
+      filter "makefilter" to easily employ shell commands (like sed,
       or grep) as rlwrap filters (extending/superseding "outfilter")
 
-      a new round of testing on Polarhome to weed out
-      incompatibilities with older Unix systems 
+      filters can change (some) bindable and internal readline
+      variables with a new RlwrapFilter method tweak_readline_oob()
+      
+      a round of testing on Polarhome weeded out some
+      incompatibilities with older Unix systems
 
 0.44  rlwrap doesn't (yet) work with bracketed-paste. As this is
       enabled by default from readline-8.1 onwards, rlwrap disables
       it, even if specified in .inputrc. A multi-line paste will
       therefore (still) behave as multiple 1-line pastes
 
-      rlwrap is now aware of multi-byte characters and correctly
+      rlwrap is aware of multi-byte characters and correctly
       handles prompts (or things that look like prompts, e.g.
       progress indicators) that contain them, according to your
       locale.
       
-      rlwrap filters can now also filter signals (see
+      rlwrap filters can also filter signals (see
       RlwrapFilter(3pm)), changing them, or providing extra input to
       the rlwrapped command.
 
-      Key *sequences* can now be bound to rlwrap-direct-keypress
+      Key *sequences* can be bound to rlwrap-direct-keypress
       (using a new readline command rlwrap-direct-prefix) (contributed
       by Yuri d'Elia)
 
