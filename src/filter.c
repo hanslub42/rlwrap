@@ -258,7 +258,24 @@ static char *read_tagless() {
   return buffer;
 }
 
+static int list_length(const void **list, int maxlen) {
+   const void **p;
+   int n;
+   for (n=0, p = list; n < maxlen && *p; p++)
+     n++;
+   return n;
+}
 
+static void maybe_tweak_readline(const char*message) { /* experimental and kludgey, but easy to extend (e.g. "@read_initfile::filename::\n") */
+  if (mystrstr(message, "@rl_variable_bind::") == message) { /* "@rl_variable_bind::rl_variable_name::value" */
+    char **words = split_with(message, "::");
+    if(list_length((const void **) words, 5) != 4)
+      myerror(FATAL|NOERRNO, "reading from filter: malformed special oob message: <%s>", mangle_string_for_debug_log(message, 80));
+    rl_variable_bind(words[1], words[2]); /* no need for error handling: readline will complain if necessary */
+    free_splitlist(words);
+  }
+}       
+  
 void handle_out_of_band(int tag, char *message) {
   int split_em_up = FALSE;
 
@@ -269,7 +286,7 @@ void handle_out_of_band(int tag, char *message) {
     if (expected_tag == TAG_COMPLETION) /* start new line when completing (looks better) */
       fprintf(stderr, "\n"); /* @@@ error reporting (still) uses buffered I/O */
     WONTRETURN(myerror(FATAL|NOERRNO, message));
-  case TAG_OUTPUT_OUT_OF_BAND:
+  case TAG_OUTPUT_OUT_OF_BAND: 
     my_putstr(message);
     break;
   case TAG_ADD_TO_COMPLETION_LIST:
@@ -277,6 +294,7 @@ void handle_out_of_band(int tag, char *message) {
     split_em_up = TRUE;
     break;
   case TAG_IGNORE:
+    maybe_tweak_readline(message); 
     break;
   default:
     WONTRETURN(myerror(FATAL|USE_ERRNO, "out-of-band message with unknown tag %d: <%20s>", tag, message));

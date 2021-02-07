@@ -216,6 +216,11 @@ main(int argc, char **argv)
   install_signal_handlers();	
   block_all_signals();
   fork_child(command_name, argv); /* this will unblock most signals most of the time */
+
+  init_readline("");
+  last_minute_checks();
+  run_unit_test(0,NULL, TEST_AFTER_READLINE_INIT); 
+
   if (filter_command)
     spawn_filter(filter_command);
   run_unit_test(argc - optind, argv + optind, TEST_AFTER_SPAWNING_SLAVE_COMMAND); /* argv points at the first non-option rlwrap argument */
@@ -292,9 +297,6 @@ main_loop()
   sigemptyset(&no_signals_blocked);
   
 
-  init_readline("");
-  last_minute_checks();
-  run_unit_test(0,NULL, TEST_AFTER_READLINE_INIT); 
 
   pass_through_filter(TAG_OUTPUT,""); /* If something is wrong with filter, get the error NOW */
   set_echo(FALSE);		      /* This will also put the terminal in CBREAK mode */

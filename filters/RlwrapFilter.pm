@@ -424,11 +424,19 @@ sub send_output_oob {
 }
 
 
-
 sub  send_ignore_oob {
   my ($self, $text) = @_;
   write_message(TAG_IGNORE, $text);
 }
+
+sub tweak_readline_oob {
+  my ($self, $rl_function, @args) = @_;
+  if (not grep{$rl_function eq $_} qw(rl_variable_bind)) { # the list can be extended in future versions
+    die ("tweak_readline_oob() called with unknown/unimplemented readline function '$rl_function'\n");
+  }
+  $self -> send_ignore_oob("@" . join("::", ($rl_function, @args, "\n")));
+}
+
 
 sub die_with_error_message {
   my ($error_message) = @_;
@@ -801,6 +809,19 @@ message to the filter
 
 Send an out-of-band TAG_IGNORE message to rlwrap. B<rlwrap> will silently
 discard it, but it can be useful when debugging filters
+
+
+=item $f -> tweak_readline_oob($readline_function, @parameters)
+
+Send a specially formatted out-of-band message to make B<rlwrap> call a B<readline> function.
+At this moment, only "rl_variable_bind" is recognised, but the mechanism could easily be extended.
+For example:
+
+    $filter -> tweak_readline_oob("rl_variable_bind", "horizontal_scroll_mode", "on");
+    $filter -> run
+
+The message will not displayed by B<rlwrap>. See the B<readline> manual for bindable rl_variables.
+The parameters should not contain "::" (two consecutive colons)
 
 =item $f -> add_to_completion_list(@words)
 

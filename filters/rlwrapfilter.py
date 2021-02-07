@@ -560,6 +560,12 @@ class RlwrapFilter:
         write_message(TAG_IGNORE, text)
 
 
+    def tweak_readline_oob(self, rl_function, *args):
+        if rl_function not in ["rl_variable_bind"]: # can be extended in future versions
+            self.error("tweak_readline_oob() called with unknown/unimplemented readline function '{}'".format(rl_function))
+        self.send_ignore_oob("@" + "::".join((rl_function,) + args + ("\n",)))
+
+        
     def cwd(self):
         return os.getcwd()
 
