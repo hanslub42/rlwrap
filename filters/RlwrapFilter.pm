@@ -430,11 +430,16 @@ sub  send_ignore_oob {
 }
 
 sub tweak_readline_oob {
-  my ($self, $rl_function, @args) = @_;
-  if (not grep{$rl_function eq $_} qw(rl_variable_bind)) { # the list can be extended in future versions
-    die ("tweak_readline_oob() called with unknown/unimplemented readline function '$rl_function'\n");
-  }
-  $self -> send_ignore_oob("@" . join("::", ($rl_function, @args, "\n")));
+  my ($self, $rl_tweak, @args) = @_;
+  my %nargs = (rl_variable_bind => 2,
+               rl_completer_word_break_characters => 1,
+               rl_completer_quote_characters => 1,
+               rl_filename_completion_desired => 1);
+               # the list can be extended in future versions
+
+  die "tweak_readline_oob() called with unknown readline function or variable '$rl_tweak'\n" unless  $nargs{$rl_tweak};
+  die "tweak_readline_oob($rl_tweak,...) should be called with $nargs{$rl_tweak} more args\n" if @args != $nargs{$rl_tweak};
+  $self -> send_ignore_oob("@" . join("::", ($rl_tweak, @args, "\n")));
 }
 
 
@@ -734,7 +739,7 @@ As B<rlwrap> is transparent to signals, signals get passed on to I<command>.
 This handler gets called (as handler($signo)) for signals SIGHUP, SIGINT,
 SIGQUIT, SIGTERM, SIGCONT, SIGUSR1, SIGUSR2, and SIGWINCH, before the signal is delivered.
 It receives (and should return) $signo as a string. The returned signal is delivered to
-I<command>; return "0" to ignore the signal altogether. Output can be written out-of-band (to B<rlwrap>) or 
+I<command>; return "0" to ignore the signal altogether. Output can be written out-of-band (to B<rlwrap>) or
 cloak_and_dagger (to I<command>, see below)
 
 
@@ -814,14 +819,16 @@ discard it, but it can be useful when debugging filters
 =item $f -> tweak_readline_oob($readline_function, @parameters)
 
 Send a specially formatted out-of-band message to make B<rlwrap> call a B<readline> function.
-At this moment, only "rl_variable_bind" is recognised, but the mechanism could easily be extended.
-For example:
+At this moment, the following types are recognised:
 
-    $filter -> tweak_readline_oob("rl_variable_bind", "horizontal_scroll_mode", "on");
-    $filter -> run
+    $filter -> tweak_readline_oob("rl_variable_bind", $rl_variable_name, $value);
+    # ... only for bindable readline variables like those in .inputrc
+    $filter -> tweak_readline_oob("rl_completer_word_break_characters", $chars);
+    $filter -> tweak_readline_oob("rl_completer_quote_characters", $chars);
+    $filter -> tweak_readline_oob("rl_filename_completion_desired", "0" or "1");
 
-The message will not displayed by B<rlwrap>. See the B<readline> manual for bindable rl_variables.
-The parameters should not contain "::" (two consecutive colons)
+The parameters should not contain "::" (two consecutive colons). This method can be called at any
+moment, even before $filter -> run
 
 =item $f -> add_to_completion_list(@words)
 

@@ -266,14 +266,24 @@ static int list_length(const void **list, int maxlen) {
    return n;
 }
 
-static void maybe_tweak_readline(const char*message) { /* experimental and kludgey, but easy to extend (e.g. "@read_initfile::filename::\n") */
-  if (mystrstr(message, "@rl_variable_bind::") == message) { /* "@rl_variable_bind::rl_variable_name::value" */
-    char **words = split_with(message, "::");
-    if(list_length((const void **) words, 5) != 4)
-      myerror(FATAL|NOERRNO, "reading from filter: malformed special oob message: <%s>", mangle_string_for_debug_log(message, 80));
+static bool starts_with(const char *str, const char *prefix) {
+  return mystrstr(str, prefix) == str;
+}
+
+static void maybe_tweak_readline(const char*message) { /* a bit kludgey, but easy to extend  */
+  if (message[0] != '@')
+    return;
+  char **words = split_with(message, "::"); /* words and its elements are allocated on the heap */
+  /* parameter checking should be done  in the {python,perl} modules - segfaults may happen otherwise */
+  if (starts_with(message, "@rl_variable_bind::"))  /* "@rl_variable_bind::rl_variable_name::value::\n" */
     rl_variable_bind(words[1], words[2]); /* no need for error handling: readline will complain if necessary */
-    free_splitlist(words);
-  }
+  if (starts_with(message, "@rl_completer_word_break_characters::")) 
+      rl_completer_word_break_characters = words[1];
+  if (starts_with(message, "@rl_completer_quote_characters::"))
+    rl_completer_quote_characters = words[1];
+  if (starts_with(message, "@rl_filename_completion_desired::"))
+    rl_filename_completion_desired = my_atoi(words[1]);
+  /* feel free to extend this list (but make sure to modify the {perl,python} modules accordingly! */
 }       
   
 void handle_out_of_band(int tag, char *message) {

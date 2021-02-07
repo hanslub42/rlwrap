@@ -251,6 +251,7 @@ void test_haystack(const char *haystack, const char* needle) {
 /* split_with("a bee    cee"," ") returns a pointer to an array {"a", "bee",  "cee", NULL} on the heap */
 
 char **
+
 split_with(const char *string, const char *delimiters) {
   const char *s;
   char *token, **pword;

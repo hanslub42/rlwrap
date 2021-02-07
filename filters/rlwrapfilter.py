@@ -559,11 +559,18 @@ class RlwrapFilter:
     def send_ignore_oob(self, text):
         write_message(TAG_IGNORE, text)
 
-
-    def tweak_readline_oob(self, rl_function, *args):
-        if rl_function not in ["rl_variable_bind"]: # can be extended in future versions
-            self.error("tweak_readline_oob() called with unknown/unimplemented readline function '{}'".format(rl_function))
-        self.send_ignore_oob("@" + "::".join((rl_function,) + args + ("\n",)))
+      
+    def tweak_readline_oob(self, rl_tweak, *args):
+        nargs = {'rl_variable_bind'                   : 2,
+                 'rl_completer_word_break_characters' : 1,
+                 'rl_completer_quote_characters'      : 1,
+                 'rl_filename_completion_desired'     : 1}
+                 # the above list can be extended in future versions
+        if rl_tweak not in nargs: 
+            self.error("tweak_readline_oob() called with unknown/unimplemented readline function '{}'".format(rl_tweak))
+        if len(args) !=  nargs[rl_tweak]:
+            self.error("tweak_readline_oob({},...) should be called with exactly {} args".format(rl_tweak, nargs[rl_tweak] + 1))
+        self.send_ignore_oob("@" + "::".join((rl_tweak,) + args + ("\n",)))
 
         
     def cwd(self):
