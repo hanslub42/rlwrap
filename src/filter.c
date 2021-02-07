@@ -258,14 +258,6 @@ static char *read_tagless() {
   return buffer;
 }
 
-static int list_length(const void **list, int maxlen) {
-   const void **p;
-   int n;
-   for (n=0, p = list; n < maxlen && *p; p++)
-     n++;
-   return n;
-}
-
 static bool starts_with(const char *str, const char *prefix) {
   return mystrstr(str, prefix) == str;
 }
@@ -274,7 +266,7 @@ static void maybe_tweak_readline(const char*message) { /* a bit kludgey, but eas
   if (message[0] != '@')
     return;
   char **words = split_with(message, "::"); /* words and its elements are allocated on the heap */
-  /* parameter checking should be done  in the {python,perl} modules - segfaults may happen otherwise */
+  /* parameter checking should be done  in the {python,perl} modules - rlwrap might crash otherwise */
   if (starts_with(message, "@rl_variable_bind::"))  /* "@rl_variable_bind::rl_variable_name::value::\n" */
     rl_variable_bind(words[1], words[2]); /* no need for error handling: readline will complain if necessary */
   if (starts_with(message, "@rl_completer_word_break_characters::")) 
