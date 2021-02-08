@@ -238,20 +238,31 @@ making rlwrap hold back the prompt until it has been cooked ("patient mode"). Th
 EXPERIMENTAL: Wake up every \fItimeout\fP millisecs, where \fItimeout\fP is the same as for the \-w (\-\-wait\-before\-prompt) option, 40 ms by default. This is used to sense the slave's interrupt character and ISIG flag and to adjust stdin's terminal settings accordingly, even before you press a key. Try this option e.g. when CTRL-C acts differently on \fIcommand\fP with, and without, rlwrap. 
 
 .TP
-.OL \-z \-\-filter \fIfilter\fP
-Use \fIfilter\fP to change \fBrlwrap\fP's behaviour. A filter can be used to keep certain input out of the history, 
-to change the prompt, to implement simple macros or programmable completion. \fBrlwrap\fP comes with a \fBperl\fP and a \fBpython\fP module
-to make filter writing easy. (cf. \fBRlwrapFilter(3pm)\fP for the perl module, the python one is very similar) A number of example filters are installed in the directory @DATADIR@/rlwrap/filters. "rlwrap \-z \fIfilter\fP" displays information about a filter, "rlwrap \-z listing" lists all currently installed filters.
-If \fIfilter\fP needs arguments, you should quote the whole filter command line: 
+.OL \-z \-\-filter \fIsome_filter\fP
+Use \fIsome_filter\fP to change \fBrlwrap\fP's behaviour. Filters can be used to keep certain input out of the history, 
+to change the prompt, to implement simple macros, programmable hotkeys for e.g. fuzzy history search, and programmable completion. \fBrlwrap\fP comes with a \fBperl\fP and a \fBpython\fP module
+to make filter writing easy. (cf. \fBRlwrapFilter(3pm)\fP for the perl module, the python one is very similar) A number of example filters are installed in the directory @DATADIR@/rlwrap/filters.
+
+    rlwrap \-z listing
+
+lists all currently installed filters, while
+
+    rlwrap \-z some_filter
+
+displays information about \fIsome_filter\fP
+
+
+If \fIsome_filter\fP needs arguments, you should quote the whole filter command line: 
 .nf
 
-    rlwrap \-z 'filter args' command ...
+    rlwrap \-z 'some_filter args' command ...
     rlwrap \-z 'pipeline filter1 ... : filter2 ... : ...' command ... 
     
 .fi
+
 If this command line contains shell metacharacters, \fBrlwrap\fP passes it to the system shell for parsing. 
 
-As filters have to follow a special protocol, shell commands like \fBsed\fP and \fBgrep\fP cannot be used as \fBrwlrap\fP filters. They can, however, be \fBconverted\fP into filters by the \fBmakefilter\fP filter:
+As filters have to follow a special protocol, shell commands like \fBsed\fP and \fBgrep\fP cannot be used as \fBrwlrap\fP filters. They can, however, be converted into filters by the \fBmakefilter\fP filter:
 
     rlwrap \-z 'makefilter egrep \-i \-\-color "error|$"' command
 
@@ -267,20 +278,14 @@ sanitises your drinking history. Both filters can be combined using the \fBpipel
 Run \fBnc\fP (netcat) with command\-line editing and history
 .B rlwrap\ nc
 .TP
-Wrap \fBsmbclient\fP (which uses readline itself), keep passwords out of the history and don't wrap commands launched from smbclient (like \fBmore\fP)
+Wrap \fBsmbclient\fP (which uses readline itself), keep passwords out of the history and don't interfere with pagers (like \fBless\fP) called by smbclient.
 .B rlwrap\ \-aPassword:\ \-N\ smbclient //PEANUT/C
 .TP
-Wrap \fIsensitive_app\fP, hide password from \fBps\fP (if \fIsensitive_app\fP does that) and keep all input that starts with a space out of history:
+Wrap \fIsensitive_app\fP, hide password from \fBps\fP (if \fIsensitive_app\fP does so) and keep all input that starts with a space out of history:
 .B rlwrap -g '^ ' -U sensitive_app --password MySeCrEt
 .TP 
 Wrap \fBgauche\fP (a Scheme interpreter) with a bold blue prompt, enable multi\-line editing (using .scm as filename extension) and don't consider single quotes as quotes (so that the parentheses in e.g. (print 'q) match)  
-.B rlwrap\ \-pBlue \-m\ \-M\ .scm\ \-q'\"' gosh
-.TP
-Get a list of all currently installed filters
-.B rlwrap\ \-z\ listing
-.TP
-Get help for the filter \fBpipeto\fP
-.B rlwrap\ \-z\ pipeto
+.B rlwrap\ \-pBlue \-m\ \-M\ .scm\ \-q'"' gosh     "
 .TP 
 Wrap \fBsqlite3\fP, use the \fBpipeto\fP filter to be able to pipe the output of SQL commands through \fBgrep\fP and/or \fBless\fP, complete (case\-insensitively) on the SQL keywords in 'sql_words'
 .B rlwrap\ \-a\ \-z\ pipeto\ \-i\ \-f\ sql_words\ sqlite3\ contacts.db
@@ -315,7 +320,7 @@ to distinguish their last lines ("candidate prompts") from real prompts, especia
 want to re\-write ("cook") prompts. \fBrlwrap\fP solves this (almost)
 by waiting a little, to see if there is more to come. "A little" is 40
 msec by default, but this can be changed with the \fB\-w\fP option.
-Normally \fBrlwrap\fP writes the suspected prompt as soon as it is
+Normally \fBrlwrap\fP writes the candidate prompt as soon as it is
 received, replacing it with a "cooked" version after the wait
 time. This is called "impatient" mode. If you don't like the flashing
 effect (which can become annoying when you "cook" the prompt heavily) you
@@ -446,9 +451,9 @@ History for \fIcommand\fP (remember that \fIcommand\fP may be overridden by the 
 .TP
 $RLWRAP_HOME/\fIcommand\fP_completions, ~/.\fIcommand\fP_completions
 Per\-user completion word list for \fIcommand\fP. \fBrlwrap\fP never
-writes into this list, but one can combine \fB\-l\fP and \fB\-f\fP
-options to to simulate the effect of a \fB\-r\fP option that works
-across invocations.
+writes into this list, but one can use \fB\-l\fP \fIlogfile\fP  and then \fB\-f\fP \fIlogfile\fP to
+simulate the effect of a \fB\-r\fP option that works across
+invocations.
 .TP
 @DATADIR@/rlwrap/completions/\fIcommand\fP  
 System\-wide completion word list for \fIcommand\fP. This file is only
@@ -498,12 +503,12 @@ may also help.
 .SH VERSION
 This manpage documents rlwrap version @VERSION@
 .SH AUTHORS
-The GNU Readline library (written by Brian Fox and Chet Ramey) does all the hard work
-behind the scenes, the pty\-handling code has been taken practically
-unchanged from rxvt\-2.7.10 (currently maintained by Geoff C. Wing),
-and completion word lists are managed by Damian Ivereigh's libredblack
-library. The few remaining lines of code were written by Hans Lub
-(hanslub42@gmail.com).
+
+The GNU Readline library (written by Brian Fox and Chet Ramey) does
+all the hard work behind the scenes, the pty\-handling code (written by
+Geoff C. Wing) was taken practically unchanged from \fBrxvt\fP, and
+completion word lists are managed by Damian Ivereigh's \fBlibredblack\fP
+library. The rest was written by Hans Lub (hanslub42@gmail.com).
 .SH SEE ALSO
 
 .TP
