@@ -16,7 +16,7 @@ my $rampsize = 72; # my urxvt cannot do more
 my $filter = new RlwrapFilter;
 my $name = $filter -> name;
 
-$filter -> help_text("Usage: rlwrap -z '$name <colour1>--<colour2> <command>\n".
+$filter -> help_text("Usage: rlwrap -z '$name <colour1>--<colour2>' <command>\n".
 		     "paint the prompt in colour gradient between X11 colours <colour1> and <colour2>\n".
 		     "spaces in colour names must be replaced by underscores, e.g. lemon_chiffon--pale_turquoise");
 
@@ -27,6 +27,7 @@ $filter -> run;
 
 sub paint {
   my ($bland) = @_;
+  die "unpainted prompt contains ESC codes, consider using rlwrap --ansi-aware (-A)\n" if $bland =~ /\e/;
   init() unless $colours_were_declared;
   return apply_ramp($bland, $rampsize);
 }
