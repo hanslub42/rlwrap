@@ -492,10 +492,12 @@ will notice these races especially on a busy machine and with heavy
 command output are garbled or incorrectly coloured.
  
 \fBrlwrap\fP can try, but often fails to, handle prompts that contain
-control characters. The \fB-A\fP (\fB--ansi-colour-aware\fP) option may
-help, but if it doesn't, a filter may be needed to clean up the prompt.
-Specifying \fB--set-term-name\fP with a simpler, of even dumb, terminal
-may also help.
+control characters (prompts, and the effect of \fB-A\fP and \fB\-t\fP, can be analysed by
+the filter \fBdissect_prompt\fP). If  \fB\-A\fP
+(\fB--ansi-colour-aware\fP) doesn't help, a
+filter may be needed to clean up the prompt.  Specifying
+\fB--set-term-name\fP with a simpler, of even dumb, terminal may also
+help.
 
 
 
