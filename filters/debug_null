@@ -10,7 +10,8 @@ my $filter = new RlwrapFilter;
 
 
 $filter -> help_text("Usage: rlwrap [-options] -z null <command>\n".
-		     "a filter that can take a lot of time to do nothing with any message type");
+		     "a filter that does nothing, but can test the effect of (slow) filters\n".
+                     "(only if debug flags 'filtering' and 'random delay' are set" );
 
 $filter -> minimal_rlwrap_version("0.44");
 
