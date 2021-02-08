@@ -34,7 +34,7 @@ command = args.command_line[0] if args.command_line else None
 ######### instantiate a RlwrapFilter ############
 filter = rlwrapfilter.RlwrapFilter()
 filter.help_text = """\
-Usage:  rlwrap [-options] -z 'makefilter <command> [-options]'
+Usage:  rlwrap [-options] -z 'makefilter <command> [-options]' ...
 convert <command> into rlwrap filter (e.g. to colourise output or censor history)
 important: <command> *must* output exactly *one*  line for each input line.
 (except possibly a startup message)

@@ -113,8 +113,9 @@ void spawn_filter(const char *filter_command) {
 
     DEBUG_RANDOM_SLEEP;
     /* set environment for filter (it needs to know at least the file descriptors for its input and output) */
-   
-    if (!getenv("RLWRAP_FILTERDIR"))
+    DPRINTF1(DEBUG_FILTERING, "getenv{RLWRAP_FILTERDIR} = <%s>", getenv("RLWRAP_FILTERDIR"));
+    
+    if ((! getenv("RLWRAP_FILTERDIR")) || (! *getenv("RLWRAP_FILTERDIR")))
       mysetenv("RLWRAP_FILTERDIR", add2strings(DATADIR,"/rlwrap/filters"));
     mysetenv("PATH", add3strings(getenv("RLWRAP_FILTERDIR"),":",getenv("PATH")));
     mysetenv("RLWRAP_VERSION", VERSION);
