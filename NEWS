@@ -26,6 +26,8 @@
 
       filters can change (some) bindable and internal readline
       variables with a new RlwrapFilter method tweak_readline_oob()
+
+      rlwrap would quit if client writes 0 bytes (only on AIX)
       
       a round of testing on Polarhome weeded out some
       incompatibilities with older Unix systems

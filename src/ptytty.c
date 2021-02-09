@@ -252,7 +252,11 @@ ptytty_control_tty(int fd_tty, const char *ttydev)
       close(fd);                  /* ouch: still have controlling tty */
 
     /* ---------------------------------------- */
-#if defined(PTYS_ARE_PTMX) && defined(I_PUSH)
+
+#ifdef HAVE_ISASTREAM
+    if (isastream(fd_tty) == 1) {
+        ioctl(fd_tty, I_SWROPT, 0);
+#  if defined(PTYS_ARE_PTMX) && defined(I_PUSH)
     /*
      * Push STREAMS modules:
      *    ptem: pseudo-terminal hardware emulation module.
@@ -270,16 +274,15 @@ ptytty_control_tty(int fd_tty, const char *ttydev)
      * close() - on the master side which causes a hang up to be sent
      * through - Geoff Wing
      */
-# ifdef HAVE_ISASTREAM
-    if (isastream(fd_tty) == 1)
-# endif
-      {
+     
         DPRINTF0(DEBUG_TERMIO, "Pushing STREAMS modules");
         ioctl(fd_tty, I_PUSH, "ptem");
         ioctl(fd_tty, I_PUSH, "ldterm");
         ioctl(fd_tty, I_PUSH, "ttcompat");
-      }
-#endif
+      
+#  endif
+    }    
+#endif        
     /* ---------------------------------------- */
 # if defined(TIOCSCTTY)
     fd = ioctl(fd_tty, TIOCSCTTY, NULL);
