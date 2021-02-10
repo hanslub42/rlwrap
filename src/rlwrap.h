@@ -550,7 +550,7 @@ size_t mbc_strnlen(const char *mb_string, size_t maxlen, MBSTATE *st);
 #  define FALSE 0
 #endif
 
-
+#define STR(p) (p ? p : "<NULL>")
 
 #ifndef min
 # define min(a,b) ((a) < (b) ? (a) : (b))
