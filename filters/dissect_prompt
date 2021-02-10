@@ -1,0 +1,30 @@
+#!/usr/bin/env python3
+
+"""a demo for doing nothing"""
+
+import sys
+import os
+
+if 'RLWRAP_FILTERDIR' in os.environ:
+    sys.path.append(os.environ['RLWRAP_FILTERDIR'])
+else:
+    sys.path.append('.')
+
+import rlwrapfilter
+
+filter = rlwrapfilter.RlwrapFilter()
+
+filter.help_text = "Usage: rlwrap [-options] -z dissect_prompt.py <command>\n"\
+                   + "show hidden control codes in a <command>'s prompt"
+
+
+def dissect_prompt(prompt):
+    filter.send_output_oob("Prompt as ASCII, including non-printable characters: " + ascii(prompt) + "\n")
+    if '\x01' in list(prompt):
+       filter.send_output_oob("N.B.: '\\x01' and  '\\x02' are added by to rlwrap to inform readline that the enclosed codes don't take up space\n")        
+    return prompt
+
+                   
+filter.prompt_handler = dissect_prompt
+
+filter.run()
