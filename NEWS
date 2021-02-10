@@ -27,9 +27,9 @@
       filters can change (some) bindable and internal readline
       variables with a new RlwrapFilter method tweak_readline_oob()
 
-      rlwrap would quit if client writes 0 bytes (only on AIX)
+      On AIX, rlwrap would quit if client wrote 0 bytes
       
-      a round of testing on Polarhome weeded out some
+      a round of testing on Polarhome to weed out some
       incompatibilities with older Unix systems
 
 0.44  rlwrap doesn't (yet) work with bracketed-paste. As this is

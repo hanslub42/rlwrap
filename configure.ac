@@ -434,7 +434,7 @@ fi
 AC_DEFINE_UNQUOTED(PROC_MOUNTPOINT, "[$opt_proc_mountpoint]", [Define to location of Linux-style procfs mountpoint if provided and valid])
 
 
-AC_MSG_CHECKING([whether we can find command line under <opt_proc_mountpoint>/<pid>/cmdline and mirror it by overwriting our own *argv])
+AC_MSG_CHECKING([whether we can find command line under <opt_proc_mountpoint>/<pid>/cmdline and mirror it by overwriting our own *argv (this may take a few secs)])
 # We won't exactly do that, but instead write a test program that writes a random string to *argv (making sure it is longer than argv[0])
 # and then verify that we can see the same string under <opt_proc_mountpoint>/<pid>/cmdline
 # If so, we enable the --mirror-args option
