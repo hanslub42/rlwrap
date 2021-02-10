@@ -1,0 +1,79 @@
+#!/usr/bin/env perl
+
+
+use lib ($ENV{RLWRAP_FILTERDIR} or ".");
+use RlwrapFilter;
+use POSIX qw(:signal_h);
+use File::Slurp;
+use strict;
+
+# We want any editor to receive SIGWINCH.
+# SIGWINCH is not in POSIX, which means that POSIX.pm doesn't
+# know about it. We use 'kill -l' to find it.
+
+my $raw_input;
+
+my @signals = split /\s+/, `kill -l`; # yuck!
+for (my $signo = 1; $signals[$signo-1]; $signo++) {
+  if ($signals[$signo-1] eq 'WINCH') {
+    my $sigset_unblock = POSIX::SigSet->new($signo);
+    unless (defined sigprocmask(SIG_UNBLOCK, $sigset_unblock)) {
+      die "Could not unblock signals: $!\n";
+    }
+  }
+}
+
+my $tmpdir = $ENV{TMP} || $ENV{TEMP} || "/tmp";
+
+
+my $filter = new RlwrapFilter;
+my $name = $filter -> name;
+
+$filter -> help_text(<<DOC);
+Usage: rlwrap -z $name <command>
+Any hotkey bound to 'rlwrap-hotkey' will blah...
+DOC
+
+$filter -> hotkey_handler(\&hotkey);
+$filter -> run;
+
+
+
+sub hotkey {
+  my ($key, $prefix, $postfix, $history, $histpos) = @_;
+  my $editfile = "$tmpdir/history.$$.txt";
+  my $lineno = $histpos + 1;
+  my $colno = length($prefix) + 1;
+  $history ||= " "; #writefile crashes  if called on an empty string....
+  write_file($editfile , $history);
+  my $editor = $ENV{RLWRAP_EDITOR} || "vi +%L";
+  $editor =~ s/%L/$lineno/;
+  $editor =~ s/%C/$colno/;
+  system("$editor $editfile");
+  my @lines = read_file($editfile);
+  my (@new_history, $counter, $empty_counter, $last_counter, $last_empty_counter);
+  foreach my $line (@lines) {
+    $line =~ s/\t//g;
+    $line =~ s/^\s+//;
+    $line =~ s/\s+$//;
+    if ($line) {
+      if ($empty_counter > 0) {
+        # remember position of last line after an empty line,
+        # and the number of empty lines:
+        ($last_counter, $last_empty_counter) = ($counter, $empty_counter); 
+      }
+      $empty_counter = 0;
+      $counter++; # We count 0-based, so increment only now
+      push @new_history, $line;
+    } else {
+      $empty_counter++;
+    }
+  }
+  if ($last_empty_counter) {
+    $histpos = $last_counter;
+    $prefix = $new_history[$histpos];
+    $postfix = "";
+  }
+  return ($key, $prefix, $postfix, (join "\n", @new_history), $histpos);
+}
+
