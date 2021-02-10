@@ -264,20 +264,24 @@ static bool starts_with(const char *str, const char *prefix) {
 }
 
 static void maybe_tweak_readline(const char*message) { /* a bit kludgey, but easy to extend  */
+  char **words;
   if (message[0] != '@')
     return;
-  char **words = split_with(message, "::"); /* words and its elements are allocated on the heap */
-  /* parameter checking should be done  in the {python,perl} modules - rlwrap might crash otherwise */
-  if (starts_with(message, "@rl_variable_bind::"))  /* "@rl_variable_bind::rl_variable_name::value::\n" */
-    rl_variable_bind(words[1], words[2]); /* no need for error handling: readline will complain if necessary */
+  words = split_with(message, "::"); /* words and its elements are allocated on the heap */
+  /* parameter checking should be done  in the {python,perl} modules - if not, the assertions below may fail */
+  assert(words[1] != NULL);
   if (starts_with(message, "@rl_completer_word_break_characters::")) 
       rl_completer_word_break_characters = words[1];
   if (starts_with(message, "@rl_completer_quote_characters::"))
     rl_completer_quote_characters = words[1];
   if (starts_with(message, "@rl_filename_completion_desired::"))
     rl_filename_completion_desired = my_atoi(words[1]);
+  if (starts_with(message, "@rl_variable_bind::")) {  /* "@rl_variable_bind::rl_variable_name::value::\n" */
+    assert(words[2] != NULL);
+    rl_variable_bind(words[1], words[2]); /* no need for error handling: readline will complain if necessary */
+  }
   /* feel free to extend this list (but make sure to modify the {perl,python} modules accordingly! */
-}       
+}     
   
 void handle_out_of_band(int tag, char *message) {
   int split_em_up = FALSE;

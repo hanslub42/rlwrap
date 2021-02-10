@@ -140,10 +140,10 @@ sub prompt {
   my $pid = $$;
   $sprompt =~ s/%p/$pid/g;
   $sprompt =~ s/%t/`tty`/eg;
-  my $pwd = `pwd`;
+  chomp(my $pwd = `pwd`);
   $pwd =~ s/^$ENV{HOME}/~/;
   $sprompt =~ s/%d/$pwd/eg;
-  $sprompt =~ s/\n//g;
+  #$sprompt =~ s/\n//g;
   lprint $sprompt;
 }
 
@@ -281,10 +281,11 @@ sub change_prompt {
   my ($termwidth) = eval "GetTerminalSize"; 
   { local $prompt = "New prompt here > ";
     my $redblah = red("blah");
-    lprint "\%p -> pid, \%t -> tty, %d -> pwd, red{blah} -> $redblah, 4*x -> xxxx" .($have_ReadKey ? ", %w -> termwidth\n" : "\n");
+    lprint "\%p -> pid, \%t -> tty, %d -> pwd, red{blah} -> $redblah, \\n -newline, 4*x -> xxxx" .($have_ReadKey ? ", %w -> termwidth\n" : "\n");
     prompt();
     $input = <>;
     $input =~ s/\r?\n$//;
+    $input =~ s/\\n/\n/g;
     $input =~ s/\%w/$termwidth/ge;
     $input =~ s/\((\d.*?)\)/eval($1)/ge;
     $input =~ s/(\d+)\*([^ {}]+)/$2 x $1/ge;

@@ -368,8 +368,8 @@ int dont_wrap_command_waits() {
   if (wchan_fd < 0) { /* don't assume that programs that don't use the alternate screen always need rlwrap */
     if (been_warned++ == 0 && !(term_rmcup && term_smcup)) {
       myerror(WARNING|USE_ERRNO, "you specified the -N (--no-children) option"
-                                 " - but spying\non %s's wait status doesn't work on"
-                                 " your system, as rlwrap cannot read %s", command_name, command_wchan);
+                                 " - but spying\non %s's wait status\n doesn't work on your system,"
+                                 " as rlwrap cannot sense the 'alternate screen',\n and cannot read %s", command_name, command_wchan);
     }
     return FALSE;
   }     
