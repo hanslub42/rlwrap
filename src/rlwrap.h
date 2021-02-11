@@ -390,6 +390,7 @@ void  mystrlcat(char *dst, const char *src, size_t size);
 bool strings_are_equal(const char *s1, const char *s2);
 char *mystrstr(const char *haystack, const char *needle);
 char *mysavestring(const char *string);
+char *strifnull(char *string);
 char *add3strings(const char *str1, const char *str2, const char *str3);
 #define add2strings(a,b)  add3strings(a,b,"")
 int my_atoi(const char *nptr);
@@ -550,7 +551,6 @@ size_t mbc_strnlen(const char *mb_string, size_t maxlen, MBSTATE *st);
 #  define FALSE 0
 #endif
 
-#define STR(p) (p ? p : "<NULL>")
 
 #ifndef min
 # define min(a,b) ((a) < (b) ? (a) : (b))

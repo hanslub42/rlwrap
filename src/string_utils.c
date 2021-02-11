@@ -86,14 +86,21 @@ strings_are_equal(const char *s1, const char *s2) {
   return s1 && s2 && strcmp(s1,s2)== 0;
 }
 
-/* mysavestring: allocate a copy of a string on the heap */
-
+/*  allocate a copy of a string on the heap */
 char *
 mysavestring(const char *string)
 {
   assert(string != NULL);
   return mystrndup(string, strlen(string));
 }
+
+/* return "<NULL>" if arg == NULL, else arg */
+char *
+strifnull(char *string)
+{
+  return string ? string : "<NULL>";
+}       
+
 
 
 /* add3strings: allocate a sufficently long buffer on the heap and
