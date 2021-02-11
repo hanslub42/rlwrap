@@ -202,7 +202,7 @@ extern int _rl_horizontal_scroll_mode;
 #  define MAYBE_MULTILINE 1
 # endif
 #else
-# define _rl_eof_char 0;
+# define _rl_eof_char 0
 #endif
 
 #ifdef MAYBE_MULTILINE
