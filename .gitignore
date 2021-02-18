@@ -20,3 +20,4 @@ src/Makefile.in
 src/rlwrap
 stamp-h1
 tools/
+filters/RlwrapFilter.3pm
