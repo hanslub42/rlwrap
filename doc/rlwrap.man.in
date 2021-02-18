@@ -367,14 +367,14 @@ can be re\-bound more sensibly by including lines like the
 following in your \fB~/.inputrc\fP:
 .PP
 .nf
-   "\eM\-\eC\-m" : rlwrap\-accept\-line\-and\-forget         # ESC\-ENTER to accept but keep out of history
-   "\eC\-x"    : rlwrap\-call\-editor                    # CTRL\-x e to edit (multi-line) input in editor of your choice 
+   "\eM\-\eC\-m":  rlwrap\-accept\-line\-and\-forget         # ESC\-ENTER to accept but keep out of history
+   "\eC\-x":     rlwrap\-call\-editor                    # CTRL\-x e to edit (multi-line) input in editor of your choice 
     $if erl                                          # (only) for the Erlang shell:
        "\eC\-g": rlwrap\-direct\-keypress                # pass CTRL\-g directly to enter 'user switch' command
     $endif 
-    "\eC\-t"   : rlwrap\-direct\-prefix                  # make it possible to define direct keypresses that start with CTRL\-t ...
-    "\eC\-tx"  : rlwrap\-direct\-keypress                # ... in that case: pass CTRL\-t + x directly.
-    "\eC\-y"   : rlwrap\-hotkey\-without\-history         # CTRL\-y to filter input line (and e.g. insert X selection)
+    "\eC\-t":    rlwrap\-direct\-prefix                  # make it possible to define direct keypresses that start with CTRL\-t ...
+    "\eC\-tx":   rlwrap\-direct\-keypress                # ... in that case: pass CTRL\-t + x directly.
+    "\eC\-y":    rlwrap\-hotkey\-without\-history         # CTRL\-y to filter input line (and e.g. insert X selection)
 .fi
 .PP
 cf. the \fBreadline(3)\fP manpage. (NB: take care to not use keys that are already caught by your window manager, or by the terminal driver, like CTRL+S, as \fBrlwrap\fP will never see those)
