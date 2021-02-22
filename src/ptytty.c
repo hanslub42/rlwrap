@@ -255,7 +255,9 @@ ptytty_control_tty(int fd_tty, const char *ttydev)
 
 #ifdef HAVE_ISASTREAM
     if (isastream(fd_tty) == 1) {
+#  if defined(I_SWROPT) 
         ioctl(fd_tty, I_SWROPT, 0);
+#  endif      
 #  if defined(PTYS_ARE_PTMX) && defined(I_PUSH)
     /*
      * Push STREAMS modules:
