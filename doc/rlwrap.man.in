@@ -7,9 +7,12 @@ rlwrap \- readline wrapper
 ..
 .de OA
 .ie '@HAVE_OPTIONAL_ARGS@'yes' The argument is optional; if given, it has to \
-directly follow the option without an
-intervening space.
-.el On this system, you \fBmust\fP give a (dummy) argument.
+directly follow a short option without an intervening space (\fB\\$1\\$3\fP), and a long option with an equals sign (\fB\\$2=\\$3\fP).
+.el On this system, if you don't want to give an argument, use the long option (\fB\\$2\fP) or the short option with a dummy argument (\fB\\$1 grblz\fP).
+..
+.de OB
+.ie '@HAVE_LONG_OPTS@'yes' .B \\$1[\\$3], \\$2[=\\$3]
+.el  .B \\$1 \\$3
 ..
 .de OL
 .ie '@HAVE_LONG_OPTS@'yes' .B \\$1, \\$2  \\$3
@@ -38,20 +41,21 @@ although some of those options could make your command line quite a bit more
 comfortable...
 .SH OPTIONS
 .TP
-.OL \-a \-\-always\-readline [\fIpassword_prompt\fP] 
+.OB \-a \-\-always\-readline \fIpassword_prompt\fP 
 Always remain in "readline mode", regardless of \fIcommand\fP's terminal settings.
 If \fBrlwrap\fP "does nothing" this is the option to use, as \fIcommand\fP is apparently already
 doing its own line editing. 
 \fBNB\fP: With this
 option, rlwrap will echo (and save) passwords, unless you give \fIcommand\fP's
 password prompt as an argument.
+
 .OA \-a \-\-always\-readline  Password:
 
 The \fB\-N\fP (\fB\-\-no\-children\fP) option can be used to avoid wrapping 
 pagers and editors called from \fIcommand\fP; this should make them much more usable
 
 .TP
-.OL \-A \-\-ansi\-colour\-aware [\fI!\fP] 
+.OB \-A \-\-ansi\-colour\-aware \fI!\fP 
 Prompts that use colour, or use other CSI codes to e.g. set window titles or
 enable bracketed-paste will confuse rlwrap, especially at the end of
 long input lines. This option will usually (but by no means always) make rlwrap better behaved in such
@@ -59,6 +63,8 @@ cases.
 
 Giving '!' as an argument will make \fBrlwrap\fP remove all color codes
 from the prompt.
+
+.OA \-A \-\-ansi\-colour\-aware  !
 
 .TP
 .OL  \-b \-\-break\-chars  \fIlist_of_characters\fP
@@ -141,7 +147,7 @@ When in readline mode, append \fIcommand\fP's output (including echo'ed user inp
 \fIfile\fP (creating \fIfile\fP when it doesn't exist).  
 
 .TP
-.OL \-m \-\-multi\-line [\fInewline_substitute\fP]
+.OB \-m \-\-multi\-line \fInewline_substitute\fP
 Enable multi\-line input using a "newline substitute" character
 sequence (" \\ ", [space\-backslash\-space] by default). Newline
 substitutes are translated to newlines before sending the input to
@@ -173,15 +179,15 @@ Only ever "cook" prompts that match \fIregexp\fP, which can be preceded by  '!',
 immediately ("confident mode").
 
 .TP
-.OL \-p \-\-prompt\-colour [\fIcolour_name|Colour_name|colour_spec\fP]
+.OB \-p \-\-prompt\-colour \fIcolour\fP
 Use one of the colour names \fIblack, red, green, yellow, blue, cyan, purple (=magenta)\fP or \fIwhite\fP, or an ANSI\-conformant <colour_spec> to colour any prompt displayed by
 \fIcommand\fP. An uppercase colour name (\fIYellow\fP or \fIYELLOW\fP ) gives a bold prompt. Prompts that already contain
 (colour) escape sequences or one of the readline "ignore markers" (ASCII 0x01 and 0x02) are not coloured. This option implies \-\-ansi\-colour\-aware.
-\fIcolour spec\fP has the form
-<attr>;<fg>[;<bg>] Example: \-p'1;31' will give a bold red prompt on the
+You can also use a \fIcolour spec\fP of the form
+<attr>;<fg>[;<bg>], for example  \-p'1;31' will give a bold red prompt on the
 current background (this is the default when no argument is
 given). Google for 'ANSI color' to learn more about colour codes.
-.OA \-p \-\-prompt\-colour '0;31' 
+.OA \-p \-\-prompt\-colour 'Red' 
 
 .TP
 .OL \-P \-\-pre\-given \fItext\fP
