@@ -730,8 +730,8 @@ check_optarg(char opt, int remaining)
 						        as optional argument (e.g. 'rlwrap -a password sqlplus' will try to
 						        execute 'password sqlplus' ) */
 #ifndef GETOPT_GROKS_OPTIONAL_ARGS
-  if (optarg &&    /* is there an optional arg? have a look at it: */
-      ((optarg[0] == '-' && isalpha(optarg[1])) || /* looks like next option */
+  if (optarg &&         /* is there an optional arg? have a look at it: */
+      ((optarg[0] == '-' && (optarg[1] == '-' || isalpha(optarg[1]))) || /* looks like next option */
        remaining == 0)) /* or is last item on command line */
 
     myerror(WARNING|NOERRNO, "on this system, the getopt() library function doesn't\n"
