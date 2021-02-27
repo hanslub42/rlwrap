@@ -719,7 +719,7 @@ init_rlwrap(char *command_line)
  */
 
 static char *
-check_optarg(char opt, int remaining)
+check_optarg(char opt, int remaining, bool isdummy, const char *suggestion)
 {
 
   MAYBE_UNUSED(opt); MAYBE_UNUSED(remaining);
@@ -736,7 +736,7 @@ check_optarg(char opt, int remaining)
 
     myerror(WARNING|NOERRNO, "on this system, the getopt() library function doesn't\n"
        "grok optional arguments, so '%s' is taken as an argument to the -%c option\n"
-       "Is this what you meant? If not, please provide an argument", optarg, opt);
+            "Is this what you meant? If not, please provide %s  argument like '%s'", optarg, opt, isdummy ? "a dummy" : "an", suggestion);
 #endif
   
   return optarg;
@@ -795,12 +795,12 @@ read_options_and_command_name(int argc, char **argv)
     switch (c) {
     case 'a':
       always_readline = TRUE;
-      if (check_optarg('a', remaining))
+      if (check_optarg('a', remaining, TRUE, "brumbleslurgh"))
         password_prompt_search_string = mysavestring(optarg);
       break;
     case 'A':
       ansi_colour_aware = TRUE;
-      if (check_optarg('A', remaining) && strings_are_equal(optarg, "!"))
+      if (check_optarg('A', remaining, TRUE, " ") && strings_are_equal(optarg, "!"))
           bleach_the_prompt = TRUE;
       break;
     case 'b':
@@ -819,7 +819,7 @@ read_options_and_command_name(int argc, char **argv)
       if (option_count > 1)
         myerror(FATAL|NOERRNO, "-d or --debug option has to be the *first* rlwrap option\n"
                                "in order to be able to follow the processing  of all subsequent options");
-      debug = check_optarg('d', remaining) ? my_atoi(optarg) : DEBUG_DEFAULT;
+      debug = check_optarg('d', remaining, FALSE, "7") ? my_atoi(optarg) : DEBUG_DEFAULT;
       my_fopen(&debug_fp, DEBUG_FILENAME, "w+", "debug log"); /* w+, not w: both parent and child write to the same logfile, and need to fseek beyond where the other may have written stuff */
 #else
       myerror(FATAL|NOERRNO, "To use -d( for debugging), configure %s with --enable-debug and rebuild",program_name);
@@ -861,8 +861,8 @@ read_options_and_command_name(int argc, char **argv)
 #ifndef HAVE_SYSTEM
       myerror(WARNING|NOERRNO, "the -m option doesn't work on this system");
 #endif
-      multiline_separator =
-        (check_optarg('m', remaining) ? mysavestring(optarg) : " \\ ");
+      multiline_separator = /* \\\\ will be printed as \\ which is correct if we want ' \ ' to be the multiline separator */
+        (check_optarg('m', remaining, FALSE, " \\\\ ") ? mysavestring(optarg) : " \\ ");
       break;
     case 'M': multi_line_tmpfile_ext = mysavestring(optarg); break;
     case 'N': commands_children_not_wrapped = TRUE; break;
@@ -877,7 +877,7 @@ read_options_and_command_name(int argc, char **argv)
       break;
     case 'p':
       colour_the_prompt = TRUE;
-      initialise_colour_codes(check_optarg('p', remaining) ?
+      initialise_colour_codes(check_optarg('p', remaining, FALSE, "Red") ?
                               colour_name_to_ansi_code(optarg) :
                               colour_name_to_ansi_code("Red"));
       break;
