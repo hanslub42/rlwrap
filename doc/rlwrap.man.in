@@ -42,7 +42,7 @@ comfortable...
 .SH OPTIONS
 .TP
 .OB \-a \-\-always\-readline \fIpassword_prompt\fP 
-Always remain in "readline mode", regardless of \fIcommand\fP's terminal settings.
+Always remain in "readline mode" (see below), regardless of \fIcommand\fP's terminal settings.
 If \fBrlwrap\fP "does nothing" this is the option to use, as \fIcommand\fP is apparently already
 doing its own line editing. 
 \fBNB\fP: With this
@@ -305,18 +305,29 @@ in "raw" mode. In cooked mode the terminal will wait until you press
 the ENTER key before handing the entire line to the program, in raw
 mode every key you press is handed down immediately. In cooked mode
 you generally can use the backspace key, but not the arrow keys, to
-edit your input. Most simple console commands use cooked mode whenever
-they want whole input lines, and raw mode when they want single
-keypresses. More sophisticated commands tend to use raw mode all the
-time; they may sometimes be rlwrappable with the \fB\-a\fP (and \fB\-N\fP) options.
+edit your input. 
 
-When you \fBrlwrap\fP \fIcommand\fP, \fBrlwrap\fP will run it a
-in a separate session, under its own (controlling) "pseudo\-terminal" (pty),
-and monitor this pty to see whether it is in raw, or in
-cooked mode. In the first case, \fBrlwrap\fP will copy all input
-and output directly between \fIcommand\fP and your terminal ("direct
-mode"). In the second case, \fBrlwrap\fP will use readline to edit your input ("readline mode"), and monitor 
-\fBcommand\fP's output \- every last line that doesn't end with a newline is a potential prompt. How it handles such a candidate prompt depends on its being in "patient" or "impatient" mode:
+When you \fBrlwrap\fP \fIcommand\fP, \fBrlwrap\fP will run it a in a
+separate session, under its own (controlling) "pseudo\-terminal"
+(pty), and monitor this pty to see whether it is in raw, or in cooked
+mode. In the first case, \fBrlwrap\fP will copy all input and output
+directly between \fIcommand\fP and your terminal ("direct mode"). In
+the second case, \fBrlwrap\fP will use readline to edit your input
+("readline mode"), and monitor \fBcommand\fP's output \- every last
+line that doesn't end with a newline is a potential prompt. How it
+handles such a candidate prompt depends on its being in "patient" or
+"impatient" mode, see below.
+
+Simple console commands use cooked mode whenever they want whole input
+lines, and raw mode when they want single keypresses. Those are the
+progams for which \fBrlwrap\fP is most useful.  More sophisticated
+commands have their own line editor and hence use raw mode all the
+time.  With those commands, \fBrlwrap\fP will appear to "do nothing".
+Therefore, if \fBrlwrap\fP is in direct mode when the user presses
+ENTER for the first time it will give a warning that it needs
+\fB\-\-always\-readline\fP to do anything at all (warnings can be
+suppressed with the \fB\-n\fP option)
+
 
 
 .SH PATIENT, IMPATIENT AND CONFIDENT MODE

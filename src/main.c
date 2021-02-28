@@ -72,11 +72,12 @@ int prompt_is_still_uncooked = TRUE;         /* The main loop consults this vari
                                                 prompt), and, importantly, at startup (so that substitute prompts get displayed even with
                                                 programs that don't have a startup message, such as cat)  */
 						
-int we_just_got_a_signal_or_EOF = FALSE;    /* When we got a signal or EOF, and the program sends something that ends in a newline, take it
+int we_just_got_a_signal_or_EOF = FALSE;     /* When we got a signal or EOF, and the program sends something that ends in a newline, take it
 					       as a response to user input - i.e. preserve a cooked prompt and just print the new output after it */
 int rlwrap_already_prompted = FALSE;
-int accepted_lines =  0; /* number of lines accepted (used for one-shot rlwrap) */
-
+int accepted_lines =  0;                     /* number of lines accepted (used for one-shot rlwrap) */
+bool user_has_typed_first_NL = FALSE;        /* When the *first* user NL is typed in direct mode, we probably need --always-readline: give a warning, .. */
+bool advise_always_readline = FALSE;         /* ... which has to be given a bit later in order to not mess up the screen                                 */
 
 /* private variables */
 static char *history_filename = NULL;
@@ -448,7 +449,7 @@ main_loop()
             continue;                   /* and try one more time (hopefully catching the signal this time round                 */
           } else {
             myerror(FATAL|USE_ERRNO, "read error on master pty"); 
-          }
+          } 
 	}
         remove_padding_and_terminate(buf, nread);
 	completely_mirror_slaves_output_settings(); /* some programs (e.g. joe) need this. Gasp!! */	
@@ -456,8 +457,17 @@ main_loop()
 	check_cupcodes(buf);
         if (skip_rlwrap()) { /* Race condition here! The client may just have finished an emacs session and
 			        returned to cooked mode, while its ncurses-riddled output is stil waiting for us to be processed. */
-	  write_patiently(STDOUT_FILENO, buf, nread, "to stdout");
-
+          if (advise_always_readline) {
+            char *newlines = "\n\n";
+            assert(!always_readline);
+            write_patiently(STDOUT_FILENO, newlines, strlen(newlines), "to stdout"); /* make the following warning stand out ...  */
+            myerror(WARNING|NOERRNO, "rlwrap appears to do nothing for %s, which asks for\n"
+                                     "single keypresses all the time. Don't you need --always-readline\n"
+                                     "and possibly --no-children? (cf. the rlwrap manpage)\n", command_name);
+            advise_always_readline = FALSE;
+          }
+          write_patiently(STDOUT_FILENO, buf, nread, "to stdout"); /* ... and print it before the clients output */
+          DPRINTF1(DEBUG_AD_HOC, "advise_always_readline = %d", advise_always_readline);
 	  DPRINTF2(DEBUG_TERMIO, "read from pty and wrote to stdout  %d  bytes in direct mode  <%s>",  nread, M(buf));
 	  yield();
 	  continue;
@@ -574,7 +584,12 @@ main_loop()
 	if (skip_rlwrap()) {	/* direct mode, just pass it on */
 	                        /* remote possibility of a race condition here: when the first half of a multi-byte char is read in
 				   direct mode and the second half in readline mode. Oh well... */
-	  DPRINTF0(DEBUG_TERMIO, "passing it on (in transparent mode)");	
+	  DPRINTF0(DEBUG_TERMIO, "passing it on (in transparent mode)");
+          if (!user_has_typed_first_NL && (byte_read == '\r' || byte_read == '\n')) {
+            user_has_typed_first_NL = TRUE;
+            advise_always_readline = TRUE; /* first NL is in direct mode: advise the user that she probably wants --always-readline */ 
+          }
+            
 	  completely_mirror_slaves_terminal_settings(); /* this is of course 1 keypress too late: we should
 							   mirror the terminal settings *before* the user presses a key.
 							   (maybe using rl_event_hook??)   @@@FIXME  @@@ HOW?*/
