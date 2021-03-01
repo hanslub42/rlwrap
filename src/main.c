@@ -722,7 +722,7 @@ static char *
 check_optarg(char opt, int remaining, bool isdummy, const char *suggestion)
 {
 
-  MAYBE_UNUSED(opt); MAYBE_UNUSED(remaining);
+  MAYBE_UNUSED(opt); MAYBE_UNUSED(remaining); MAYBE_UNUSED(isdummy); MAYBE_UNUSED(suggestion);
   
   if (!optarg)
     last_option_didnt_have_optional_argument = TRUE; /* if this variable is set, and  if command is not found,
@@ -800,7 +800,7 @@ read_options_and_command_name(int argc, char **argv)
       break;
     case 'A':
       ansi_colour_aware = TRUE;
-      if (check_optarg('A', remaining, TRUE, " ") && strings_are_equal(optarg, "!"))
+      if (check_optarg('A', remaining, TRUE, "") && strings_are_equal(optarg, "!"))
           bleach_the_prompt = TRUE;
       break;
     case 'b':
