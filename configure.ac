@@ -166,33 +166,6 @@ AC_DEFINE_UNQUOTED(TPUTS_PUTC_ARGTYPE, $ac_cv_type_tputs_putc,
                    [Define as the type for the argument to the putc function of tputs ('int' or 'char')])
 ac_c_werror_flag=$_savedwerror_flag       
 
-AC_MSG_CHECKING([whether your getopt() correctly understands double colons in option string]) 
-AC_RUN_IFELSE(
-    [AC_LANG_PROGRAM( [[ const char optstring[] = "+:a::b";
-		         char  * myargv [] = {"progname", "-a", "-b"}; 
-		         int myargc = 3;
-			 extern char *optarg;
-		      ]] , [[
-		         int opt = getopt(myargc, myargv, optstring);
-		         if (opt != 'a' || optarg) /* optarg != NULL means that -b is seen as argument of -a */ 
-		           exit (-1);
-		        else
-		           exit(0); ]] )],
-    [AC_DEFINE(GETOPT_GROKS_OPTIONAL_ARGS, 1, Define if your getopt() correctly understands double colons in the option string)
-     AC_SUBST(HAVE_OPTIONAL_ARGS,yes)
-     ac_double_colons="yes"],
-    [AC_SUBST(HAVE_OPTIONAL_ARGS,no)
-     ac_double_colons="no"],
-    [echo
-     AC_MSG_WARN([This test doesn't work when cross-compiling. Edit GETOPT_GROKS_OPTIONAL_ARGS in config.h by hand. Guessing: ])
-     ac_double_colons=no])
-AC_MSG_RESULT($ac_double_colons)
-
-
-
-
-
-
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
 AC_TYPE_PID_T
@@ -203,7 +176,20 @@ AC_PROG_GCC_TRADITIONAL
 AC_TYPE_SIGNAL
 
 # Let groff -Tman know whether we have long options
-AC_CHECK_FUNC([getopt_long], [AC_SUBST(HAVE_LONG_OPTS,[yes])],[AC_SUBST(HAVE_LONG_OPTS,[no])])
+
+
+# Up to 0.45, rlwrap would test if getopt() understands option strings like "a:b::c" with double colons
+# I now tend to think that that only happens if (POSIX) getopt() is implemented using (GNU) getopt_long(), so this test
+# is actually superfluous. I leave GETOPT_GROKS_OPTIONAL_ARGS alone for the moment, in case some getopt_long() 
+# implementation that doesnt grok double colons turns up:
+
+
+AC_CHECK_FUNC([getopt_long],
+  [AC_SUBST(HAVE_LONG_OPTS,[yes])
+   AC_DEFINE(GETOPT_GROKS_OPTIONAL_ARGS, 1, Define if your getopt() correctly understands double colons in the option string)
+   AC_SUBST(HAVE_OPTIONAL_ARGS,yes)],
+  [AC_SUBST(HAVE_LONG_OPTS,[no])]
+   AC_SUBST(HAVE_OPTIONAL_ARGS,no))
 
 AC_CHECK_FUNCS(basename dirname flock getopt_long isastream  mkstemps pselect putenv readlink sched_yield )
 AC_CHECK_FUNCS(setenv setitimer setsid setrlimit sigaction snprintf strlcpy strlcat strnlen system)
