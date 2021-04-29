@@ -40,6 +40,7 @@
 #include <signal.h>
 #include <stdio.h>
 #include <ctype.h>
+#include <math.h>
 #include <inttypes.h>  /* stdint.h is not on AIX, inttypes.h is in ISO C 1999 */
 
 #include <errno.h>

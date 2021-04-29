@@ -456,7 +456,8 @@ static int myalarm_was_set = FALSE;
 void myalarm(int msecs) {
 #ifdef HAVE_SETITIMER
   struct itimerval awhile = {{0,0},{0,0}};
-  awhile.it_value.tv_usec = msecs * 1000;
+  awhile.it_value.tv_sec = floor(msecs/1000);
+  awhile.it_value.tv_usec = (msecs - awhile.it_value.tv_sec * 1000) * 1000;
   received_sigALRM = FALSE;
   setitimer(ITIMER_REAL, &awhile, NULL);
 #else
