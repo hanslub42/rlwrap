@@ -56,7 +56,8 @@ my_pty_fork(int *ptr_master_fd,
   } else if (pid == 0) {                /* child */
     DEBUG_RANDOM_SLEEP;
     i_am_child = TRUE;          /* remember who I am */
-    my_fopen(&debug_fp, DEBUG_FILENAME, "a+", "debug log");
+    if (debug)
+        my_fopen(&debug_fp, DEBUG_FILENAME, "a+", "debug log");
 
     unblock_all_signals();    
     close(fdm);                 /* fdm not used in child */
