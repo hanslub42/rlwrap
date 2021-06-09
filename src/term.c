@@ -44,6 +44,7 @@ char *term_rmcup;                    /* rmcup - char sequence to return from alt
 char *term_rmkx;                     /* rmkx - char sequence to return from keyboard application mode */
 char *term_enable_bracketed_paste;   /* If we write this to some terminals (xterm etc.) they  will    */
                                      /* "bracket" pasted input with \e[200 and \e201                  */ 
+char *term_disable_bracketed_paste;
 int term_has_colours;
 
 int redisplay = 1;
@@ -176,9 +177,10 @@ init_terminal(void)
     term_rmcup          = tigetstr_or_else_tgetstr("rmcup",  "te", "exit alternate screen"); 
     term_rmkx           = tigetstr_or_else_tgetstr("rmkx",   "ke", "leave keypad-transmit mode");
 
-    /* there is no way (yet) to determine whether a terminal knows about bracketed paste - we cannot use tigetstr(). "Dumb" terminals do not, of course */
+    /* there is no way (yet) to determine whether a terminal knows about bracketed_paste_enabled paste - we cannot use tigetstr(). "Dumb" terminals do not, of course */
 
-    term_enable_bracketed_paste = strings_are_equal(term_name, "dumb") ? NULL : "\033[?2004h";
+    term_enable_bracketed_paste  = strings_are_equal(term_name, "dumb") ? NULL : "\033[?2004h";
+    term_disable_bracketed_paste = strings_are_equal(term_name, "dumb") ? NULL : "\033[?2004l";
 
     
     if (!term_cursor_right) /* probably only on 'dumb' terminal */

@@ -27,10 +27,11 @@ int remember_for_completion = FALSE;    /* whether we should put al words from i
 char *multiline_separator = NULL;       /* character sequence to use in lieu of newline when storing multi-line input in a single history line */
 char *pre_given = NULL;                 /* pre-given user input when rlwrap starts up */
 struct rl_state saved_rl_state = { "", "", 0, 0, 0 };      /* saved state of readline */
-static bool bracketed_paste_enabled = FALSE;
+bool bracketed_paste_enabled = FALSE;
 static char return_key;                 /* Key pressed to enter line */
 static int forget_line;
 static char *colour_start, *colour_end;        /* colour codes */
+
 int multiline_prompts = TRUE;
 
 /* forward declarations */

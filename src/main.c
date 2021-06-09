@@ -1079,7 +1079,12 @@ cleanup_rlwrap_and_exit(int status)
   }     
   if (debug) 
     debug_postmortem();
-  
+
+
+  if (bracketed_paste_enabled) {
+    DPRINTF0(DEBUG_READLINE, "disabling bracketed-paste");
+    my_putstr(term_disable_bracketed_paste);
+  }
   if (terminal_settings_saved)
     if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &saved_terminal_settings) < 0)  /* ignore errors (almost dead anyway) */ 
       { /* nothing ... */ } /* fprintf(stderr, "Arggh\n"); don't use myerror!!*/
