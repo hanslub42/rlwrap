@@ -107,7 +107,8 @@ void spawn_filter(const char *filter_command) {
     char **argv;
 
     i_am_filter = TRUE;
-    my_fopen(&debug_fp, DEBUG_FILENAME, "a+", "debug log");
+    if (debug) 
+       my_fopen(&debug_fp, DEBUG_FILENAME, "a+", "debug log");
     unblock_signals(signals_to_allow);  /* when we run a pager from a filter we want to catch these */
 
 

@@ -423,6 +423,7 @@ void my_fopen(FILE  **pfp, const char *path, const char *mode, const char *descr
     myerror(FATAL|USE_ERRNO, "Cannot %s  %s %s for %s", what, description, path, how);
 }
 
+
 void
 open_logfile(const char *filename)
 {
@@ -432,6 +433,7 @@ open_logfile(const char *filename)
   now = time(NULL);
   fprintf(log_fp, "\n\n[rlwrap] %s\n", ctime(&now));
 }
+
 
 void
 write_logfile(const char *str)
