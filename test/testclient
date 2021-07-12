@@ -166,7 +166,7 @@ sub run_bash {
 
 sub progress_bar {
   for (my $i=0; $i < 200; $i++) {
-    print "\N{FULL BLOCK}";
+    print " \x{1F642}"; # "\N{FULL BLOCK}";
     select(undef, undef, undef, 0.02);
   }
   print "\n";
@@ -238,7 +238,7 @@ sub hanky_panky {
     sleep 1; print "\br";
     sleep 1; print "\r";
   }
-  print "\nYawn!\n"
+   print "\nYawn!\n"
 }
     
 
