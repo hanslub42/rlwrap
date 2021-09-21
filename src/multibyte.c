@@ -108,6 +108,7 @@ mbc_strnlen(const char *mb_string, size_t maxlen, MBSTATE *st)
 }
 
 
+
 #else /* if not MULTIBYTE_AWARE: */
 
 MBSTATE *

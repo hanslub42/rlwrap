@@ -215,6 +215,10 @@ extern int _rl_horizontal_scroll_mode;
 
 
 
+#define DEF_UNIT_TEST(name) void name(int argc, char **argv, test_stage s)
+#define STAGE(stage) s == stage
+
+
 
 extern void test_main(void);
 
@@ -417,7 +421,7 @@ void remove_padding_and_terminate(char *buf, int length);
 void unbackspace(char* buf);
 char *mark_invisible(const char *buf);
 char *copy_and_unbackspace(const char *original);
-int colourless_strlen(const char *str, char **pcopy_without_ignore_markers, int termwidth);
+int colourless_strlen(const char *str, char **pcopy_without_ignore_markers, int termwidth, int stop_at, char **stopptr);
 int colourless_strlen_unmarked (const char *str, int termwidth);
 char *get_last_screenline(char *long_line, int termwidth);
 char *lowercase(const char *str);

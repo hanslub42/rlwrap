@@ -768,12 +768,17 @@ copy_next(int n, const char **original, char **copy)
 
 
 /* helper function: returns the number of displayed characters (the "colourless length") of str (which has to have its
-   unprintable sequences marked with RL_PROMPT_*_IGNORE).  Puts a copy without the RL_PROMPT_*_IGNORE characters in
-   *copy_without_ignore_markers (if != NULL)
+   unprintable sequences marked with RL_PROMPT_*_IGNORE).  
+   It works internally by building a list  of visible character cells (struct mbchar_cell, see below) and returning its length.
+   Flattens this list into bytes and points copy_without_ignore_markers  (if  != NULL) to the result
+   if stop_at != 0 then the list building will end  as soon as stop_at cells have been seen, and  point stopptr (if != NULL) 
+   at a copy of str beginning at the first (visible, multibyte) character past the stop position.  
+   
+   This can be used to determine where a (possibly multibyte, coloured) prompt moves to a new line on a narrow terminal.   
 */
 
 int
-colourless_strlen(const char *str, char ** pcopy_without_ignore_markers, int UNUSED(termwidth))
+colourless_strlen(const char *str, char ** pcopy_without_ignore_markers, int UNUSED(termwidth), int stop_at, char **stopptr)
 {
   int visible  = TRUE;
   int length   = strlen(str);
@@ -791,10 +796,15 @@ colourless_strlen(const char *str, char ** pcopy_without_ignore_markers, int UNU
     
   /* The next loop scans str, one multi-byte character at a time, constructing a colourless copy  */
   /* cellptr always points at the next available free cell                                        */
-  for(mbc_initstate(&st), str_ptr = str, colourless_bytes = 0, cellptr = copied_cells;
+  for(mbc_initstate(&st), colourless_length = 0, str_ptr = str, colourless_bytes = 0, cellptr = copied_cells;
       *str_ptr;
       mbc_inc(&str_ptr, &st)) {
     assert (cellptr < copied_cells + length);
+    if (stop_at && stopptr && (colourless_length >= stop_at)) {
+      *stopptr = mysavestring(str_ptr);
+      break;
+    }
+
     switch (*str_ptr) {
     case RL_PROMPT_START_IGNORE:
       visible = FALSE;
@@ -833,9 +843,9 @@ colourless_strlen(const char *str, char ** pcopy_without_ignore_markers, int UNU
       cellptr -> state  = st; /* remember shift state after reading str_ptr, just in case a backspace comes along later */
       cellptr           += 1;
     }
+    colourless_length = cellptr - copied_cells;
   } /* end of for loop */
 
-  colourless_length = cellptr - copied_cells;
   
   copy_without_ignore_markers = mymalloc(colourless_bytes + 1);
   for (cellptr = copied_cells, copy_ptr = copy_without_ignore_markers, i = 0; i < colourless_length; i++, cellptr++) {
@@ -855,11 +865,22 @@ colourless_strlen(const char *str, char ** pcopy_without_ignore_markers, int UNU
   else
     free(copy_without_ignore_markers);
   
-  
 
   return colourless_length;
 }
 
+
+DEF_UNIT_TEST(test_colourless_strlen) {
+  if (STAGE(TEST_AT_PROGRAM_START))   {
+    char test[] = "\e[0;31mblא\e[0m bla \e[0;33mblא\e[0m";
+    char *result, *copy;
+    int len = colourless_strlen(mark_invisible(test), &copy, 0, 2,  &result);  
+    printf("origineel = '%s', len = %d, copy = '%s', result = '%s'\n", test, len, copy, result);
+    exit(0);
+  }
+}
+
+              
 /* helper function: returns the number of displayed characters (the
    "colourless length") of str (which has its unprintable sequences
    marked with RL_PROMPT_*_IGNORE).
@@ -874,7 +895,7 @@ int
 colourless_strlen_unmarked (const char *str, int termwidth)
 {
   char *marked_str = mark_invisible(str);
-  int colourless_length = colourless_strlen(marked_str, NULL, termwidth);
+  int colourless_length = colourless_strlen(marked_str, NULL, termwidth, 0, NULL);
   free(marked_str);
   return colourless_length;
 }
@@ -911,6 +932,11 @@ get_last_screenline(char *long_line, int termwidth)
     return last_screenline;
   }
 }
+
+
+
+
+
 
 /* lowercase(str) returns lowercased copy of str */
 char *

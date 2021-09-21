@@ -340,7 +340,8 @@ void wipe_textarea(struct winsize *old_winsize)
 {
   int point, lineheight, linelength, cursor_height, i, promptlength;
   if (!prompt_is_single_line()) {       /* Don't need to do anything in horizontal_scroll_mode  */
-    promptlength = colourless_strlen((saved_rl_state.cooked_prompt ? saved_rl_state.cooked_prompt:  saved_rl_state.raw_prompt), NULL, old_winsize -> ws_col); 
+    promptlength = colourless_strlen((saved_rl_state.cooked_prompt ? saved_rl_state.cooked_prompt:  saved_rl_state.raw_prompt),
+                                     NULL, old_winsize -> ws_col, 0, NULL); 
     linelength = (within_line_edit ? strlen(rl_line_buffer) : 0) + promptlength;
     point = (within_line_edit ? rl_point : 0) + promptlength;
     assert(old_winsize -> ws_col > 0);

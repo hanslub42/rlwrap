@@ -236,11 +236,14 @@ line_handler(char *line)
        I think this method is more natural for multi-line input as well, (we will actually see our multi-line input as
        multiple lines) but not everyone will agree with that.
           
-       O.K, we know for sure that cursor is at start of line. When clients output arrives, it will be printed at
-       just the right place - but first we 'll erase the user input (as it may be about to be changed by the filter) */
+       O.K, we know for sure that cursor is at start of line (after the prompt, or at position 0, if bracketed paste is
+       enabled)). When clients output arrives, it will be printed at just the right place - but first we 'll erase the
+       user input (as it may be about to be changed by the filter) */
 
-    if (bracketed_paste_enabled)   /* we're at start of line and the prompt has just been erased */
+    if (bracketed_paste_enabled) {   /* we're at start of line and the prompt has just been erased */
+      move_cursor_to_start_of_prompt(FALSE);
       my_putstr(saved_rl_state.cooked_prompt);
+    }
       
     rl_delete_text(0, rl_end);  /* clear line  (after prompt) */
     rl_point = 0;
@@ -411,7 +414,7 @@ my_homegrown_redisplay(int hide_passwords)
   int skip = max(1, min(width / 5, 10));        /* jumpscroll this many positions when cursor reaches edge of terminal */
   
   char *prompt_without_ignore_markers;
-  int colourless_promptlen = colourless_strlen(rl_prompt, &prompt_without_ignore_markers,0);
+  int colourless_promptlen = colourless_strlen(rl_prompt, &prompt_without_ignore_markers, 0, 0, NULL);
   int promptlen = strlen(prompt_without_ignore_markers);
   int invisible_chars_in_prompt = promptlen - colourless_promptlen;
   char *prompt_plus_line = add2strings(prompt_without_ignore_markers, rl_line_buffer);

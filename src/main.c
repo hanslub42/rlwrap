@@ -164,16 +164,25 @@ static struct option longopts[] = {
 
 
 
-/* helper function to run a unit test whenever UNIT_TEST is #defined, e.g. by "make clean; make CFLAGS='-DUNIT_TEST=my_test'" */
-
+/* helper function to run a unit test whenever UNIT_TEST is #defined, e.g. by "make clean; make CFLAGS='-DUNIT_TEST=my_test'" 
+ * example of such an unit test (can be defined in any of the .c files):
+ * 
+ * my_test(int argc, char **argv, test_stage stage) {
+ *   if (test_stage == TEST_AFTER_OPTION_PARSING) {
+ *     // test whatever you like 
+ *      exit(0);
+ *    } 
+ *  }
+ */
 #ifdef UNIT_TEST
   static void run_unit_test(int argc, char **argv, test_stage stage) {
     extern void UNIT_TEST(int argc, char **argv, test_stage stage);
     #define VALUE_AS_STRING(v) NAME_AS_STRING(v)
     #define NAME_AS_STRING(n) #n
   
-    if(stage == TEST_AT_PROGRAM_START)
-      myerror(WARNING|NOERRNO, "running unit test %s", VALUE_AS_STRING(UNIT_TEST)); 
+    if(stage == TEST_AT_PROGRAM_START) {
+      myerror(WARNING|NOERRNO, "running unit test %s()", VALUE_AS_STRING(UNIT_TEST));
+    }
     UNIT_TEST(argc, argv, stage);
   }
 #else
@@ -181,6 +190,11 @@ static struct option longopts[] = {
     /*do nothing */
   }
 #endif
+
+
+
+
+
 /*
  * main function. initialises everything and calls main_loop(),
  * which never returns
