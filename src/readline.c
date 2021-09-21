@@ -123,7 +123,7 @@ init_readline(char *UNUSED(prompt))
   saved_rl_state.cooked_prompt = NULL;
 
   bracketed_paste_enabled = term_enable_bracketed_paste != NULL && strings_are_equal(rl_variable_value("enable-bracketed-paste"),"on");
-
+  DPRINTF2(DEBUG_READLINE, "var: %s, enabled: %s", rl_variable_value("enable-bracketed-paste"), term_enable_bracketed_paste);
   if (bracketed_paste_enabled) {
     DPRINTF0(DEBUG_READLINE, "bracketed-paste is enabled");
     my_putstr(term_enable_bracketed_paste);
@@ -241,8 +241,11 @@ line_handler(char *line)
        user input (as it may be about to be changed by the filter) */
 
     if (bracketed_paste_enabled) {   /* we're at start of line and the prompt has just been erased */
+      SHOWCURSOR('1');
       move_cursor_to_start_of_prompt(FALSE);
+      SHOWCURSOR('2');
       my_putstr(saved_rl_state.cooked_prompt);
+      SHOWCURSOR('3');
     }
       
     rl_delete_text(0, rl_end);  /* clear line  (after prompt) */
@@ -318,7 +321,6 @@ line_handler(char *line)
 static int
 my_accept_line(int UNUSED(count), int key)
 {
-  SHOWCURSOR('0');
   rl_point = 0;			/* leave cursor on predictable place */
   my_redisplay();
   rl_done = 1;
