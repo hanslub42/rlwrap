@@ -338,6 +338,8 @@ char *
 search_and_replace(char *patt, const char *repl, const char *string, int cursorpos,
                    int *line, int *col)
 {
+  assert(patt && repl && string);
+   
   int i, j, k;
   int pattlen = strlen(patt);
   int replen = strlen(repl);
@@ -348,7 +350,6 @@ search_and_replace(char *patt, const char *repl, const char *string, int cursorp
   size_t scratchsize;
   char *scratchpad, *result;
 
-  assert(patt && repl && string);
   DPRINTF2(DEBUG_READLINE, "string=%s, cursorpos=%d",
            M(string), cursorpos);
   scratchsize = max(stringlen, (stringlen * replen) / pattlen) + 1;     /* worst case : repleng > pattlen and string consists of only <patt> */
