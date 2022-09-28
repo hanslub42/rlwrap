@@ -48,6 +48,7 @@ import traceback
 import binascii
 import collections
 import numbers
+from packaging import version
 
 TAG_INPUT                       = 0
 TAG_OUTPUT                      = 1
@@ -71,7 +72,7 @@ REJECT_PROMPT = '_THIS_CANNOT_BE_A_PROMPT_'
 we_are_running_under_rlwrap = 'RLWRAP_COMMAND_PID' in os.environ
 
 # rlwrap version
-rlwrap_version = float(os.environ.get('RLWRAP_VERSION', "0.41"))
+rlwrap_version = os.environ.get('RLWRAP_VERSION', "0.41")
 
 # open communication lines with rlwrap (or with the terminal when not running under rlwrap)
 if (we_are_running_under_rlwrap):
@@ -379,8 +380,8 @@ class RlwrapFilter:
         if not is_valid_type(value):
             self.warn("{0} should not be '{1}'\n".format(name, type(value)))
 
-        if name == 'minimal_rlwrap_version' and (value > rlwrap_version):
-            self.error("requires rlwrap version {0} or newer.\n".format(str(value)))
+        if name == 'minimal_rlwrap_version' and (version.parse(value) > version.parse(rlwrap_version)):
+            self.error("requires rlwrap version {0} or newer.\n".format(value))
         self.__dict__[name] = value
 
 
@@ -418,7 +419,7 @@ class RlwrapFilter:
             'prompt_rejected':is_string,
             'command_line':is_string,
             'running_under_rlwrap':is_boolean,
-            'minimal_rlwrap_version':is_float,
+            'minimal_rlwrap_version':is_string,
             'name':is_string
         }
 
