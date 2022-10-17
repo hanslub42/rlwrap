@@ -814,10 +814,10 @@ colourless_strlen(const char *str, char ** pcopy_without_ignore_markers, int UNU
     switch (*str_ptr) {
     case RL_PROMPT_START_IGNORE:
       visible = FALSE;
-      continue;
+      break;
     case RL_PROMPT_END_IGNORE:
       visible = TRUE;
-      continue;
+      break;
     case '\r':
       if (visible) {                  /* only ever interpret CR (and Backspace) when visible (i.e. outside control sequences) */
         for ( ; cellptr > copied_cells; cellptr--)  
@@ -825,7 +825,7 @@ colourless_strlen(const char *str, char ** pcopy_without_ignore_markers, int UNU
         mbc_initstate(&st);           /* restart with virgin state */
         colourless_bytes = 0;
       }
-      continue;
+      break;
     case '\b':
       if ((visible && cellptr > copied_cells)) {     /* except when invisible, or at beginning of copy ... */
         cellptr -= 1;                                /* ... reset cellptr to previous (multibyte) char     */
@@ -836,18 +836,20 @@ colourless_strlen(const char *str, char ** pcopy_without_ignore_markers, int UNU
         else
           mbc_initstate(&st);                        /* or initial state, if at start of line              */
       }
-      continue;
-    }
-    if (visible) {
-      MBSTATE st_copy   = st;
-      int nbytes        = mbc_charwidth(str_ptr, &st_copy);
-      char *q           = cellptr -> bytes = mymalloc(1 + nbytes);
+      break;
+    default:
+      if (visible) {
+        MBSTATE st_copy   = st;
+        int nbytes        = mbc_charwidth(str_ptr, &st_copy);
+        char *q           = cellptr -> bytes = mymalloc(1 + nbytes);
 
-      colourless_bytes += nbytes;
-      mbc_copy(str_ptr,&q, &st); /* copy the possibly multi-byte character at str_ptr to cellptr -> bytes , incrementing q to just past the copy */
-      *q                = '\0';
-      cellptr -> state  = st; /* remember shift state after reading str_ptr, just in case a backspace comes along later */
-      cellptr           += 1;
+        colourless_bytes += nbytes;
+        mbc_copy(str_ptr,&q, &st); /* copy the possibly multi-byte character at str_ptr to cellptr -> bytes , incrementing q to just past the copy */
+        *q                = '\0';
+        cellptr -> state  = st; /* remember shift state after reading str_ptr, just in case a backspace comes along later */
+        cellptr           += 1;
+      }
+      break;
     }
     colourless_length = cellptr - copied_cells;
   } /* end of for loop */
