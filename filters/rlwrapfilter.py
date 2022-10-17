@@ -46,7 +46,10 @@ import select
 import re
 import traceback
 import binascii
-import collections
+try:
+    from collections.abc import Callable
+except ImportError:
+    from collections import Callable
 import numbers
 
 TAG_INPUT                       = 0
@@ -323,7 +326,7 @@ def is_float(value):
 
 
 def is_callable(value):
-    return isinstance(value, collections.Callable) or value == None
+    return isinstance(value, Callable) or value == None
 
 
 @intercept_error
