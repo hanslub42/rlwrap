@@ -339,16 +339,22 @@ search_and_replace(char *patt, const char *repl, const char *string, int cursorp
                    int *line, int *col)
 {
   int i, j, k;
-  int pattlen = strlen(patt);
-  int replen = strlen(repl);
-  int stringlen = strlen(string);
+  int pattlen, replen, stringlen;
   int cursor_found = FALSE;
   int current_line = 1;
   int current_column = 0;
   size_t scratchsize;
   char *scratchpad, *result;
 
-  assert(patt && repl && string);
+  assert(patt);
+  pattlen = strlen(patt);
+
+  assert(repl);
+  replen = strlen(repl);
+
+  assert(stringlen);
+  stringlen = strlen(string);
+  
   DPRINTF2(DEBUG_READLINE, "string=%s, cursorpos=%d",
            M(string), cursorpos);
   scratchsize = max(stringlen, (stringlen * replen) / pattlen) + 1;     /* worst case : repleng > pattlen and string consists of only <patt> */
