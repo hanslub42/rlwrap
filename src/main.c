@@ -959,6 +959,9 @@ read_options_and_command_name(int argc, char **argv)
       add2strings(rl_basic_word_break_characters, "/.");
   }
 
+  if (!complete_filenames && !opt_f && !remember_for_completion && !always_readline) { /* https://github.com/hanslub42/rlwrap/issues/147 */
+    rl_bind_key('\t', rl_insert);
+  }
   
   if (optind >= argc) { /* rlwrap -a -b -c with no command specified */
     if (filter_command) { /* rlwrap -z filter with no command specified */
