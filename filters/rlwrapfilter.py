@@ -71,7 +71,11 @@ REJECT_PROMPT = '_THIS_CANNOT_BE_A_PROMPT_'
 we_are_running_under_rlwrap = 'RLWRAP_COMMAND_PID' in os.environ
 
 # rlwrap version
-rlwrap_version = float(os.environ.get('RLWRAP_VERSION', "0.41"))
+rlwrap_version_string  = os.environ.get('RLWRAP_VERSION', "0.41") # e.g. 0.45.2b
+int_with_dot, rest     = rlwrap_version_string.split('.', 1)      # 0, 45.2b
+rest                   = re.sub(r'[^\d]','', rest)                # 452
+rlwrap_version         = float(int_with_dot + '.' + rest)         # 0.452
+
 
 # open communication lines with rlwrap (or with the terminal when not running under rlwrap)
 if (we_are_running_under_rlwrap):
