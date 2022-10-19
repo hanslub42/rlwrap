@@ -59,15 +59,10 @@
 
 
 
-#if TIME_WITH_SYS_TIME
-# include <sys/time.h>
-# include <time.h>
-#else
-# if HAVE_SYS_TIME_H
+#if HAVE_SYS_TIME_H
 #  include <sys/time.h>
-# else
+#else
 #  include <time.h>
-# endif
 #endif
 
 #if HAVE_SYS_FILE_H
@@ -319,10 +314,7 @@ extern int deferred_adapt_commands_window_size;
 extern int signal_handlers_were_installed;
 extern int received_sigALRM;
 
-#ifndef RETSIGTYPE
-#define RETSIGTYPE void /* systems where RETSIGTYPE = int have died out, apparently */
-#endif
-typedef RETSIGTYPE (*sighandler_type)(int);       
+typedef void (*sighandler_type)(int);       
 
 /* we'll install signal handlers with mysignal(SIGBLAH, HANDLER(handler)), to improve debug log readabilty */
 void mysignal(int sig, sighandler_type handler, const char *handler_name);

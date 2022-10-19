@@ -59,7 +59,7 @@
 
 extern int debug;
 
-typedef RETSIGTYPE (*sighandler_t)(int);
+typedef void (*sighandler_t)(int);
 
 typedef struct freed_stamp
 {
@@ -82,7 +82,7 @@ sighandler_t old_segfault_handler;
 
 
 /* local segfault handler, installed just before we dereference a pointer to test its writability */
-static RETSIGTYPE
+static void
 handle_segfault(int UNUSED(sig))
 {
   fprintf(stderr, "free() called on bad (unallocated) memory at %s:%d\n", offending_sourcefile, offending_line);

@@ -25,7 +25,7 @@ dnl  Boston, MA 02111-1307, USA.
 
 AC_INIT(rlwrap,0.45.2)
 
-AC_PREREQ(2.61)
+AC_PREREQ(2.71)
 
 
 AC_CONFIG_AUX_DIR(tools)
@@ -47,31 +47,31 @@ opt_multibyte_aware=yes
 opt_proc_mountpoint=/proc
 
 AC_ARG_ENABLE(debug,
-    AC_HELP_STRING([--enable-debug], [enable debugging (default=NO)]),
+    AS_HELP_STRING([--enable-debug], [enable debugging (default=NO)]),
     opt_debug=$enableval)
 
 AC_ARG_ENABLE(pedantic-ansi,
-    AC_HELP_STRING([--enable-pedantic-ansi], [compile with -ansi and -pedantic (default=NO)]),
+    AS_HELP_STRING([--enable-pedantic-ansi], [compile with -ansi and -pedantic (default=NO)]),
     opt_pedantic_ansi=$enableval)
 
 
 AC_ARG_ENABLE(homegrown-redisplay,
-    AC_HELP_STRING([--enable-homegrown-redisplay], [try this only if rlwrap messes up the prompt (default=NO)]),
+    AS_HELP_STRING([--enable-homegrown-redisplay], [try this only if rlwrap messes up the prompt (default=NO)]),
     opt_homegrown_redisplay=$enableval)
 
 
 
 AC_ARG_ENABLE(multibyte-aware,
-    AC_HELP_STRING([--enable-multibyte-aware], [make rlwrap aware of multibyte characters (default=yes)]),
+    AS_HELP_STRING([--enable-multibyte-aware], [make rlwrap aware of multibyte characters (default=yes)]),
     opt_multibyte_aware=$enableval)
 
 
 AC_ARG_ENABLE(spy-on-readline,
-    AC_HELP_STRING([--enable-spy-on-readline], [use private readline variable to keep screen tidy when resizing terminal (default=yes)]),
+    AS_HELP_STRING([--enable-spy-on-readline], [use private readline variable to keep screen tidy when resizing terminal (default=yes)]),
     opt_spy_on_readline=$enableval)
 
 AC_ARG_ENABLE(proc-mountpoint,                                                                                                                    
-     AC_HELP_STRING([--enable-proc-mountpoint],                                                                                  
+     AS_HELP_STRING([--enable-proc-mountpoint],                                                                                  
        [specify mountpoint for Linux-style procfs (used for determination of command's PWD) (default=/proc)]), # '                               
      opt_proc_mountpoint=$enableval) 
 
@@ -108,10 +108,9 @@ AC_PATH_PROG(PERL,perl)
 AC_CHECK_PROG(STRIP,strip,strip,true)
 
 # Checks for header files.
-AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
 AC_CHECK_HEADERS([errno.h fcntl.h libgen.h libutil.h stdlib.h string.h sched.h sys/file.h sys/ioctl.h sys/wait.h sys/resource.h stddef.h ])
-AC_CHECK_HEADERS([termios.h unistd.h stdint.h time.h getopt.h regex.h curses.h stropts.h termcap.h util.h])
+AC_CHECK_HEADERS([termios.h unistd.h stdint.h time.h sys/time.h getopt.h regex.h curses.h stropts.h termcap.h util.h])
 
 AC_CHECK_HEADERS([ term.h  ncurses/term.h], , ,
     [#ifdef HAVE_CURSES_H
@@ -169,11 +168,10 @@ ac_c_werror_flag=$_savedwerror_flag
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
 AC_TYPE_PID_T
-AC_HEADER_TIME
+
 
 # Checks for library functions.
 AC_PROG_GCC_TRADITIONAL
-AC_TYPE_SIGNAL
 
 # Let groff -Tman know whether we have long options
 
@@ -210,13 +208,28 @@ AC_CHECK_FUNCS(openpty getpty grantpt unlockpt)
 
 
 
+# AC_CACHE_CHECK(for getpt, ptyttylib_cv_func_getpt,
+# [AC_TRY_LINK([#define _GNU_SOURCE
+# #ifdef HAVE_STDLIB_H
+# # include <stdlib.h>
+# #endif],
+#   [(void)getpt();],
+#   ptyttylib_cv_func_getpt=yes, ptyttylib_cv_func_getpt=no)])
+
+
+
 AC_CACHE_CHECK(for getpt, ptyttylib_cv_func_getpt,
-[AC_TRY_LINK([#define _GNU_SOURCE
-#ifdef HAVE_STDLIB_H
-# include <stdlib.h>
-#endif],
-  [(void)getpt();],
-  ptyttylib_cv_func_getpt=yes, ptyttylib_cv_func_getpt=no)])
+[AC_LINK_IFELSE(
+  [AC_LANG_PROGRAM([[
+  #define _GNU_SOURCE
+  #ifdef HAVE_STDLIB_H
+  # include <stdlib.h>
+  #endif
+  ]],
+  [[(void)getpt();]],
+  ptyttylib_cv_func_getpt=yes, ptyttylib_cv_func_getpt=no)])])
+
+
 if test x$ptyttylib_cv_func_getpt = xyes; then
   AC_DEFINE(HAVE_GETPT, 1, Define if you have _GNU_SOURCE getpt() )
 fi
@@ -283,7 +296,9 @@ if test x$ptyttylib_cv_ptys = xPREHISTORIC -o x$ptyttylib_cv_ptys = xHPUX -o x$p
 fi
 
 
-AC_CHECKING(for pty ranges)
+
+
+AC_MSG_NOTICE(checking for pty ranges)
 ptys=`echo /dev/pty??`
 pch1=`echo $ptys | tr ' ' '\012' | sed -e 's/^.*\(.\).$/\1/g' | sort -u | tr -d '\012'`
 pch2=`echo $ptys | tr ' ' '\012' | sed -e 's/^.*\(.\)$/\1/g' | sort -u | tr -d '\012'`
@@ -335,12 +350,37 @@ AC_CHECK_HEADER([readline/readline.h],[],AC_MSG_ERROR([readline.h not found - yo
 # AC_EGREP_RL_HEADER_AND_CHECK_FUNC(function_or_variable, [code using function_or_variable],  HAVE_FUNCTION_OR_VARIABLE)
 # This macro looks for <function_or_variable>, both as a declaration in header.h, and as a symbol in $LIBS  
 # ------------------------------------------------------------------------------------------
+
+# @@ Haal hier TRY_LINK uit!
+# AC_DEFUN([AC_EGREP_RL_HEADER_AND_CHECK_FUNC],
+#          [ AC_MSG_CHECKING([whether your readline headers and library know about $1])
+#            AC_EGREP_HEADER($1, [readline/readline.h], in_header=1, in_header=0)
+#            AC_TRY_LINK([ #include <stdio.h>
+#                          #include "readline/readline.h" ],
+#                          [$2], in_lib=1, in_lib=0)
+#            if test x$in_lib = x1 -a x$in_header = x1 ; then
+#               AC_DEFINE($3, 1 ,[Define to 1 if your readline lib has $1])
+#               last_check=yes
+#            else
+#               last_check=no
+#            fi
+#            remark=
+#            if test x$in_lib = x0 -a x$in_header = x1 ; then
+#                remark=" (only in headers, not in lib. Hmmmmm....)"
+#            fi
+#            AC_MSG_RESULT([$last_check$remark])
+#            ])
+
+
+
 AC_DEFUN([AC_EGREP_RL_HEADER_AND_CHECK_FUNC],
          [ AC_MSG_CHECKING([whether your readline headers and library know about $1])
            AC_EGREP_HEADER($1, [readline/readline.h], in_header=1, in_header=0)
-           AC_TRY_LINK([ #include <stdio.h>
-                         #include "readline/readline.h" ],
-                         [$2], in_lib=1, in_lib=0)
+
+           AC_LINK_IFELSE(
+              [AC_LANG_PROGRAM([[ #include <stdio.h>
+                                  #include "readline/readline.h"
+                               ]], [[$2]])], in_lib=1, in_lib=0)
            if test x$in_lib = x1 -a x$in_header = x1 ; then
               AC_DEFINE($3, 1 ,[Define to 1 if your readline lib has $1])
               last_check=yes
@@ -385,10 +425,19 @@ AC_EGREP_RL_HEADER_AND_CHECK_FUNC([rl_executing_keyseq],[printf("%s", rl_executi
 # Depending on the linker (or linker options like gcc's -fvisibility=xxx) it may or may not be visible:
 
 AC_MSG_CHECKING([whether the private symbol _rl_horizontal_scroll_mode is visble in your readline libs])
-AC_TRY_LINK([#include <stdio.h>
-             extern int _rl_horizontal_scroll_mode;],
-             [printf("%d", _rl_horizontal_scroll_mode)],
+# AC_TRY_LINK([#include <stdio.h>
+#              extern int _rl_horizontal_scroll_mode;],
+#              [printf("%d", _rl_horizontal_scroll_mode)],
+#              found_rl_horiz=yes, found_rl_horiz=no)
+
+AC_LINK_IFELSE(
+           [AC_LANG_PROGRAM( [[
+              #include <stdio.h>
+             extern int _rl_horizontal_scroll_mode;]],
+             [[printf("%d", _rl_horizontal_scroll_mode)]])],
              found_rl_horiz=yes, found_rl_horiz=no)
+
+
 AC_MSG_RESULT($found_rl_horiz)
 
 if test $opt_spy_on_readline = yes  -a $found_rl_horiz = no ; then
@@ -450,7 +499,7 @@ else
   for N in  1 2 3 ; do # retry a few times because of a possible  race (on 1-processor systems) where ./conftest has been forked by the shell, ...
                        # ... but not yet executed (which will make the following test fail)
     if grep $random_nonsense2 $opt_proc_mountpoint/$CONFTEST_PID/cmdline >/dev/null 2>&1; then
-      $as_echo "#define ENABLE_MIRROR_ARGS 1" >>confdefs.h
+      AS_ECHO(["#define ENABLE_MIRROR_ARGS 1"]) >>confdefs.h
       result="yes"
       break
     fi

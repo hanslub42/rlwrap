@@ -245,7 +245,7 @@ line_handler(char *line)
       move_cursor_to_start_of_prompt(FALSE);
       SHOWCURSOR('2');
       my_putstr(saved_rl_state.cooked_prompt);
-      SHOWCURSOR('3');
+      SHOWCURSOR('3q;');
     }
       
     rl_delete_text(0, rl_end);  /* clear line  (after prompt) */
