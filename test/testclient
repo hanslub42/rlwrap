@@ -166,7 +166,8 @@ sub run_bash {
 
 sub progress_bar {
   for (my $i=0; $i < 200; $i++) {
-    print " \x{1F642}"; # "\N{FULL BLOCK}";
+    #print "\x{1F642}"; # smiley - example of wide (multi-cell) character that will confuse rlwrap when in a prompt;
+    print "\x{2588}"; # "\N{FULL BLOCK}";
     select(undef, undef, undef, 0.02);
   }
   print "\n";
