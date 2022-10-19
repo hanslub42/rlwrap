@@ -25,7 +25,7 @@ dnl  Boston, MA 02111-1307, USA.
 
 AC_INIT(rlwrap,0.45.2)
 
-AC_PREREQ(2.71)
+AC_PREREQ(2.69)
 
 
 AC_CONFIG_AUX_DIR(tools)
