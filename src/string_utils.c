@@ -352,7 +352,7 @@ search_and_replace(char *patt, const char *repl, const char *string, int cursorp
   assert(repl);
   replen = strlen(repl);
 
-  assert(stringlen);
+  assert(string);
   stringlen = strlen(string);
   
   DPRINTF2(DEBUG_READLINE, "string=%s, cursorpos=%d",
