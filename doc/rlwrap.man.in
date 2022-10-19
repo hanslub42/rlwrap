@@ -99,7 +99,7 @@ How aggressively to weed out duplicate entries from the input history.
 If \fIn\fP = \fB0\fP, all inputs are kept in the history list, if
 \fIn\fP = \fB1\fP (this is the default) consecutive duplicates are dropped
 from the list, while \fIn\fP = \fB2\fP will make \fBrlwrap\fP drop all
-previous occurrences of the current input from the list.
+previous occurrences (in the current session) of the current input from the list.
 
 .TP
 .OL \-e \-\-extra-char-after-completion \fIchar\fP
