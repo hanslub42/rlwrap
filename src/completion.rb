@@ -102,7 +102,7 @@ my_rbdestroy(struct rbtree *rb)
 
 
 static void
-print_list()
+print_list(void)
 {
   const char *word;
   RBLIST *completion_list = rbopenlist(completion_tree);	/* uses mymalloc() internally, so no chance of getting a NULL pointer back */
@@ -130,7 +130,7 @@ static char *rbtree_to_string(const struct rbtree *rb, int max_items) {
 }
 
 void
-init_completer()
+init_completer(void)
 {
   completion_tree = rbinit();
 }
@@ -191,7 +191,7 @@ feed_file_into_completion_list(const char *completions_file)
                                                          
 
 int
-get_completion_type()
+get_completion_type(void)
 {				/* some day, this function will inspect the current line and make rlwrap complete
 				   differently according to the word *preceding* the one we're completing ' */
   return (COMPLETE_FROM_LIST | (complete_filenames ? COMPLETE_FILENAMES : 0) | (filter_pid ? FILTER_COMPLETIONS : 0));

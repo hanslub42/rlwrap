@@ -138,7 +138,7 @@ my_pty_fork(int *ptr_master_fd,
 
 
 int
-slave_is_in_raw_mode()
+slave_is_in_raw_mode(void)
 {
   struct termios *pterm_slave;
   static int been_warned = 0;
@@ -162,7 +162,7 @@ slave_is_in_raw_mode()
 }
 
 void
-mirror_slaves_echo_mode()
+mirror_slaves_echo_mode(void)
 {                               /* important e.g. when slave command asks for password  */
   struct termios *pterm_slave = NULL;
   int should_echo_anyway = always_echo || (always_readline && !dont_wrap_command_waits());
@@ -214,7 +214,7 @@ mirror_slaves_echo_mode()
 }
 
 void
-write_EOF_to_master_pty()
+write_EOF_to_master_pty(void)
 {
   struct termios *pterm_slave = my_tcgetattr(slave_pty_sensing_fd, "slave pty");
   char *sent_EOF = mysavestring("?");
@@ -254,7 +254,7 @@ write_EOL_to_master_pty(char *received_eol)
 }
 
 void
-completely_mirror_slaves_terminal_settings()
+completely_mirror_slaves_terminal_settings(void)
 {
   
   struct termios *pterm_slave;
@@ -268,7 +268,7 @@ completely_mirror_slaves_terminal_settings()
 }
 
 void
-completely_mirror_slaves_output_settings() 
+completely_mirror_slaves_output_settings(void) 
 {
   struct termios *pterm_stdin, *pterm_slave;  
   DEBUG_RANDOM_SLEEP;
@@ -309,7 +309,7 @@ completely_mirror_slaves_output_settings()
 */  
 
 void
-completely_mirror_slaves_special_characters()
+completely_mirror_slaves_special_characters(void)
 {
   struct termios *pterm_stdin, *pterm_slave;
   DEBUG_RANDOM_SLEEP;
@@ -342,7 +342,7 @@ completely_mirror_slaves_special_characters()
 */
 
   
-int dont_wrap_command_waits() {
+int dont_wrap_command_waits(void) {
   static char command_wchan[MAXPATHLEN+1];
   static char *wait_phrases[] = {"wait4", "suspend", "do_wait", NULL}; 
   static int initialised = FALSE;
@@ -393,7 +393,7 @@ int dont_wrap_command_waits() {
 }       
 
 
-int skip_rlwrap() { /* this function is called from sigTSTP signal handler. Is it re-entrant? */
+int skip_rlwrap(void) { /* this function is called from sigTSTP signal handler. Is it re-entrant? */
   int retval = FALSE;
   DEBUG_RANDOM_SLEEP;
   if (dont_wrap_command_waits())

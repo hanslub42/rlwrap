@@ -134,7 +134,7 @@ init_readline(char *UNUSED(prompt))
 /* save readline internal state in rl_state, redisplay the prompt
    (so that client output gets printed at the right place) */
 void
-save_rl_state()
+save_rl_state(void)
 {
   free(saved_rl_state.input_buffer); /* free(saved_rl_state.raw_prompt) */;
   saved_rl_state.input_buffer = mysavestring(rl_line_buffer);
@@ -156,7 +156,7 @@ save_rl_state()
 /* Restore readline internal state from rl_state.   */
 
 void
-restore_rl_state()
+restore_rl_state(void)
 {
   
   char *newprompt;
@@ -245,7 +245,7 @@ line_handler(char *line)
       move_cursor_to_start_of_prompt(FALSE);
       SHOWCURSOR('2');
       my_putstr(saved_rl_state.cooked_prompt);
-      SHOWCURSOR('3q;');
+      SHOWCURSOR('3');
     }
       
     rl_delete_text(0, rl_end);  /* clear line  (after prompt) */
@@ -534,7 +534,7 @@ my_homegrown_redisplay(int hide_passwords)
 
 
 void
-my_redisplay()
+my_redisplay(void)
 {
   int debug_force_homegrown_redisplay = 0;
 
@@ -958,7 +958,7 @@ char *process_new_output(const char* buffer, struct rl_state* UNUSED(state)) {
 
 
 
-int cook_prompt_if_necessary () {
+int cook_prompt_if_necessary (void) {
   char *pre_cooked, *slightly_cooked, *rubbish_from_alternate_screen,  *filtered, *uncoloured, *cooked, *p, *non_rubbish = NULL;
   static char **term_ctrl_seqs[] 
     = {&term_rmcup, &term_rmkx, NULL}; /* (NULL-terminated) list of (pointers to) term control sequences that may be

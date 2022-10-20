@@ -244,7 +244,7 @@ cursor_hpos(int col)
 }
 
 void
-cr()
+cr(void)
 {
   if (term_cr)
     tputs(term_cr, 1, my_putchar);
@@ -253,7 +253,7 @@ cr()
 }
 
 void
-clear_the_screen()
+clear_the_screen(void)
 {                               /* clear_screen is a macro in term.h */
   int i;
 
@@ -265,7 +265,7 @@ clear_the_screen()
 }
 
 void
-clear_line()
+clear_line(void)
 {
   int i;
   int width = winsize.ws_col;
@@ -301,7 +301,7 @@ backspace(int count)
 }
 
 void 
-curs_left()
+curs_left(void)
 {
   if (term_cursor_left)
     tputs(term_cursor_left, 1, my_putchar);
@@ -311,14 +311,14 @@ curs_left()
 
 
 void
-curs_up()
+curs_up(void)
 {
   if (term_cursor_up)
     tputs(term_cursor_up, 1, my_putchar);
 }
 
 void
-curs_down()
+curs_down(void)
 {
   if (term_cursor_down)
     tputs(term_cursor_down, 1, my_putchar);
@@ -345,7 +345,7 @@ my_putstr(const char *string)
 }
   
 
-static void test_termfunc(char *control_string, char *control_string_name, char* start, void (* termfunc)(), char *end)
+static void test_termfunc(char *control_string, char *control_string_name, char* start, void (* termfunc)(void), char *end)
 {
   char *mangled_control_string =
     (control_string ?
@@ -362,11 +362,11 @@ static void test_termfunc(char *control_string, char *control_string_name, char*
   free(mangled_control_string);
 }       
 
-static void backspace1 () { backspace(1); }
-static void cursor_hpos4 () { cursor_hpos(4);}
+static void backspace1 (void) { backspace(1); }
+static void cursor_hpos4 (void) { cursor_hpos(4);}
 
 
-void test_terminal()
+void test_terminal(void)
 {
   if (debug) {
     debug_fp = fopen(DEBUG_FILENAME, "w");

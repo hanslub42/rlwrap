@@ -162,7 +162,7 @@ void spawn_filter(const char *filter_command) {
 }
 
 
-void kill_filter()  {
+void kill_filter(void)  {
   int status;
   assert (filter_pid && filter_input_fd);
   close(filter_input_fd); /* filter will see EOF and should exit  */
@@ -179,7 +179,7 @@ void kill_filter()  {
         
 
 
-char *filters_last_words() {
+char *filters_last_words(void) {
   assert (filter_is_dead);
   return read_from_filter(TAG_OUTPUT);
 }       
@@ -245,7 +245,7 @@ static char *read_from_filter(int tag) {
 }
 
 
-static char *read_tagless() {
+static char *read_tagless(void) {
   uint32_t length32;
   char *buffer;
          

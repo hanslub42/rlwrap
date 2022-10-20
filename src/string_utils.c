@@ -258,7 +258,6 @@ void test_haystack(const char *haystack, const char* needle) {
 /* split_with("a bee    cee"," ") returns a pointer to an array {"a", "bee",  "cee", NULL} on the heap */
 
 char **
-
 split_with(const char *string, const char *delimiters) {
   const char *s;
   char *token, **pword;
@@ -284,7 +283,8 @@ unsplit_with(int n, char **strings, const char *delim) {
 
 /* split_with("a\t\tbla", '\t') returns {"a" "bla", NULL}, but we want {"a", "", "bla", NULL} for filter completion.
    We write a special version (can be freed with free_splitlist), that optionally checks the number of components (if expected_count > 0) */
-char **split_on_single_char(const char *string, char c, int expected_count) {
+char **
+split_on_single_char(const char *string, char c, int expected_count) {
   /* the 1st +1 for the last element ("bla"), the 2nd +1 for the marker element (NULL) */
   char **list = mymalloc((count_char_occurrences(string,c) + 1 + 1) * sizeof(char **));
   char *stringcopy = mysavestring(string);
@@ -880,7 +880,7 @@ colourless_strlen(const char *str, char ** pcopy_without_ignore_markers, int UNU
 
 DEF_UNIT_TEST(test_colourless_strlen) {
   if (STAGE(TEST_AT_PROGRAM_START))   {
-    char test[] = "\e[0;31mblא\e[0m bla \e[0;33mblא\e[0m";
+    char test[] = "\033[0;31mblא\033[0m bla \033[0;33mblא\033[0m";
     char *result, *copy;
     int len = colourless_strlen(mark_invisible(test), &copy, 0, 2,  &result);  
     printf("origineel = '%s', len = %d, copy = '%s', result = '%s'\n", test, len, copy, result);
@@ -1057,7 +1057,7 @@ decode_field_length(char** ppmessage)
 
 /* Test an invariant: */
 void
-test_field_length_encoding()
+test_field_length_encoding(void)
 {
   int testval = 1423722;
   char *encoded = encode_field_length(testval);

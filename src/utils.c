@@ -33,7 +33,7 @@ static FILE *log_fp;
    back */
 
 void
-yield()
+yield(void)
 {
   DPRINTF0(DEBUG_TERMIO, "yield...");
 #if 0 /* If command writes some output and immediately starts a long computation, sched_yield() will not return for a
@@ -52,7 +52,7 @@ static volatile int signal_handled = FALSE;
 
 #ifdef HAVE_REAL_PSELECT
 
-void zero_select_timeout () {
+void zero_select_timeout (void) {
   signal_handled = TRUE;
 }
 
@@ -65,7 +65,7 @@ static struct timeval * volatile pmy_select_timeout_tv; /* The SIGCHLD handler s
                                                           into a register, which won't work: hence the "volatile" keyword */ 
 static struct timeval my_select_timeout_tv;
 
-void zero_select_timeout () {
+void zero_select_timeout (void) {
   my_select_timeout_tv.tv_sec = 0;
   my_select_timeout_tv.tv_usec = 0;
   pmy_select_timeout_tv = &my_select_timeout_tv;
@@ -456,14 +456,14 @@ filesize(const char *filename)
 
 
 void
-close_logfile()
+close_logfile(void)
 {
   if (log_fp)
     fclose(log_fp);
 }
 
 void
-close_open_files_without_writing_buffers() /* called from child just before exec(command) */
+close_open_files_without_writing_buffers(void) /* called from child just before exec(command) */
 {
   if(log_fp)
     close(fileno(log_fp));  /* don't flush buffers to avoid avoid double double output output */
@@ -599,7 +599,7 @@ get_new_slave_cwd(char **cwd)
 
 /* change_working_directory() tries to change rlwrap's working directory to the rlwrapped command's current working directory   */
 void
-change_working_directory()
+change_working_directory(void)
 {
   static char *slaves_working_directory = NULL;
   if (!slaves_working_directory)
@@ -644,7 +644,7 @@ void log_fd_info(int fd) {
 
 /* some last-minute checks before we can start */
 void
-last_minute_checks()
+last_minute_checks(void)
 {
   /* flag unhealthy option combinations */
   if (multiline_separator && filter_command)
@@ -827,7 +827,7 @@ free_multiple(void *ptr, ...)
 
 
 
-void mysetsid() {
+void mysetsid(void) {
 # ifdef HAVE_SETSID /* c'mon, this is POSIX! */
   pid_t ret = setsid();
 

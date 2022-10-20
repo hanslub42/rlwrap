@@ -291,7 +291,7 @@ fork_child(char *UNUSED(command_name), char **argv)
  * This function never returns.
  */
 void
-main_loop()
+main_loop(void)
 {    
   int nfds;   
   fd_set readfds; 
@@ -1011,7 +1011,7 @@ read_options_and_command_name(int argc, char **argv)
 
 
 int
-output_queue_is_nonempty()
+output_queue_is_nonempty(void)
 {
   return (output_queue ? TRUE : FALSE);
 }
@@ -1032,7 +1032,7 @@ put_in_output_queue(char *stuff)
  */
 
 void
-flush_output_queue()
+flush_output_queue(void)
 {
   int nwritten, queuelen, how_much;
   char *old_queue = output_queue;

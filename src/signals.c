@@ -86,7 +86,7 @@ mysignal(int sig, sighandler_type handler, const char *handler_name) {
 
 
 void
-install_signal_handlers()
+install_signal_handlers(void)
 {
   int i;
   mysignal(SIGCHLD, HANDLER(child_died));
@@ -105,7 +105,7 @@ install_signal_handlers()
 }
 
 
-static void uninstall_signal_handlers() {
+static void uninstall_signal_handlers(void) {
   int i;
   for(i=1; i<MAX_SIG; i++)
     mysignal(i, SIG_DFL, NULL);
@@ -114,7 +114,7 @@ static void uninstall_signal_handlers() {
 
 
 void
-ignore_sigchld()
+ignore_sigchld(void)
 {
   mysignal(SIGCHLD, HANDLER(do_nothing));
 }
@@ -161,7 +161,7 @@ change_signalmask(int how, int *sigs)
 
 
 void
-unblock_all_signals()
+unblock_all_signals(void)
 {
   sigset_t mask;
   sigfillset(&mask);
@@ -169,7 +169,7 @@ unblock_all_signals()
 } 
 
 void
-block_all_signals()
+block_all_signals(void)
 {
   sigset_t mask;
   int i;

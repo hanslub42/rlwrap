@@ -201,7 +201,7 @@ char *copy_and_free_string_for_malloc_debug(char* str) {
 
 /* this function logs all non-freed memory blocks (in order to hunt for memory leaks) */
 /* blocklist = NULL, hence it is a no-op unless DEBUG_MALLOC has been defined */
-void debug_postmortem() {
+void debug_postmortem(void) {
   Freed_stamp p;
   char *block;
   DPRINTF0(DEBUG_MEMORY_MANAGEMENT,"Postmortem list of unfree memory blocks (most recently allocated first): ");

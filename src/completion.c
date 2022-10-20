@@ -103,8 +103,8 @@ compare(const char *string1, const char *string2)
 
 /* Header file for redblack.c, should be included by any code that 
 ** uses redblack.c since it defines the functions 
-*/
-
+*/ 
+ 
 /* Stop multiple includes */
 #ifndef _REDBLACK_H
 
@@ -130,15 +130,15 @@ compare(const char *string1, const char *string2)
 #endif
 
 /* Modes for rblookup */
-#define RB_NONE -1		/* None of those below */
-#define RB_LUEQUAL 0		/* Only exact match */
+#define RB_NONE -1	    /* None of those below */
+#define RB_LUEQUAL 0	/* Only exact match */
 #define RB_LUGTEQ 1		/* Exact match or greater */
 #define RB_LULTEQ 2		/* Exact match or less */
 #define RB_LULESS 3		/* Less than key (not equal to) */
-#define RB_LUGREAT 4		/* Greater than key (not equal to) */
+#define RB_LUGREAT 4	/* Greater than key (not equal to) */
 #define RB_LUNEXT 5		/* Next key after current */
 #define RB_LUPREV 6		/* Prev key before current */
-#define RB_LUFIRST 7		/* First key in index */
+#define RB_LUFIRST 7	/* First key in index */
 #define RB_LULAST 8		/* Last key in index */
 
 /* For rbwalk - pinched from search.h */
@@ -151,74 +151,61 @@ typedef enum
 }
 VISIT;
 
-struct RB_ENTRY (lists)
-{
-  const struct RB_ENTRY (node) * rootp;
-  const struct RB_ENTRY (node) * nextp;
-};
+struct RB_ENTRY(lists) { 
+const struct RB_ENTRY(node) *rootp; 
+const struct RB_ENTRY(node) *nextp; 
+}; 
+ 
+#define RBLIST struct RB_ENTRY(lists) 
 
-#define RBLIST struct RB_ENTRY(lists)
-
-struct RB_ENTRY (tree)
-{
+struct RB_ENTRY(tree) {
 #ifndef RB_CUSTOMIZE
-  /* comparison routine */
-  int (*rb_cmp) (const void *, const void *, const void *);
-
-  /* config data to be passed to rb_cmp */
-  const void *rb_config;
-
-  /* root of tree */
+		/* comparison routine */
+int (*rb_cmp)(const void *, const void *, const void *);
+		/* config data to be passed to rb_cmp */
+const void *rb_config;
+		/* root of tree */
 #endif /* RB_CUSTOMIZE */
-  struct RB_ENTRY (node) * rb_root;
+struct RB_ENTRY(node) *rb_root;
 };
 
 #ifndef RB_CUSTOMIZE
-RB_STATIC struct RB_ENTRY (tree) *
-rbinit(int (*)(const void *, const void *, const void *), const void *);
+RB_STATIC struct RB_ENTRY(tree) *rbinit(int (*)(const void *, const void *, const void *),
+		 const void *);
 #else
-RB_STATIC struct RB_ENTRY (tree) * RB_ENTRY(init) (void);
+RB_STATIC struct RB_ENTRY(tree) *RB_ENTRY(init)(void);
 #endif /* RB_CUSTOMIZE */
 
 #ifndef no_delete
-RB_STATIC const
-RB_ENTRY(data_t) *
-RB_ENTRY(delete) (const RB_ENTRY(data_t) *, struct RB_ENTRY(tree) *);
+RB_STATIC const RB_ENTRY(data_t) *RB_ENTRY(delete)(const RB_ENTRY(data_t) *, struct RB_ENTRY(tree) *);
 #endif
 
 #ifndef no_find
-     RB_STATIC const RB_ENTRY(data_t) *
-  RB_ENTRY(find) (const RB_ENTRY(data_t) *, struct RB_ENTRY(tree) *);
+RB_STATIC const RB_ENTRY(data_t) *RB_ENTRY(find)(const RB_ENTRY(data_t) *, struct RB_ENTRY(tree) *);
 #endif
 
 #ifndef no_lookup
-     RB_STATIC const RB_ENTRY(data_t) * RB_ENTRY(lookup) (int,
-							  const
-							  RB_ENTRY(data_t) *,
-							  struct
-							  RB_ENTRY(tree) *);
+RB_STATIC const RB_ENTRY(data_t) *RB_ENTRY(lookup)(int, const RB_ENTRY(data_t) *, struct RB_ENTRY(tree) *);
 #endif
 
 #ifndef no_search
-     RB_STATIC const RB_ENTRY(data_t) *
-  RB_ENTRY(search) (const RB_ENTRY(data_t) *, struct RB_ENTRY(tree) *);
+RB_STATIC const RB_ENTRY(data_t) *RB_ENTRY(search)(const RB_ENTRY(data_t) *, struct RB_ENTRY(tree) *);
 #endif
 
 #ifndef no_destroy
-     RB_STATIC void RB_ENTRY(destroy) (struct RB_ENTRY(tree) *);
+RB_STATIC void RB_ENTRY(destroy)(struct RB_ENTRY(tree) *);
 #endif
 
 #ifndef no_walk
-     RB_STATIC void RB_ENTRY(walk) (const struct RB_ENTRY(tree) *,
-				    void (*)(const RB_ENTRY(data_t) *,
-					     const VISIT, const int, void *),
-				    void *);
+RB_STATIC void RB_ENTRY(walk)(const struct RB_ENTRY(tree) *,
+		void (*)(const RB_ENTRY(data_t) *, const VISIT, const int, void *),
+		void *); 
 #endif
 
 #ifndef no_readlist
-     RB_STATIC RBLIST *RB_ENTRY(openlist) (const struct RB_ENTRY(tree) *);
-     RB_STATIC const RB_ENTRY(data_t) * RB_ENTRY(readlist) (RBLIST *);
-     RB_STATIC void RB_ENTRY(closelist) (RBLIST *);
+RB_STATIC RBLIST *RB_ENTRY(openlist)(const struct RB_ENTRY(tree) *); 
+RB_STATIC const RB_ENTRY(data_t) *RB_ENTRY(readlist)(RBLIST *); 
+RB_STATIC void RB_ENTRY(closelist)(RBLIST *); 
 #endif
 
 /* Some useful macros */
@@ -278,6 +265,7 @@ RB_ENTRY(delete) (const RB_ENTRY(data_t) *, struct RB_ENTRY(tree) *);
  * Initial import of files. Versions are now all over the place. Oh well
  *
  */
+
 static char rcsid[]="$Id: redblack.c,v 1.9 2003/10/24 01:31:21 damo Exp $";
 
 /*
@@ -1447,7 +1435,7 @@ my_rbdestroy(struct rbtree *rb)
 
 
 static void
-print_list()
+print_list(void)
 {
   const char *word;
   RBLIST *completion_list = rbopenlist(completion_tree);	/* uses mymalloc() internally, so no chance of getting a NULL pointer back */
@@ -1475,7 +1463,7 @@ static char *rbtree_to_string(const struct rbtree *rb, int max_items) {
 }
 
 void
-init_completer()
+init_completer(void)
 {
   completion_tree = rbinit();
 }
@@ -1536,7 +1524,7 @@ feed_file_into_completion_list(const char *completions_file)
                                                          
 
 int
-get_completion_type()
+get_completion_type(void)
 {				/* some day, this function will inspect the current line and make rlwrap complete
 				   differently according to the word *preceding* the one we're completing ' */
   return (COMPLETE_FROM_LIST | (complete_filenames ? COMPLETE_FILENAMES : 0) | (filter_pid ? FILTER_COMPLETIONS : 0));

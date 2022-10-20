@@ -20,6 +20,14 @@
 */
 
 
+
+#if !defined(__STDC_VERSION__) || __STDC_VERSION__ < 199901L
+typedef int bool;
+#define true 1
+#define false 0
+#endif
+
+
 #include "../config.h"
 #include <sys/types.h>
 #if HAVE_SYS_WAIT_H
