@@ -70,12 +70,12 @@ sub declare_rgb {
 
 
 sub init {
-  my ($col1, $col2) = ($ARGV[0] =~ /(.*)--(.*)/);
-  die ($filter->help_text) unless $col2;
-  foreach ($col1, $col2) {
-    s/_/ /g;
-  }
-  declare_colour_ramp($rampsize, colour2rgb($col1), colour2rgb($col2));
+    my ($col1, $col2) = ($ARGV[0] =~ /(.*)--(.*)/);
+    die ($filter->help_text) unless $col2;
+    foreach ($col1, $col2) {
+      s/_/ /g;
+    }
+    declare_colour_ramp($rampsize, colour2rgb($col1), colour2rgb($col2));
 }
 
 sub declare_colour_ramp {

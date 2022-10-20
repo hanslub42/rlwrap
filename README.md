@@ -1,4 +1,4 @@
-rlwrap v 0.45 February 2021
+rlwrap v 0.46 October 2022
 
 ## WHAT IT IS:
 
@@ -17,12 +17,12 @@ user-defined completion (by way of completion word lists) and
 persistent history, or if you want to program 'special effects' using
 the filter mechanism.
 
-As it is often used with older or even obsolete software,
-`rlwrap` strives to compile and run on a fairly wide range of not
-necessarily recent Unix-like systems (FreeBSD, OSX, HP-UX, AIX,
-Solaris, QNX, cygwin, linux and probably quite a few more) This would
-not be possible without [Polarhome](http://polarhome.com)'s dinosaur
-zoo of ageing Unix systems
+As it is often used with older or even obsolete software, `rlwrap`
+strives to compile and run on a fairly wide range of not necessarily
+recent Unix-like systems (FreeBSD, OSX, HP-UX, AIX, Solaris, QNX,
+cygwin, linux and probably quite a few more) This would not have been
+without [Polarhome](http://polarhome.com)'s now retired 'dinosaur zoo'
+of ageing Unix systems
 
 ## HOW TO USE IT:
 
@@ -48,7 +48,7 @@ from a file (`-f` option) or from `<command>`'s past in/output (-r
 option).
 
 `rlwrap` continually monitors `<command>`'s terminal settings, so that
-it can do the right thing when command asks for single keypresses or
+it can do the right thing when it asks for single keypresses or
 for a password.
 
 Commands that already use Readline, or a similar library, will always
