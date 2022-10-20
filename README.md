@@ -68,7 +68,7 @@ Run netcat with command-line editing:
 Run lprolog and use its saved input history and lib.pl to build a
 completion word list:
   
-    rlwrap -f lib.lp -f . lprolog
+    rlwrap -f lib.pl -f . lprolog
 
 Run smbclient (which already uses readline), add all input and output
 to the completion list, complete local filenames, avoid showing (and
