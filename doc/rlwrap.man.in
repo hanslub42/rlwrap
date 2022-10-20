@@ -498,7 +498,7 @@ One could e.g. put the following lines in \fB~/.inputrc\fP:
 making \fBrlwrap\fP show all completions whenever it runs \fBcoqtop\fP
 .SH BUGS and LIMITATIONS 
 Though it is flexible, delivers the goods (readline functionality), and adheres to the Unix
-"many small tools" paradigm, \fBrlwrap\fP is a kludge. It doesn'tknow anything about
+"many small tools" paradigm, \fBrlwrap\fP is a kludge. It doesn't know anything about
 \fIcommand\fP's internal state, which makes context\-sensitive completion
 impossible. Using the GNU Readline library from within \fIcommand\fP is
 still by far the best option.

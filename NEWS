@@ -1,3 +1,39 @@
+0.46  rlwrapfilter.py would not find collections.Callable on
+      newer (>= 3.10) python
+
+      rlwrapfilter.py would choke on rlwrap version strings
+      (like 0.45.2) that cannot be converted by float()
+
+      rlwrap could segfault or garble prompts if they contain
+      a carriage return
+
+      configure.ac would complain about obsolete macros with
+      newest autoconf
+
+      Bind TAB to self-insert if no completions are specified on
+      the rlwrap command line 
+
+
+0.45.2  rlwrap enables bracketed-paste when instructed to do so by
+      .inputrc, but would then never disable it at exit.
+
+      rlwrap -z (i.e. rlwrap when using a filter) would still open
+      /tmp/rlwrap.debug after forking the filter command, preventing
+      other users from running it afterwards
+
+      
+0.45.1 rlwrap would always open /tmp/rlwrap.debug after forking child
+      command, preventing other users from running it.
+
+      Fix args to setitimer() call to prevent EINVAL error on return
+
+      advise about --always-readline if in direct mode at first user
+      ENTER keystroke
+
+      check for I_SWROPT even if isastream() is present (compile would
+      fail on Oracle linux)
+
+
 0.45  rlwrap correctly handles bracketed paste
 
       --only-cook '!<regexp>' enables "confident mode" where every
