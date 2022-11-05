@@ -122,7 +122,10 @@ init_readline(char *UNUSED(prompt))
   saved_rl_state.raw_prompt = mysavestring("");
   saved_rl_state.cooked_prompt = NULL;
 
-  bracketed_paste_enabled = term_enable_bracketed_paste != NULL && strings_are_equal(rl_variable_value("enable-bracketed-paste"),"on");
+  bracketed_paste_enabled = term_enable_bracketed_paste != NULL
+                            && strings_are_equal(rl_variable_value("enable-bracketed-paste"),"on") &&
+                            rl_readline_version >= 0x802;  /* rlwrap had problems with pre-8.2 readline in bracketed-paste mode,
+                                                              cf. https://github.com/hanslub42/rlwrap/issues/168                    */
   DPRINTF2(DEBUG_READLINE, "var: %s, enabled: %s", rl_variable_value("enable-bracketed-paste"), term_enable_bracketed_paste);
   if (bracketed_paste_enabled) {
     DPRINTF0(DEBUG_READLINE, "bracketed-paste is enabled");
@@ -239,18 +242,10 @@ line_handler(char *line)
        O.K, we know for sure that cursor is at start of line (after the prompt, or at position 0, if bracketed paste is
        enabled)). When clients output arrives, it will be printed at just the right place - but first we 'll erase the
        user input (as it may be about to be changed by the filter) */
-
-    if (bracketed_paste_enabled) {   /* we're at start of line and the prompt has just been erased */
-      SHOWCURSOR('1');
-      move_cursor_to_start_of_prompt(FALSE);
-      SHOWCURSOR('2');
-      my_putstr(saved_rl_state.cooked_prompt);
-      SHOWCURSOR('3');
-    }
       
     rl_delete_text(0, rl_end);  /* clear line  (after prompt) */
     rl_point = 0;
-    my_redisplay();             /* and redisplay (this time without user input, cf the comments for the line_handler() function below) */
+    my_redisplay();             /* and redisplay (without user input, which will be echoed back, cf. comments above) */
     rewritten_line =
       (multiline_separator ? 
        search_and_replace(multiline_separator, "\n", line, 0, NULL,
