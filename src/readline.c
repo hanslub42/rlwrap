@@ -103,8 +103,11 @@ init_readline(char *UNUSED(prompt))
 				   in .inputrc */
 
   /* put the next variable binding(s) *after* rl_initialize(), so they cannot be overridden */
-  /* rl_variable_bind("enable-bracketed-paste","off"); */     /* enable-bracketed-paste changes cursor positioning after printing the prompt ...
-                                                           ... causing rlwrap to overwrite it after accepting input                        */
+  if (rl_readline_version < 0x802)  /* in bracketed_paste_mode rl_deprep_terminal() prints BRACK_PASTE_FINI ("\033[?2004l\r") 
+                                       which moves the cursor to the beginning of the line. In pre-8.2 readline,  this doesn't
+                                       set _rl_last_c_pos to 0, which makes rl_redisplay() think that it is already past the prompt,
+                                       making it overwrite the prompt that rlwrap has already printed. cf. https://github.com/hanslub42/rlwrap/issues/168                    */
+      rl_variable_bind("enable-bracketed-paste","off");      
  
   using_history();
   rl_redisplay_function = my_redisplay;
@@ -122,10 +125,8 @@ init_readline(char *UNUSED(prompt))
   saved_rl_state.raw_prompt = mysavestring("");
   saved_rl_state.cooked_prompt = NULL;
 
-  bracketed_paste_enabled = term_enable_bracketed_paste != NULL
-                            && strings_are_equal(rl_variable_value("enable-bracketed-paste"),"on") &&
-                            rl_readline_version >= 0x802;  /* rlwrap had problems with pre-8.2 readline in bracketed-paste mode,
-                                                              cf. https://github.com/hanslub42/rlwrap/issues/168                    */
+  bracketed_paste_enabled = term_enable_bracketed_paste != NULL && strings_are_equal(rl_variable_value("enable-bracketed-paste"),"on");
+                           
   DPRINTF2(DEBUG_READLINE, "var: %s, enabled: %s", rl_variable_value("enable-bracketed-paste"), term_enable_bracketed_paste);
   if (bracketed_paste_enabled) {
     DPRINTF0(DEBUG_READLINE, "bracketed-paste is enabled");
@@ -306,9 +307,8 @@ line_handler(char *line)
     /* readline only outputs term_enable_bracketed_paste when we call rl_prep_terminal(). That's too   */
     /* late for us, as we only call rl_prep_terminal *after* we have received user input               */
 
-    /* This may mess up certain terminals: "" */
-    /* if (bracketed_paste_enabled)
-       my_putstr(term_enable_bracketed_paste); */
+    if (bracketed_paste_enabled)
+       my_putstr(term_enable_bracketed_paste); 
   }
 }
 
