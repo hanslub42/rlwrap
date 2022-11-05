@@ -310,8 +310,10 @@ line_handler(char *line)
 
     /* readline only outputs term_enable_bracketed_paste when we call rl_prep_terminal(). That's too   */
     /* late for us, as we only call rl_prep_terminal *after* we have received user input               */
-    if (bracketed_paste_enabled)
-      my_putstr(term_enable_bracketed_paste);
+
+    /* This may mess up certain terminals: "" */
+    /* if (bracketed_paste_enabled)
+       my_putstr(term_enable_bracketed_paste); */
   }
 }
 
