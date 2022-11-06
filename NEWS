@@ -1,3 +1,7 @@
+0.46.1  when compiled with readline-8.2, correctly handle echo'ed user
+      input when accepting a line. This will disable
+      bracketed-paste when compiled with readline-8.1 or earlier.
+
 0.46  rlwrapfilter.py would not find collections.Callable on
       newer (>= 3.10) python
 
