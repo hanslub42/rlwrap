@@ -55,3 +55,11 @@ The code that determines whether a cooked prompt should be overwritten
 and not quite correct (e.g. substitute prompts may be left standing
 when they should be erased). 
 
+--
+
+readline < 8.2 doesn't account for the fact that rl_deprep_terminal()
+outputs a "\r"   when enable-bracketed-paste is on.
+rlwrap < 0.46.1 compensated for that, but will therefore mis-print
+accepted user input when compiled with readline-8.2
+rlwrap-0.46.1 now *disables* bracketed paste when compiled with readline 8.1
+or earlier
