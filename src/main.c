@@ -1100,8 +1100,10 @@ cleanup_rlwrap_and_exit(int status)
 
 
   if (bracketed_paste_enabled) {
+    int saved_nl_came_last = newline_came_last;
     DPRINTF0(DEBUG_READLINE, "disabling bracketed-paste");
-    my_putstr(term_disable_bracketed_paste);
+    my_putstr(term_disable_bracketed_paste); /* this will not output a newline, but also not add any visible output, so ... */
+    newline_came_last = saved_nl_came_last;  /* preserve the value of newline_came_last                                     */
   }
   if (terminal_settings_saved)
     if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &saved_terminal_settings) < 0)  /* ignore errors (almost dead anyway) */ 
