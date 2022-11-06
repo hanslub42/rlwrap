@@ -239,7 +239,7 @@ line_handler(char *line)
       
     rl_delete_text(0, rl_end);  /* clear line  (after prompt) */
     rl_point = 0;
-    my_redisplay();             /* and redisplay (without user input, which will be echoed back, cf. comments above) */
+    my_redisplay();             /* and redisplay (now without user input, which will be echoed back, cf. comments above) */
     rewritten_line =
       (multiline_separator ? 
        search_and_replace(multiline_separator, "\n", line, 0, NULL,
