@@ -29,7 +29,7 @@ parser.add_argument('--logfile', '-l', nargs='?',
 args = parser.parse_args()
 fd = args.logfile
 
-# a message_handler is seldom used (as it cannot change messages, only examine them) 
+# a message_handler is seldom used (as it cannot change messages, only examine them)
 # It gets called with the tag as its second argument
 def logit(message, tag):
     tagname = filter.tag2name(tag)

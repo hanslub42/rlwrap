@@ -30,7 +30,7 @@ my ($local_dir_filename_column, $remote_dir_filename_column);
 
 $filter -> help_text("usage: rlwrap [-aword:] -z ftp_filter ftp\n" .
 		     "run plain Netkit ftp with completion for commands, local and remote files\n" .
-		     "(demo filter to show the use of the cloak_and_dagger method)");  
+		     "(demo filter to show the use of the cloak_and_dagger method)");
 $filter -> prompt_handler(\&prompt);
 $filter -> completion_handler(\&complete);
 $filter -> cloak_and_dagger_verbose(0); # set to 1 to spy on cloak_and_dagger dialogue
@@ -51,7 +51,7 @@ sub listing {
   my @lines = split /\r?\n/, $filter -> cloak_and_dagger($command, $ftp_prompt, 2);
   my $colnoref = ($where eq "local" ? \$local_dir_filename_column : \$remote_dir_filename_column);
   if (not $$colnoref) { # find out which column of listing has the filename
-      my $dotdotline = (grep /\.\./, @lines)[0]; # .. should always be there 
+      my $dotdotline = (grep /\.\./, @lines)[0]; # .. should always be there
       #print STDERR $dotdotline;
       my @fields = split /\s+/, $dotdotline;
       for (my $i = 0; $i < @fields; $i++) {
@@ -64,7 +64,7 @@ sub listing {
   }
   my $pattern = ($what eq "directories" ? "^d" : "^-");
   @lines = grep /$pattern/, @lines if $$colnoref > 0; # makes only sense if there is a column with drwxr-xr-x
-  my @results = map {(split /\s+/, $_)[$$colnoref] } @lines;    
+  my @results = map {(split /\s+/, $_)[$$colnoref] } @lines;
   return @results;
 }
 
@@ -113,7 +113,7 @@ sub complete {
     push @completions, grep /^$prefix/, @ftp_commands;
     return @completions;
   }
-  
+
 
   my ($command) = ($line =~ /\s*(\S+)/);
   my (undef, $dir, $name_prefix) = ($prefix =~ m#((.*)/)?([^/]*)#);

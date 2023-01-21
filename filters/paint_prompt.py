@@ -4,8 +4,8 @@
 a demo for painting prompt
 
 this filter tests rlwrap's tolerance for very heavily cooked prompts.
-it uses the seldom-used xterm 256-colour mode (which may or may not work in your 
-other terminal emulators like rxvt) 
+it uses the seldom-used xterm 256-colour mode (which may or may not work in your
+other terminal emulators like rxvt)
 
 try `rlwrap -z './paint_prompt.py 0087ff--ff0000' telnet`
 """
@@ -89,7 +89,7 @@ def apply_ramp(text):
     i = 0
     for c in text:
         # ESC[38;5;$colour is the xterm code to swithc to $colour, the \x01 and \x02 are
-        # readline "ignore codes" to tell readline that the sequence is unprintable 
+        # readline "ignore codes" to tell readline that the sequence is unprintable
         buf.append(
             ''.join([
                 "\x01\x1b[38;5;{0}m\x02".format(rgb2xterm[intermediate_color(i/len(text))]),

@@ -10,7 +10,7 @@
 A vanilla ftp is not bundled in modern Linux today.
 For example, ftp on Fedora 21 is readline-enabled.
 
-$ ldd /usr/bin/ftp 
+$ ldd /usr/bin/ftp
         linux-vdso.so.1 =>  (0x00007ffd015e7000)
         libreadline.so.6 => /lib64/libreadline.so.6 (0x00007fd213777000)
         libncurses.so.5 => /lib64/libncurses.so.5 (0x00007fd21354f000)
@@ -44,7 +44,7 @@ def listing (dir, where, what):
     command = '!ls -la {0}|cat'.format(dir) if where == 'local' else 'ls -la'
     lines = re.split(r'\r?\n', filter.cloak_and_dagger(command, ftp_prompt, 2))
     if dir_filename_column[where] == None: # find out which column of listing has the filename
-        dotdotline = [l for l in lines if re.search(r'(^|\s+)\.\.(\s|$)', l)][0]; # .. should always be there 
+        dotdotline = [l for l in lines if re.search(r'(^|\s+)\.\.(\s|$)', l)][0]; # .. should always be there
         fields = re.split(r'\s+', dotdotline)
         try:
             dir_filename_column[where] = fields.index("..")
@@ -139,13 +139,13 @@ if __name__ == '__main__':
         'get' : ['remote','files','local','directories'],
         'put' : ['local', 'files','remote','directories']
     }
-    
-    
+
+
     filter = rlwrapfilter.RlwrapFilter()
     dir_filename_column = {'local':None, 'remote':None}
     #dir_filename_column['local'] = None
     #dir_filename_column['remote'] = None
-    
+
     filter.help_text = '\n'.join([
         "usage: rlwrap -c [-aword:] -z ftp_filter.py ftp (-e) [hostname]",
         "run plain Netkit ftp with completion for commands, local and remote files",
@@ -153,8 +153,8 @@ if __name__ == '__main__':
     filter.prompt_handler = prompt_handler
     filter.completion_handler = complete_handler
     filter.cloak_and_dagger_verbose = False # set to True to spy on cloak_and_dagger dialogue
-    
-    
+
+
     if (not 'RLWRAP_COMMAND_PID' in os.environ) or re.match(r'^ftp', os.environ['RLWRAP_COMMAND_LINE']):
         raise SystemExit("This filter works only with plain vanilla ftp\n")
 

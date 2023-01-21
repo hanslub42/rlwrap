@@ -1,4 +1,4 @@
-Chet Ramey <chet at po.cwru.edu>: author of the amazing readline 
+Chet Ramey <chet at po.cwru.edu>: author of the amazing readline
 library, around which rlwrap is but a thin wrapper.
 
 Hans Lub hanslub42@gmail.com: most of the rlwrap code, except for:
@@ -15,7 +15,7 @@ Jon Olsson (jon at vexed.se) contributed patches to weed out unsafe
 strcat and strcpy calls
 
 Hisanobu Okuda ported the RlwrapFilter.pm perl module (and a number
-of example filters) to python, and contributed a new way of handling 
+of example filters) to python, and contributed a new way of handling
 multi-part filter messages.
 
 Robert Kroeger contributed code to keep track of the rlwrapped command's

@@ -19,8 +19,8 @@ test_without_filter_command = False # only for debuggging: make filter_command a
 ########## parse filter arguments #################
 parser = argparse.ArgumentParser(description='filter arguments:', add_help=False,
                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-parser.add_argument('--message_type', nargs='?', choices=['input', 'output', 'history', 'prompt', 'echo'],  
-          help="message type to filter", default="output")                
+parser.add_argument('--message_type', nargs='?', choices=['input', 'output', 'history', 'prompt', 'echo'],
+          help="message type to filter", default="output")
 parser.add_argument('--timeout', nargs='?', type=float, default = 0.5,
           help="timeout for <command> response")
 parser.add_argument('--stick-around',
@@ -38,9 +38,9 @@ Usage:  rlwrap [-options] -z 'makefilter <command> [-options]' ...
 convert <command> into rlwrap filter (e.g. to colourise output or censor history)
 important: <command> *must* output exactly *one*  line for each input line.
 (except possibly a startup message)
-filter """ + parser.format_help() 
+filter """ + parser.format_help()
 
-filter.minimal_rlwrap_version = 0.45 
+filter.minimal_rlwrap_version = 0.45
 
 
 ########## spawn filter_command #################
@@ -50,8 +50,8 @@ command_has_spoken = False
 def handle_child_death(signum, frame):
     advice =  (f"\nConsider using 'makefilter --stick-around ...'  to see more error messages"
                 if not args.stick_around and not command_has_spoken else "")
-    filter.error(f"{args.command_line[0]} has died." + advice)            
-        
+    filter.error(f"{args.command_line[0]} has died." + advice)
+
 signal.signal(signal.SIGCHLD, handle_child_death)
 
 def spawn_filter_command():
@@ -62,7 +62,7 @@ def spawn_filter_command():
         # in order to see messages at <command> death
         quoted_command_line  = list(map(lambda s : shlex.quote(s), args.command_line))
         quoted_command_line += ['||', 'sleep', '1']
-        command_as_string = " ".join(quoted_command_line) 
+        command_as_string = " ".join(quoted_command_line)
         command_line = ["sh", "-c", command_as_string]
     filter_command= pexpect.spawn(command_line[0], command_line[1:], echo=False, timeout=args.timeout, encoding='utf-8')
     filter_command.delaybeforesend = None
@@ -76,7 +76,7 @@ def spawn_filter_command():
             break
     if welcome_or_errormessage:
        filter.send_output_oob(welcome_or_errormessage)
-    filter_command.timeout = args.timeout     
+    filter_command.timeout = args.timeout
     #print(filter_command.__dict__)
     return filter_command
 
@@ -85,7 +85,7 @@ def spawn_filter_command():
 @rlwrapfilter.intercept_error_with_message(f"Error in communication with {command}")
 def pass_single_line_through_filter_command(line, strip=True):
    """
-   pass one single (output, history, prompt,...) line through filter_command. 
+   pass one single (output, history, prompt,...) line through filter_command.
    use strip = True for messages that don't end in CRNL, such as prompts, history and echo '''
    """
    global filter_command, command_has_spoken
@@ -99,31 +99,31 @@ def pass_single_line_through_filter_command(line, strip=True):
           result = filter_command.readline()
           command_has_spoken =True
        except pexpect.TIMEOUT:
-          filter.error(f"timeout readling from {filter_command}") 
+          filter.error(f"timeout readling from {filter_command}")
        except pexpect.EOF as e:
-          filter.error(f"EOF readling from {filter_command}") 
+          filter.error(f"EOF readling from {filter_command}")
    return result.rstrip("\r\n") if strip else result
 
 assembled_chunks = ""
 
 def pass_chunks_through_filter_command_line_by_line(chunk):
    """
-   pass chunk through filter_command, assembling and spliting multiple chunks into lines if needed 
+   pass chunk through filter_command, assembling and spliting multiple chunks into lines if needed
    use global variable <assembled_chunks> to retain assembled chunks between invocation
-   this should probably be done in rlwrapfilter eventually: filter.present_output_as_lines = True/False 
+   this should probably be done in rlwrapfilter eventually: filter.present_output_as_lines = True/False
    """
    global assembled_chunks
-   assembled_chunks += chunk 
+   assembled_chunks += chunk
    # chunk may contain zero, one or several CRNLs:
    lines   = assembled_chunks.split('\r\n');
-   # keep last (possibly empty) non CRNL-terminated chunk, which may turn out to have been 
+   # keep last (possibly empty) non CRNL-terminated chunk, which may turn out to have been
    # a prompt, in which case erase_assembled_chunks() will be called to forget about it, cf. below:
-   assembled_chunks  = lines[-1] 
+   assembled_chunks  = lines[-1]
    output  = ""
    for line in lines[0:-1] :
       output += pass_single_line_through_filter_command(line, False)
    return output
- 
+
 
 def erase_assembled_chunks(prompt):
     """
@@ -131,7 +131,7 @@ def erase_assembled_chunks(prompt):
     since they don't need to be treated as output anymore
     """
     global assembled_chunks
-    assembled_chunks = ""    
+    assembled_chunks = ""
     return prompt
 
 
@@ -139,7 +139,7 @@ def erase_assembled_chunks(prompt):
 ############ determine which handler to actitvate ####################
 if  args.message_type == 'output':
     filter.output_handler = pass_chunks_through_filter_command_line_by_line
-    filter.prompt_handler = erase_assembled_chunks 
+    filter.prompt_handler = erase_assembled_chunks
 elif args.message_type == 'input':
     filter.input_handler = pass_single_line_through_filter_command
 elif args.message_type == 'prompt':

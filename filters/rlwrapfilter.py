@@ -292,7 +292,7 @@ def intercept_error(func):
 
 
 def intercept_error_with_message(message=None):
-    """  
+    """
     A decorator (-factory) to intercept an exception, send the message
     to rlwrap, print a message and exit (or re-raise the exception, if
     message = None) N.B: decorators, hence also <message> are evaluated
@@ -484,7 +484,7 @@ class RlwrapFilter:
     def cloak_and_dagger(self, question, prompt, timeout,
                          prompt_search_from=0, prompt_search_to=None):
         """
-        have a private chat with the rlwrapped command. This relies very much om the assumption that command stops. 
+        have a private chat with the rlwrapped command. This relies very much om the assumption that command stops.
         talking, and only listens, when it has displayed the prompt
         """
         write_patiently(CMD_IN, bytearray(question + "\n", sys.stdin.encoding))
@@ -519,7 +519,7 @@ class RlwrapFilter:
     def add_interests(self, message):
         interested = list(message)
         tag2handler = {TAG_OUTPUT      : self.output_handler or self.echo_handler, # echo is the first OUTPUT after an INPUT
-                       TAG_INPUT       : self.input_handler or self.echo_handler,  # so to determine what is ECHO we need to see INPUT... 
+                       TAG_INPUT       : self.input_handler or self.echo_handler,  # so to determine what is ECHO we need to see INPUT...
                        TAG_HISTORY     : self.history_handler,
                        TAG_COMPLETION  : self.completion_handler,
                        TAG_PROMPT      : self.prompt_handler,
@@ -532,7 +532,7 @@ class RlwrapFilter:
             if tag2handler[tag] is not None:
                 interested[tag] = 'y'
         return ''.join(interested)
-    
+
     def name2tag(self, name):
         """
         Convert a valid tag name like " TAG_PROMPT " to a tag (an integer)
@@ -566,20 +566,20 @@ class RlwrapFilter:
     def send_ignore_oob(self, text):
         write_message(TAG_IGNORE, text)
 
-      
+
     def tweak_readline_oob(self, rl_tweak, *args):
         nargs = {'rl_variable_bind'                   : 2,
                  'rl_completer_word_break_characters' : 1,
                  'rl_completer_quote_characters'      : 1,
                  'rl_filename_completion_desired'     : 1}
                  # the above list can be extended in future versions
-        if rl_tweak not in nargs: 
+        if rl_tweak not in nargs:
             self.error("tweak_readline_oob() called with unknown/unimplemented readline function '{}'".format(rl_tweak))
         if len(args) !=  nargs[rl_tweak]:
             self.error("tweak_readline_oob({},...) should be called with exactly {} args".format(rl_tweak, nargs[rl_tweak] + 1))
         self.send_ignore_oob("@" + "::".join((rl_tweak,) + args + ("\n",)))
 
-        
+
     def cwd(self):
         return os.getcwd()
 
@@ -595,7 +595,7 @@ class RlwrapFilter:
             write_message(TAG_OUTPUT_OUT_OF_BAND, self.help_text + '\n')
         while(True):
             tag, message = read_message()
-            
+
             message = when_defined(self.message_handler, message, tag) # ignore return value
 
             if (tag == TAG_INPUT):

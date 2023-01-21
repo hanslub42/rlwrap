@@ -95,7 +95,7 @@ typedef int bool;
 #  include <curses.h>
 #  ifdef HAVE_TERM_H
 #    include <term.h>
-#  else 
+#  else
 #    ifdef HAVE_NCURSES_TERM_H /* cygwin? AIX? */
 #      include <ncurses/term.h>
 #    endif
@@ -200,7 +200,7 @@ char *strchr(), *strrchr();
 
 #if defined(SPY_ON_READLINE)
 extern int _rl_eof_char; /* Spying on readline's private life .... */
-extern int _rl_horizontal_scroll_mode;  
+extern int _rl_horizontal_scroll_mode;
 # if !defined(HOMEGROWN_REDISPLAY)
 #  define MAYBE_MULTILINE 1
 # endif
@@ -270,7 +270,7 @@ extern int mirror_arguments;
 extern int impatient_prompt;
 extern int we_just_got_a_signal_or_EOF;
 extern int remember_for_completion;
-extern int commands_children_not_wrapped; 
+extern int commands_children_not_wrapped;
 extern int accepted_lines;
 extern char *filter_command;
 extern int polling;
@@ -284,7 +284,7 @@ void flush_output_queue(void);
 extern struct rl_state
 {                               /* struct to save readline state while we're processing output from slave command*/
   char *input_buffer;           /* current input buffer */
-  char *raw_prompt;             /* current prompt */  
+  char *raw_prompt;             /* current prompt */
   char *cooked_prompt;          /* ditto redefined by user, or with colour added */
   int point;                    /* cursor position within input buffer */
   int already_saved;            /* flag set when saved, cleared when restored */
@@ -305,7 +305,7 @@ int prompt_is_single_line(void);
 char *process_new_output(const char* buffer, struct rl_state* state);
 int cook_prompt_if_necessary (void);
 
-extern int transparent; 
+extern int transparent;
 extern char *multiline_separator;
 extern char *pre_given;
 extern int leave_prompt_alone;
@@ -322,7 +322,7 @@ extern int deferred_adapt_commands_window_size;
 extern int signal_handlers_were_installed;
 extern int received_sigALRM;
 
-typedef void (*sighandler_type)(int);       
+typedef void (*sighandler_type)(int);
 
 /* we'll install signal handlers with mysignal(SIGBLAH, HANDLER(handler)), to improve debug log readabilty */
 void mysignal(int sig, sighandler_type handler, const char *handler_name);
@@ -519,7 +519,7 @@ extern pid_t filter_pid;
 extern int filter_is_dead;
 void spawn_filter(const char *filter_command);
 void kill_filter(void);
-int filter_is_interested_in(int tag); 
+int filter_is_interested_in(int tag);
 char *pass_through_filter(int tag, const char *buffer);
 char *filters_last_words(void);
 void filter_test(void);
@@ -578,7 +578,7 @@ typedef enum  {TEST_AT_PROGRAM_START, TEST_AFTER_OPTION_PARSING, TEST_AFTER_SPAW
 #include "malloc_debug.h" /* malloc_debug.{c,h} not ready for prime time */
 
 #define DEBUG_FILENAME "/tmp/rlwrap.debug"
-#define KA_BOOM  {char *p = (char *) 1; *p = 'c';} /* dump core right here  */ 
+#define KA_BOOM  {char *p = (char *) 1; *p = 'c';} /* dump core right here  */
 #define KA_SCRUNCH {volatile int x=1, y=0; x = x/y;} /* force a SIGFPE */
 #define KA_SCREECH kill(getpid(),SIGTRAP);        /* enter the debugger - use it to set (conditional) breakpoints from within C code: if (condition) KA_SCREECH; */
 
@@ -595,7 +595,7 @@ typedef enum  {TEST_AT_PROGRAM_START, TEST_AFTER_OPTION_PARSING, TEST_AFTER_SPAW
 # else
 #   define __MYFUNCTION__ ""
 #   define UNUSED(x) UNUSED_ ## x
-#   define UNUSED_FUNCTION(f) UNUSED_ ## f  
+#   define UNUSED_FUNCTION(f) UNUSED_ ## f
 # endif
 
 
@@ -613,17 +613,17 @@ typedef enum  {TEST_AT_PROGRAM_START, TEST_AFTER_OPTION_PARSING, TEST_AFTER_SPAW
 #  define DEBUG_AD_HOC                           64  /* only used during rlwrap development */
 #  define DEBUG_WITH_TIMESTAMPS                  128 /* add timestamps to every line in debug log    */
 #  define FORCE_HOMEGROWN_REDISPLAY              256 /* force use of my_homegrown_redisplay()        */
-#  define DEBUG_LONG_STRINGS                     512 /* log all strings completely, however long they are */ 
-#  define DEBUG_RACES                            1024 /* introduce random delays */  
+#  define DEBUG_LONG_STRINGS                     512 /* log all strings completely, however long they are */
+#  define DEBUG_RACES                            1024 /* introduce random delays */
 #  define DEBUG_RANDOM_FAIL                      2048 /* fail tests randomly */
 #  define DEBUG_SHOWCURSOR                       4096 /* run test_main and exit  */
 
 #  define DEBUG_MAX                              DEBUG_SHOWCURSOR
-#  define MANGLE_LENGTH                          ((debug_saved & DEBUG_LONG_STRINGS) ? 0 : 20) /* debug_saved is defined within DPRINTF macro */ 
+#  define MANGLE_LENGTH                          ((debug_saved & DEBUG_LONG_STRINGS) ? 0 : 20) /* debug_saved is defined within DPRINTF macro */
 #  define DEBUG_DEFAULT                          (DEBUG_TERMIO | DEBUG_SIGNALS | DEBUG_READLINE)
 #  define DEBUG_ALL                              (2*DEBUG_MAX-1)
 
-#  define M(x)                                   mangle_string_for_debug_log(x, MANGLE_LENGTH) 
+#  define M(x)                                   mangle_string_for_debug_log(x, MANGLE_LENGTH)
 
 
 #  define ONLY_USED_FOR_DEBUGGING(x) x
@@ -683,7 +683,7 @@ typedef enum  {TEST_AT_PROGRAM_START, TEST_AFTER_OPTION_PARSING, TEST_AFTER_SPAW
 #  define DPRINTF5(mask, format,arg1, arg2, arg3, arg4, arg5) do {;} while(FALSE)
 #  define ERRMSG(b)
 #  define SHOWCURSOR
-#  define DEBUG_RANDOM_SLEEP  
+#  define DEBUG_RANDOM_SLEEP
 
 /* Don't #define NDEBUG!  There are assertions that cannot be skipped, as in assert(important_function_call()) */
 /* Todo (maybe) #define myassert(x) if(DEBUG){assert(x)} for the other (skippable) assertions                  */

@@ -26,7 +26,7 @@ $filter -> help_text(
 $filter -> run;
 
 
-# a message_handler is seldom used (as it cannot change messages, only examine them) 
+# a message_handler is seldom used (as it cannot change messages, only examine them)
 # It gets called with the tag as its second argument
 sub logit {
   my ($message, $tag) = @_;
@@ -38,7 +38,7 @@ sub logit {
   $mangled =~ s/\t/\\t/g;
   $mangled =~ s/\x1b/\\e/g;
   $mangled =~ s/([[:cntrl:]])/sprintf("\\x%02x", unpack("C", $1))/ge;
-  
+
   format LOG =
   @<<<<<<<<<<<<<<<<<<<<    ^<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
   $tagname,                $mangled

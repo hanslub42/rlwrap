@@ -21,8 +21,8 @@
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-/* Header file for redblack.c, should be included by any code that 
-** uses redblack.c since it defines the functions 
+/* Header file for redblack.c, should be included by any code that
+** uses redblack.c since it defines the functions
 */
 
 /* Stop multiple includes */

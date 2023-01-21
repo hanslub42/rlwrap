@@ -27,9 +27,9 @@
 
    All of these functions work on basic types as char * and int, and
    none of them refer to any of rlwraps global variables (except debug)
-*/ 
+*/
 
-     
+
 #include "rlwrap.h"
 
 
@@ -99,7 +99,7 @@ char *
 strifnull(char *string)
 {
   return string ? string : "<NULL>";
-}       
+}
 
 
 
@@ -111,7 +111,7 @@ add3strings(const char *str1, const char *str2, const char *str3)
 {
   int size;
   char *buf;
-  
+
   assert(str1!= NULL); assert(str2!= NULL); assert(str3!= NULL);
   size = strlen(str1) + strlen(str2) + strlen(str3) + 1;        /* total length plus 0 byte */
   buf = (char *) mymalloc(size);
@@ -125,9 +125,9 @@ add3strings(const char *str1, const char *str2, const char *str3)
 }
 
 
-/* append_and_free_old(str1, str2): return add2strings(str1, str2), freeing str1 
+/* append_and_free_old(str1, str2): return add2strings(str1, str2), freeing str1
    append_and_free_old(NULL, str) just returns a copy of  str
-*/ 
+*/
 
 char *
 append_and_free_old(char *str1, const char *str2)
@@ -138,19 +138,19 @@ append_and_free_old(char *str1, const char *str2)
     char *result = add2strings(str1,str2);
     free (str1);
     return result;
-  }     
+  }
 }
 
 
 /* mybasename and mydirname: wrappers around basename and dirname, if
-   available, otherwise emulations of them */ 
+   available, otherwise emulations of them */
 
 
 char *
 mybasename(const char *filename)
 {                               /* determine basename of "filename" */
 #if defined(HAVE_BASENAME) && defined(_GNU_SOURCE) /* we want only the GNU version  - but this doesn't guarantee that */
-  char *filename_copy = mysavestring(filename); 
+  char *filename_copy = mysavestring(filename);
   char *result = mysavestring(basename(filename_copy));
   free(filename_copy);
   return result; /* basename on HP-UX is toxic: the result will be overwritten by subsequent invocations! */
@@ -183,7 +183,7 @@ mydirname(const char *filename)
 #endif
 }
 
- 
+
 
 /* Better atoi() with error checking */
 int
@@ -191,22 +191,22 @@ my_atoi(const char *nptr)
 {
   int result;
   char *endptr;
-  
+
   errno = 0;
   result = (int) strtol(nptr, &endptr, 10);
   if (errno || endptr == nptr || *endptr)
     myerror(FATAL|USE_ERRNO, "Could not make sense of <%s> as an integer", mangle_string_for_debug_log(nptr, 20));
   return result;
-}       
+}
 
 /* TODO: clean up the following mess. strtok() is cute, but madness. Write one function
-   char *tokenize(const char *string, const char *delimiters, bool allow_empty_strings), and make 
-   both split_with functions a special case of it. Drop mystrtok, count_str_occurrences and count_char_occurrences */ 
+   char *tokenize(const char *string, const char *delimiters, bool allow_empty_strings), and make
+   both split_with functions a special case of it. Drop mystrtok, count_str_occurrences and count_char_occurrences */
 
 
   /* mystrtok: saner version of strtok that doesn't overwrite its first argument */
-  /* Scary strtok: "The  strtok()  function breaks a string into a sequence of zero or more nonempty tokens.  
-    On the first call to strtok(), the string to be parsed should be specified in str.  
+  /* Scary strtok: "The  strtok()  function breaks a string into a sequence of zero or more nonempty tokens.
+    On the first call to strtok(), the string to be parsed should be specified in str.
     In each subsequent call that should parse the same string, str must be NULL.
   */
 
@@ -215,12 +215,12 @@ char *
 mystrtok(const char *s, const char *delimiters) {
   static char *scratchpad = NULL;
   if (s) { /* first call */
-    if (scratchpad) 
+    if (scratchpad)
       free(scratchpad); /* old news */
     scratchpad = mysavestring(s);
   }
   return strtok(s ? scratchpad : NULL, delimiters);
-}       
+}
 
 
 static int
@@ -228,7 +228,7 @@ count_str_occurrences(const char *haystack, const char* needle)
 {
   int count = 0, needle_length = strlen(needle);
   const char *p = haystack;
-  
+
   assert(needle_length > 0);
   while ((p = strstr(p, needle))) {
       count++;
@@ -251,7 +251,7 @@ count_char_occurrences(const char *haystack, char c)
 
 void test_haystack(const char *haystack, const char* needle) {
   printf("<%s> contains <%s> %d times\n", haystack, needle, count_str_occurrences(haystack, needle));
-}       
+}
 
 
 
@@ -261,12 +261,12 @@ char **
 split_with(const char *string, const char *delimiters) {
   const char *s;
   char *token, **pword;
-  char **list = mymalloc((1 + strlen(string)) * sizeof(char **)); /* worst case: only delimiters  */ 
-  for (s = string, pword = list; (token = mystrtok(s, delimiters)); s = NULL) 
+  char **list = mymalloc((1 + strlen(string)) * sizeof(char **)); /* worst case: only delimiters  */
+  for (s = string, pword = list; (token = mystrtok(s, delimiters)); s = NULL)
     *pword++ = mysavestring(token);
   *pword = NULL;
   return list;
-}       
+}
 
 /* unsplit_with(3, ["a", "bee", "cee"], "; ") returns a pointer to "a; bee; cee" on the heap */
 /* takes n elements from strings (or all of them if n < 0) */
@@ -274,7 +274,7 @@ char *
 unsplit_with(int n, char **strings, const char *delim) {
   int i;
   char *result = mysavestring(n != 0 && strings[0] ? strings[0]: "");
-  for (i = 1; (n<0 && strings[i]) || i < n; i++) { 
+  for (i = 1; (n<0 && strings[i]) || i < n; i++) {
        result = append_and_free_old(result, delim);
        result = append_and_free_old(result, strings[i]);
   }
@@ -289,7 +289,7 @@ split_on_single_char(const char *string, char c, int expected_count) {
   char **list = mymalloc((count_char_occurrences(string,c) + 1 + 1) * sizeof(char **));
   char *stringcopy = mysavestring(string);
   char *p, **pword, *current_word;
-  
+
   for (pword = list, p = current_word = stringcopy;
        *p; p++) {
     if (*p == c) {
@@ -299,13 +299,13 @@ split_on_single_char(const char *string, char c, int expected_count) {
     }
   }
   *pword++ = mysavestring(current_word);
-  if (expected_count  && pword-list != expected_count) 
+  if (expected_count  && pword-list != expected_count)
     myerror(FATAL|NOERRNO, "splitting <%s> on single %s yields %d components, expected %d",
-            mangle_string_for_debug_log(string, 50), mangle_char_for_debug_log(c, 1), pword -  list, expected_count); 
+            mangle_string_for_debug_log(string, 50), mangle_char_for_debug_log(c, 1), pword -  list, expected_count);
   *pword = NULL;
   free(stringcopy);
   return list;
-}       
+}
 
 /* free_splitlist(list) frees lists components and then list itself. list must be NULL-terminated */
 void free_splitlist (char **list) {
@@ -313,7 +313,7 @@ void free_splitlist (char **list) {
   while(*p)
     free(*p++);
   free (list);
-}       
+}
 
 
 /* search_and_replace() is a utilty for handling multi-line input
@@ -321,7 +321,7 @@ void free_splitlist (char **list) {
    in order to put the cursor on the very same spot in the external
    editor For example, when using NL as a newline substitute (rlwrap
    -m NL <command>):
-   
+
    search_and_replace("NL", "\n", "To be NL ... or not to be", 11,
    &line, &col) will return "To be \n ... or not to be", put 2 in line
    and 3 in col because a cursor position of 11 in "To be NL ..."
@@ -332,7 +332,7 @@ void free_splitlist (char **list) {
    first position on the string corresponds to cursorpos = col = 0 and
    line = 1.
 */
-   
+
 
 char *
 search_and_replace(char *patt, const char *repl, const char *string, int cursorpos,
@@ -354,7 +354,7 @@ search_and_replace(char *patt, const char *repl, const char *string, int cursorp
 
   assert(string);
   stringlen = strlen(string);
-  
+
   DPRINTF2(DEBUG_READLINE, "string=%s, cursorpos=%d",
            M(string), cursorpos);
   scratchsize = max(stringlen, (stringlen * replen) / pattlen) + 1;     /* worst case : repleng > pattlen and string consists of only <patt> */
@@ -365,12 +365,12 @@ search_and_replace(char *patt, const char *repl, const char *string, int cursorp
   for (i = j = 0; i < stringlen;  ) {
     if (line && col &&                           /* if col and line are BOTH non-NULL, and .. */
         i >= cursorpos && !cursor_found) {       /*  ... for the first time, i >= cursorpos: */
-      cursor_found = TRUE;                       /* flag that we're done here */                              
-      *line = current_line;                      /* update *line */ 
+      cursor_found = TRUE;                       /* flag that we're done here */
+      *line = current_line;                      /* update *line */
       *col = current_column;                     /* update *column */
     }
     if (strncmp(patt, string + i, pattlen) == 0) { /* found match */
-      i += pattlen;                                /* update i ("jump over" patt (and, maybe, cursorpos)) */  
+      i += pattlen;                                /* update i ("jump over" patt (and, maybe, cursorpos)) */
       for (k = 0; k < replen; k++)                 /* append repl to scratchpad */
         scratchpad[j++] = repl[k];
       current_line++;                              /* update line # (assuming that repl = "\n") */
@@ -392,7 +392,7 @@ search_and_replace(char *patt, const char *repl, const char *string, int cursorp
 /* first_of(&string_array) returns the first non-NULL element of string_array  */
 char *
 first_of(char **strings)
-{                               
+{
   char **p;
 
   for (p = strings; *p == NULL; p++);
@@ -405,7 +405,7 @@ char *
 as_string(int i)
 {
 #define MAXDIGITS 10 /* let's pray no-one edits multi-line input more than 10000000000 lines long :-) */
-  char *newstring = mymalloc(MAXDIGITS+1); 
+  char *newstring = mymalloc(MAXDIGITS+1);
 
   snprintf1(newstring, MAXDIGITS, "%d", i);
   return (newstring);
@@ -418,8 +418,8 @@ mangle_char_for_debug_log(char c, int quote_me)
 {
   char *special = NULL;
   char scrap[10], code, *format;
-  char *remainder = "\\]^_"; 
-  
+  char *remainder = "\\]^_";
+
   switch (c) {
   case 0: special = "<NUL>"; break;
   case 8: special  = "<BS>";  break;
@@ -436,11 +436,11 @@ mangle_char_for_debug_log(char c, int quote_me)
       format = "<CTRL-%c>"; code =  remainder[c-28];
     } else {
       format = (quote_me ? "\"%c\"" : "%c"); code = c;
-    }   
+    }
     snprintf1(scrap, sizeof(scrap), format, code);
   }
   return mysavestring (special ? special : scrap);
-}       
+}
 
 
 /* mangle_string_for_debug_log(string, len) returns a printable
@@ -454,7 +454,7 @@ mangle_string_for_debug_log(const char *string, int maxlen)
   char *mangled_char, *result;
   const char *p; /* good old K&R-style *p. I have become a fossil... */
   MBSTATE st;
-  
+
   if (!string)
     return mysavestring("(null)");
   result = mysavestring("");
@@ -465,9 +465,9 @@ mangle_string_for_debug_log(const char *string, int maxlen)
       } else {
         mangled_char = mangle_char_for_debug_log(*p, FALSE);
         total_length +=  strlen(mangled_char); /* can be more than 1 ("CTRL-A") */
-      } 
+      }
     if (maxlen && (total_length > maxlen)) {
-      result = append_and_free_old(result, "...");      
+      result = append_and_free_old(result, "...");
       break;  /* break *before* we append the latest char and exceed maxlen */
     }
     result = append_and_free_old(result, mangled_char);
@@ -492,8 +492,8 @@ char *mem2str(const char *mem, int size) {
   const char *p_mem;
   char  *p_str;
   char *str = mymalloc(2*size + 1); /* worst case: "\0\0\0\0.." */
-  for(p_mem = mem, p_str = str; p_mem < mem + size; p_mem++) { 
-    if (*p_mem) 
+  for(p_mem = mem, p_str = str; p_mem < mem + size; p_mem++) {
+    if (*p_mem)
       *p_str++ = *p_mem;
     else {
       *p_str++ = '\\';
@@ -519,8 +519,8 @@ int scan_metacharacters(const char* string, const char *metacharacters) {
     if (strchr(string, *c))
       return TRUE;
   return FALSE;
-}       
-               
+}
+
 /* allocate and init array of 4 strings (helper for munge_line_in_editor() and filter) */
 char **
 list4 (char *el0, char *el1, char *el2, char *el3)
@@ -547,7 +547,7 @@ list4 (char *el0, char *el1, char *el2, char *el3)
    (@@@ I have never seen this happen, by the way), and padding is not
    used anymore on modern terminals. (except maybe for things like the
    visual bell) */
- 
+
 
 void remove_padding_and_terminate(char *buf, int length) {
   char *readptr, *copyptr;
@@ -559,8 +559,8 @@ void remove_padding_and_terminate(char *buf, int length) {
   *copyptr = '\0';
   if (debug && strlen(buf) != (unsigned int) length)
     DPRINTF2(DEBUG_TERMIO, "removed %d zero bytes (padding?) from %s", length - (int) strlen(buf), M(buf));
-}       
-        
+}
+
 #define ESCAPE  '\033'
 #define BACKSPACE '\010'
 #define CARRIAGE_RETURN  '\015'
@@ -587,7 +587,7 @@ unbackspace_old(char* buf) {
 
   DPRINTF1(DEBUG_TERMIO,"unbackspace: %s", M(buf));
   seen_bs_or_cr = FALSE;
-  
+
   for (readptr = copyptr = endptr = buf; *readptr; readptr++) {
 
     assert(endptr <= readptr);
@@ -599,19 +599,19 @@ unbackspace_old(char* buf) {
       seen_bs_or_cr = TRUE;
       break;
     case CARRIAGE_RETURN:
-      copyptr = buf;  
+      copyptr = buf;
       seen_bs_or_cr = TRUE;
       break;
     default:
-      *copyptr++ = *readptr;      
+      *copyptr++ = *readptr;
       break;
     }
     if (copyptr > endptr)
       endptr = copyptr;
   }
   *endptr = '\0';
-  if (seen_bs_or_cr) 
-      DPRINTF1(DEBUG_TERMIO,"unbackspace result: %s", M(buf));  
+  if (seen_bs_or_cr)
+      DPRINTF1(DEBUG_TERMIO,"unbackspace result: %s", M(buf));
 }
 
 
@@ -624,7 +624,7 @@ unbackspace(char* buf) {
 
   DPRINTF1(DEBUG_TERMIO,"unbackspace: %s", M(buf));
   seen_bs_or_cr = FALSE;
-  
+
   for (readptr = copyptr = buf; *readptr; readptr++) {
     switch (*readptr) {
     case BACKSPACE:
@@ -634,22 +634,22 @@ unbackspace(char* buf) {
           copyptr--;                                                 /* e.g. with pathological "x\002\b" */
         if (copyptr > buf)
           copyptr--;
-      }   
+      }
       seen_bs_or_cr = TRUE;
       break;
     case CARRIAGE_RETURN:
-      copyptr = buf;  
+      copyptr = buf;
       seen_bs_or_cr = TRUE;
       break;
     default:
-      *copyptr++ = *readptr;      
+      *copyptr++ = *readptr;
       break;
     }
   }
   *copyptr = '\0';
-  if (seen_bs_or_cr) 
+  if (seen_bs_or_cr)
       DPRINTF1(DEBUG_TERMIO,"unbackspace result: %s", M(buf));
-  
+
 }
 
 
@@ -683,12 +683,12 @@ TESTFUNC(test, argc, argv, stage) {
    (declared in `readline.h').
 
    mark_invisible(buf) returns a new copy of buf with sequences of the
-   form ESC[;0-9]*m? marked in this way. 
-   
+   form ESC[;0-9]*m? marked in this way.
+
 */
 
 /*
-  (Re-)definitions for testing   
+  (Re-)definitions for testing
   #undef RL_PROMPT_START_IGNORE
   #undef  RL_PROMPT_END_IGNORE
   #undef isprint
@@ -714,18 +714,18 @@ mark_invisible(const char *buf)
   const char **original = &buf;
   char **copy = &scratchpad;
   DPRINTF1(DEBUG_AD_HOC, "mark_invisible(%s) ...", M(buf));
-  
+
   if (strchr(buf, RL_PROMPT_START_IGNORE))
     return mysavestring(buf); /* "invisible" parts already marked */
-    
+
   while (**original) {
-    copy_ordinary_char_or_ESC_sequence(original, copy); 
+    copy_ordinary_char_or_ESC_sequence(original, copy);
     assert(*copy - scratchpad < padsize);
   }
   **copy = '\0';
   DPRINTF1(DEBUG_AD_HOC, "mark_invisible(...) = <%s>", M(result));
-  return(result);       
-}       
+  return(result);
+}
 
 
 
@@ -742,14 +742,14 @@ copy_ordinary_char_or_ESC_sequence (const char **original, char **copy)
   match_and_copy(";0123456789", original, copy);
   match_and_copy("m", original, copy);
   *(*copy)++ = RL_PROMPT_END_IGNORE;
-}       
-    
+}
+
 static void
 match_and_copy(const char *charlist, const char **original, char **copy)
 {
   while (matches(charlist, **original))
     *(*copy)++ = *(*original)++;
-}       
+}
 
 static int
 matches (const char *charlist, char c)
@@ -759,8 +759,8 @@ matches (const char *charlist, char c)
     if (*p == c)
       return TRUE;
   return FALSE;
-}       
-  
+}
+
 
 static void
 copy_next(int n, const char **original, char **copy)
@@ -774,13 +774,13 @@ copy_next(int n, const char **original, char **copy)
 
 
 /* helper function: returns the number of displayed characters (the "colourless length") of str (which has to have its
-   unprintable sequences marked with RL_PROMPT_*_IGNORE).  
+   unprintable sequences marked with RL_PROMPT_*_IGNORE).
    It works internally by building a list  of visible character cells (struct mbchar_cell, see below) and returning its length.
    Flattens this list into bytes and points copy_without_ignore_markers  (if  != NULL) to the result
-   if stop_at != 0 then the list building will end  as soon as stop_at cells have been seen, and  point stopptr (if != NULL) 
-   at a copy of str beginning at the first (visible, multibyte) character past the stop position.  
-   
-   This can be used to determine where a (possibly multibyte, coloured) prompt moves to a new line on a narrow terminal.   
+   if stop_at != 0 then the list building will end  as soon as stop_at cells have been seen, and  point stopptr (if != NULL)
+   at a copy of str beginning at the first (visible, multibyte) character past the stop position.
+
+   This can be used to determine where a (possibly multibyte, coloured) prompt moves to a new line on a narrow terminal.
 */
 
 int
@@ -797,9 +797,9 @@ colourless_strlen(const char *str, char ** pcopy_without_ignore_markers, int UNU
     char *bytes;
     MBSTATE state;
   } mbchar_cell;
-  
+
   mbchar_cell *cellptr, *copied_cells = mymalloc((length + 1)  * sizeof(mbchar_cell));
-    
+
   /* The next loop scans str, one multi-byte character at a time, constructing a colourless copy  */
   /* cellptr always points at the next available free cell                                        */
   for(mbc_initstate(&st), colourless_length = 0, str_ptr = str, colourless_bytes = 0, cellptr = copied_cells;
@@ -820,7 +820,7 @@ colourless_strlen(const char *str, char ** pcopy_without_ignore_markers, int UNU
       break;
     case '\r':
       if (visible) {                  /* only ever interpret CR (and Backspace) when visible (i.e. outside control sequences) */
-        for ( ; cellptr > copied_cells; cellptr--)  
+        for ( ; cellptr > copied_cells; cellptr--)
           free((cellptr-1)->bytes);   /* free all cells            */
         mbc_initstate(&st);           /* restart with virgin state */
         colourless_bytes = 0;
@@ -829,7 +829,7 @@ colourless_strlen(const char *str, char ** pcopy_without_ignore_markers, int UNU
     case '\b':
       if ((visible && cellptr > copied_cells)) {     /* except when invisible, or at beginning of copy ... */
         cellptr -= 1;                                /* ... reset cellptr to previous (multibyte) char     */
-        colourless_bytes -= strlen(cellptr->bytes);  
+        colourless_bytes -= strlen(cellptr->bytes);
         free(cellptr->bytes);
         if (cellptr > copied_cells)
           st = (cellptr -1) -> state;                /* restore corresponding shift state                  */
@@ -854,10 +854,10 @@ colourless_strlen(const char *str, char ** pcopy_without_ignore_markers, int UNU
     colourless_length = cellptr - copied_cells;
   } /* end of for loop */
 
-  
+
   copy_without_ignore_markers = mymalloc(colourless_bytes + 1);
   for (cellptr = copied_cells, copy_ptr = copy_without_ignore_markers, i = 0; i < colourless_length; i++, cellptr++) {
-    for(p = cellptr->bytes; *p; p++, copy_ptr++) 
+    for(p = cellptr->bytes; *p; p++, copy_ptr++)
       *copy_ptr = *p;
     free(cellptr->bytes);
   }
@@ -872,7 +872,7 @@ colourless_strlen(const char *str, char ** pcopy_without_ignore_markers, int UNU
     *pcopy_without_ignore_markers = copy_without_ignore_markers;
   else
     free(copy_without_ignore_markers);
-  
+
 
   return colourless_length;
 }
@@ -882,18 +882,18 @@ DEF_UNIT_TEST(test_colourless_strlen) {
   if (STAGE(TEST_AT_PROGRAM_START))   {
     char test[] = "\033[0;31mblא\033[0m bla \033[0;33mblא\033[0m";
     char *result, *copy;
-    int len = colourless_strlen(mark_invisible(test), &copy, 0, 2,  &result);  
+    int len = colourless_strlen(mark_invisible(test), &copy, 0, 2,  &result);
     printf("origineel = '%s', len = %d, copy = '%s', result = '%s'\n", test, len, copy, result);
     exit(0);
   }
 }
 
-              
+
 /* helper function: returns the number of displayed characters (the
    "colourless length") of str (which has its unprintable sequences
    marked with RL_PROMPT_*_IGNORE).
 
-   Until rlwrap 0.44, this function didn't take wide characters into 
+   Until rlwrap 0.44, this function didn't take wide characters into
    consideration, causing problems with long prompts containing wide characters.
 */
 
@@ -913,7 +913,7 @@ colourless_strlen_unmarked (const char *str, int termwidth)
    initial segments of long_line and return the remainder
    (i.e. the last line of long_line on screen)
    if long_line contains an ESC character, return "" (signaling
-   "don't touch") */   
+   "don't touch") */
 
 
 char *
@@ -924,16 +924,16 @@ get_last_screenline(char *long_line, int termwidth)
 
   line_copy = mysavestring(long_line);
   line_length = strlen(line_copy);
-  
+
   if (termwidth == 0 ||              /* this may be the case on some weird systems */
       line_length <=  termwidth)  {  /* line doesn't extend beyond right margin
                                         @@@ are there terminals that put the cursor on the
                                         next line if line_length == termwidth?? */
-    return line_copy; 
+    return line_copy;
   } else if (strchr(long_line, '\033')) { /* <ESC> found, give up */
     free (line_copy);
     return mysavestring("Ehhmm..? > ");
-  } else {      
+  } else {
     removed = (line_length / termwidth) * termwidth;   /* integer arithmetic: 33/10 = 3 */
     last_screenline  = mysavestring(line_copy + removed);
     free(line_copy);
@@ -954,7 +954,7 @@ lowercase(const char *str) {
   for (p=result; *p; p++)
     *p = tolower(*p);
   return result;
-}       
+}
 
 
 
@@ -976,7 +976,7 @@ colour_name_to_ansi_code(const char *colour_name) {
       isit("cyan")    ? "36" :
       isit("white")   ? "37" :
       NULL ;
-      
+
 #undef isit
     if (colour_code)
       return add3strings(bold_code,";",colour_code);
@@ -984,9 +984,9 @@ colour_name_to_ansi_code(const char *colour_name) {
       myerror(FATAL|NOERRNO, "unrecognised colour name '%s'. Use e.g. 'yellow' or 'Blue'.", colour_name);
   }
   return mysavestring(colour_name);
-}       
-    
-    
+}
+
+
 
 
 
@@ -997,7 +997,7 @@ colour_name_to_ansi_code(const char *colour_name) {
 int isnumeric(char *string){
   char *pstr = string;
   if (*pstr == '-')  /* allow negative numbers */
-    pstr++; 
+    pstr++;
   while (*pstr != '\0')
     if (!isdigit(*pstr++)) return FALSE;
 
@@ -1007,7 +1007,7 @@ int isnumeric(char *string){
 #define DIGITS_NUMBER 8  /* number of (hex) digits of length of field. 6 digits -> max 16MB per message field, should suffice */
 #define MAX_FIELD_LENGTH ((1UL <<  (DIGITS_NUMBER * 4 - 1)) -1) /* max integer that can be written with DIGITS_NUMBER (hex)digits */
 #define MY_HEX_FORMAT(n) ("%0" MY_ITOA(n) "x")
-#define MY_ITOA(n) #n 
+#define MY_ITOA(n) #n
 
 
 /* fussy strtol with error checking */
@@ -1037,23 +1037,23 @@ encode_field_length(int length)
   char *encoded_length = mymalloc(DIGITS_NUMBER+1);
   sprintf(encoded_length, MY_HEX_FORMAT(DIGITS_NUMBER), length);
   return encoded_length;
-}       
+}
 
 
-/* decode first length field in a message of form "<length 1> <message 1> <length 2> ...." 
+/* decode first length field in a message of form "<length 1> <message 1> <length 2> ...."
    and advance pointer *ppmessage to the start of <message 1> */
 static int
 decode_field_length(char** ppmessage)
 {
   char hex_string[DIGITS_NUMBER+1];
   long length;
-  
+
   mystrlcpy(hex_string, *ppmessage, DIGITS_NUMBER+1);
   length = mystrtol(hex_string, 16);
   *ppmessage += DIGITS_NUMBER;
   return length;
-}       
-  
+}
+
 
 /* Test an invariant: */
 void
@@ -1087,11 +1087,11 @@ append_field_and_free_old(char *message, const char *field)
 
 char *
 merge_fields(char *field, ...)
-{  
+{
   char *varg = field;
   char *message = NULL;
   va_list vargs;
-  
+
   va_start(vargs, field);
   while (varg != END_FIELD) {
     message = append_field_and_free_old(message, varg);
@@ -1123,7 +1123,7 @@ split_filter_message(char *message, int *counter)
   int nfields = 0;
 
   static int smallest_message_size = 0;
-  
+
   if (smallest_message_size == 0)
     smallest_message_size = strlen(append_field_and_free_old(NULL, "")); /* this assumes that the empty message is the smallest possible */
 
@@ -1154,7 +1154,7 @@ split_filter_message(char *message, int *counter)
 #ifndef HAVE_REGEX_H
 char *protect_or_cleanup(const char *prompt) {
   return mysavestring(prompt); /*essentially a NOP */
-}       
+}
 
 #else
 
@@ -1165,16 +1165,16 @@ static regex_t *my_regcomp(const char*regex, int flags) {
   if (!*regex)
     return NULL;
   compiled_regexp = mymalloc(sizeof(regex_t));
-  compile_error = regcomp(compiled_regexp, regex, flags);     
+  compile_error = regcomp(compiled_regexp, regex, flags);
   if (compile_error) {
     int size = regerror(compile_error, compiled_regexp, NULL, 0);
     char *error_message =  mymalloc(size);
     regerror(compile_error, compiled_regexp, error_message, size);
-    myerror(FATAL|NOERRNO, "(Internal error:) in regexp \"%s\": %s", mangle_string_for_debug_log(regex,256), error_message);  
+    myerror(FATAL|NOERRNO, "(Internal error:) in regexp \"%s\": %s", mangle_string_for_debug_log(regex,256), error_message);
   }
   return compiled_regexp;
-}       
- 
+}
+
 
 #define TOKEN '@'
 #define MAXGROUPS 2
@@ -1182,7 +1182,7 @@ static regex_t *my_regcomp(const char*regex, int flags) {
 /* protect_pattern("foo", 'a', 'b) = "(a[^b]*b)|(foo)" */
 char *protect(const char *pattern, char protect_start, char protect_end) {
   char *alternative_pattern = mymalloc(strlen(pattern) + 14);
-  sprintf(alternative_pattern,"(%c[^%c]*%c)|(%s)", protect_start, protect_end, protect_end, pattern); 
+  sprintf(alternative_pattern,"(%c[^%c]*%c)|(%s)", protect_start, protect_end, protect_end, pattern);
   return alternative_pattern;
 }
 
@@ -1190,9 +1190,9 @@ char *protect(const char *pattern, char protect_start, char protect_end) {
 
 /* Substitute all occurences of the second group in a <compiled_pattern> "(..)|(..)" within <source> with <replacement>
    (any TOKENs within the replacement will be replaced by the match) , skipping everything that matches the first group
-   (which can be said to "protect" against replacement) E.g: 
-        
-       replace_special("a zzz b zzz", "(a[^a]*b)|(z+)", "(@)") = "a zzz b (zzz)" 
+   (which can be said to "protect" against replacement) E.g:
+
+       replace_special("a zzz b zzz", "(a[^a]*b)|(z+)", "(@)") = "a zzz b (zzz)"
 
    The role of a and b above will be played by the  RL_PROMPT_{START,END}_IGNORE characters                           */
 
@@ -1209,7 +1209,7 @@ char *replace_special(const char *source, regex_t *compiled_pattern, const char*
   copy_with_replacements = mymalloc(max_copylen); /* worst case: replace every char in source by replacement (+ 1 final zero byte)  */
   source_cursor = source;
   copy_cursor = copy_with_replacements;
-    
+
   while(TRUE) {
     regmatch_t matches[MAXGROUPS + 1];          /* whole match + MAXGROUPS groups */
     if ((regexec(compiled_pattern, source_cursor, MAXGROUPS + 1, matches , 0) == REG_NOMATCH)) {   /* no (more) matches ...   */
@@ -1220,7 +1220,7 @@ char *replace_special(const char *source, regex_t *compiled_pattern, const char*
       int protected_start   = matches[1].rm_so;
       int protected_end     = matches[1].rm_eo;
       int protected_length  = protected_end - protected_start;
-      int match_start       = matches[2].rm_so;  
+      int match_start       = matches[2].rm_so;
       int match_end         = matches[2].rm_eo;
       int match_length      = match_end - match_start;   /* Either the first ("protected") group in alternative_pattern matches, */
       assert(!(protected_end > -1 && match_end > -1));   /*  ... or the second (never both - that is the assertion here)         */
@@ -1245,14 +1245,14 @@ char *replace_special(const char *source, regex_t *compiled_pattern, const char*
   }
   return copy_with_replacements;
 }
-      
+
 
 /* All the codes we want to preserve (i.e. keep and put between RL_PROMPT_{START,END}_IGNORE )    */
 static
 char *protected_codes[]  = { "\x1B\x1B", NULL};
 
 /* As we don't protect (and hence will get rid of) ANSI colour codes when "bleaching" the prompt, */
-/* specify separately:                                                                            */ 
+/* specify separately:                                                                            */
 static char *ansi_colour_code_regexp = "(\x1B\\[[0-9;]*m)";          /* colour codes              */
 
 
@@ -1281,9 +1281,9 @@ char *protect_or_cleanup(char *prompt, bool free_prompt) {
   static char *protected_token;
   static char *unwanted_codes_regexp;
   static regex_t *compiled_and_protected_unwanted_codes_regexp;
-  
+
   /* protect stuff we want to keep: */
-  
+
   /* (once)construct the regexp for the protected codes: */
   if (!protected_codes_regexp) {
     protected_codes_regexp = unsplit_with(-1, &protected_codes[0], "|");
@@ -1297,16 +1297,16 @@ char *protect_or_cleanup(char *prompt, bool free_prompt) {
      sprintf(protected_token,"%c%c%c",RL_PROMPT_START_IGNORE, TOKEN, RL_PROMPT_END_IGNORE);
   }
   result1 = replace_special(prompt, compiled_and_protected_protected_codes_regexp, protected_token);
-  
+
   if (!unwanted_codes_regexp) {
     unwanted_codes_regexp = unsplit_with(-1, &unwanted_codes[0], "|");
     DPRINTF1(DEBUG_AD_HOC, "unwanted_codes_regexp: %s", M(unwanted_codes_regexp));
     compiled_and_protected_unwanted_codes_regexp =  my_regcomp(protect(unwanted_codes_regexp, RL_PROMPT_START_IGNORE, RL_PROMPT_END_IGNORE), REG_EXTENDED);
   }
   result = replace_special(result1, compiled_and_protected_unwanted_codes_regexp, "");
-   DPRINTF2(DEBUG_READLINE, "protect_or_cleanup(%s) = %s", M(prompt), M(result)); 
+   DPRINTF2(DEBUG_READLINE, "protect_or_cleanup(%s) = %s", M(prompt), M(result));
   free(result1);
-  
+
   if (free_prompt)
     free(prompt);
 
@@ -1325,7 +1325,7 @@ char *protect_or_cleanup(char *prompt, bool free_prompt) {
 */
 int match_regexp (const char *string, const char *regexp, int case_insensitive) {
   int result = FALSE;
-  
+
   if (!regexp || !string)
     return FALSE;
 
@@ -1338,11 +1338,11 @@ int match_regexp (const char *string, const char *regexp, int case_insensitive) 
 
     if (scan_metacharacters(regexp, metachars) && !been_warned++) /* warn only once if the user specifies a metacharacter */
       myerror(WARNING|NOERRNO, "one of the regexp metacharacters \"%s\" occurs in regexp(?) \"%s\"\n"
-             "  ...but on your platform, regexp matching is not supported!", metachars, regexp);        
-    
+             "  ...but on your platform, regexp matching is not supported!", metachars, regexp);
+
     result = mystrstr(lc_string, lc_regexp);
     free(lc_string);
-    free(lc_regexp);    
+    free(lc_regexp);
   }
 #else
   {
@@ -1352,15 +1352,15 @@ int match_regexp (const char *string, const char *regexp, int case_insensitive) 
   }
 #endif
 
-  
-  return result;        
+
+  return result;
 }
 
 
-  
-#ifdef UNIT_TEST  
 
-  
+#ifdef UNIT_TEST
+
+
 TESTFUNC(test_subst, argc, argv, stage) {
   ONLY_AT_STAGE(TEST_AFTER_OPTION_PARSING);
   while(TRUE) {
@@ -1386,12 +1386,12 @@ TESTFUNC(test_subst, argc, argv, stage) {
 
 /* scan blocks of client output for "cupcodes" that enter and exit the "alternate screen" and set the global variable screen_is_alternate accordingly */
 void check_cupcodes(const char *client_output) {
-  static char *still_unchecked; /* to avoid missing a cupcode that spans more than 1 read buffer, we keep the last few 
+  static char *still_unchecked; /* to avoid missing a cupcode that spans more than 1 read buffer, we keep the last few
                                    bytes in a static buffer (still_unchecked) , that we always prepend to the next incoming block */
   static int rmcup_len, smcup_len, max_cuplen;
   char *output_copy, *outputptr;
   int cut_here;
-  
+
   if (!(commands_children_not_wrapped && term_smcup && term_rmcup))
     return; /* check is impossible or unnecessary */
 
@@ -1400,7 +1400,7 @@ void check_cupcodes(const char *client_output) {
     rmcup_len = strlen(term_rmcup);
     smcup_len = strlen(term_smcup);
     max_cuplen = max(rmcup_len, smcup_len);
-  }     
+  }
   outputptr = output_copy = append_and_free_old(still_unchecked, client_output);
 
   /* keep the very end for next time, as it might contain a partial cupcode */
@@ -1413,7 +1413,7 @@ void check_cupcodes(const char *client_output) {
     char *rmptr = strstr(outputptr, term_rmcup);
     char *smptr = strstr(outputptr, term_smcup);
     if (rmptr == smptr) {
-      assert(rmptr == NULL); /* can only fail  if term_smcup is prefix of term_rmcup, or vice versa, which never happens as far as I know */ 
+      assert(rmptr == NULL); /* can only fail  if term_smcup is prefix of term_rmcup, or vice versa, which never happens as far as I know */
       break;
     } else if (rmptr > smptr) { /* rmcup and smcup may occur in the same block of output */
       DPRINTF0(DEBUG_READLINE, "Saw rmcup");
@@ -1423,7 +1423,7 @@ void check_cupcodes(const char *client_output) {
       DPRINTF0(DEBUG_READLINE, "Saw smcup");
       screen_is_alternate = TRUE;
       outputptr = smptr + smcup_len;
-    }       
+    }
   }
   free(output_copy);
 }

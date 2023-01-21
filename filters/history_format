@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 
 # filter to implement the old -F (--history-format) option, which was badly implemented and never
-# used anyway. The simplicity of this script shows the usefulness of the filter concept. 
+# used anyway. The simplicity of this script shows the usefulness of the filter concept.
 # As a bonus, it is much easier to modify than the original rlwrap source code
 
 use lib ($ENV{RLWRAP_FILTERDIR} or ".");
@@ -14,7 +14,7 @@ my ($raw_input, $prompt);
 
 my $filter = new RlwrapFilter;
 my $name = $filter -> name;
-my $format = join " ", @ARGV; # you may specify the format without quotes (as in -z 'history_format -- %D') 
+my $format = join " ", @ARGV; # you may specify the format without quotes (as in -z 'history_format -- %D')
 my ($prefix) = ($format =~ /^(.*?)\%/);
 $prefix ||= $format;
 

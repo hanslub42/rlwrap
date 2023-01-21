@@ -1,8 +1,8 @@
 #!/usr/bin/env perl
 
 # this filter tests rlwrap's tolerance for very heavily cooked prompts.
-# it uses the seldom-used xterm 256-colour mode (which may or may not work in your 
-# other terminal emulators like rxvt) 
+# it uses the seldom-used xterm 256-colour mode (which may or may not work in your
+# other terminal emulators like rxvt)
 
 
 use lib ($ENV{RLWRAP_FILTERDIR} or ".");
@@ -86,7 +86,7 @@ sub declare_colour_ramp {
     $colours_were_declared = 1;
 }
 
-sub ramp { # intermediate value 100*$frac % between $val1 and $val2 
+sub ramp { # intermediate value 100*$frac % between $val1 and $val2
     my ($val1, $val2, $frac) = @_;
     return int ($val1 + $frac * ($val2-$val1));
 }
@@ -101,7 +101,7 @@ sub apply_ramp {
 	my $colour = 16 + int(($rampsize -1) * $i / @text);
 	die "colour index $colour out of range" if $colour < 16 or $colour >= 16 + $rampsize;
 	$text[$i]= "\x01\x1b[38;5;${colour}m\x02" . $text[$i];  # ESC[38;5;$colour is the xterm code to swithc to $colour, the \x01 and \x02 are
-                                                                # readline "ignore codes" to tell readline that the sequence is unprintable 
+                                                                # readline "ignore codes" to tell readline that the sequence is unprintable
     }
     return (join '', @text) . "\x01\x1b[0m\x02";
 }

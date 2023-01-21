@@ -21,7 +21,7 @@ my $delay_all_responses  = $ENV{RLWRAP_DEBUG} & DEBUG_RANDOM_DELAY;
 
 sub wait_a_little_and_return {
     my($retval) = @_;
-    if ($delay_all_responses) { 
+    if ($delay_all_responses) {
         select(undef, undef, undef, 0.1*rand()); # Emulate a filter that takes a lot of time to respond
     }
     return($retval);

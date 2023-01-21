@@ -52,7 +52,7 @@ following:
   procfs, used for determination of slave command's working directory.
 
 --enable-multibyte-aware (default: YES) Prevent rlwrap from seeing
-  multibyte characters as multiple  characters. 
+  multibyte characters as multiple  characters.
 
 
 UNINSTALLATION
@@ -75,7 +75,7 @@ rlwrap's configure script will not find this installation automatically, but
 
 ./configure --prefix=$HOME CFLAGS=-I$HOME/include CPPFLAGS=-I$HOME/include LDFLAGS=-L$HOME/lib
 
-should work. You can add '-static' to LDFLAGS if you want to build a statically linked rlwrap, 
+should work. You can add '-static' to LDFLAGS if you want to build a statically linked rlwrap,
 like so:
 
 ./configure --prefix=$HOME CFLAGS=-I$HOME/include CPPFLAGS=-I$HOME/include LDFLAGS=-L$HOME/lib' -static'

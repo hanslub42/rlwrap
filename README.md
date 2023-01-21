@@ -26,7 +26,7 @@ of ageing Unix systems
 
 ## HOW TO USE IT:
 
-If 
+If
 
     $ <command> <args>
 
@@ -59,7 +59,7 @@ editing and history. Unforunately, in that case, `rlwrap` cannot
 detect whether `<command>` asks for a password. This can be remedied
 by giving the password prompt (excluding trailing space and possibly
 the first few letters) as an argument to the -a option.
- 
+
 ## EXAMPLES:
 Run netcat with command-line editing:
 
@@ -67,14 +67,14 @@ Run netcat with command-line editing:
 
 Run lprolog and use its saved input history and lib.pl to build a
 completion word list:
-  
+
     rlwrap -f lib.pl -f . lprolog
 
 Run smbclient (which already uses readline), add all input and output
 to the completion list, complete local filenames, avoid showing (and
 storing) passwords:
 
-    rlwrap -cra -assword: smbclient '\\PEANUT\C' 
+    rlwrap -cra -assword: smbclient '\\PEANUT\C'
 
 ## INSTALLATION:
 Usually just
