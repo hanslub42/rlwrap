@@ -29,10 +29,10 @@ nobase_pkgdata_DATA  = completions/testclient completions/coqtop\
 
 
 
-clean-local: 
-	rm -f *~ 
+clean-local:
+	rm -f *~
 
 
 install-data-hook:
-	chmod a+x $(DESTDIR)$(pkgdatadir)/filters/* 
- 
+	chmod a+x $(DESTDIR)$(pkgdatadir)/filters/*
+

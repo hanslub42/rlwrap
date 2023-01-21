@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
 
-# simple filter to remove colour codes, xterm titles and 'el' 
+# simple filter to remove colour codes, xterm titles and 'el'
 # (clear to end-of-line) sequences from prompt
 
 use lib ($ENV{RLWRAP_FILTERDIR} or ".");
@@ -22,14 +22,14 @@ $filter -> run;
 sub scrub {
     my ($dirty) = @_;
     my $clean = $dirty;
-    $clean =~ s/^.*\r//; 
+    $clean =~ s/^.*\r//;
     $clean =~ s/\x1b]0;.*?\x07//g; # remove xterm title control sequence
     $clean =~ s/\x1b.*?m//g; # remove colour codes
     $clean =~ s/\x1b\[K//g; # clear to end of line in xterm
     $clean =~ s/[\x01-\x1f]//g;
-    $clean =~ /[[control:]]/ and die "couldn't clean promt: still dirty\n"; 
+    $clean =~ /[[control:]]/ and die "couldn't clean promt: still dirty\n";
     while ($clean =~ s/.\x08//g) {}; # let backspaces eat the chars before them
-    return $clean;   
+    return $clean;
 }
 
 

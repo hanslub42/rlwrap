@@ -52,7 +52,7 @@
  *                  GET PSEUDO TELETYPE - MASTER AND SLAVE                   *
  * ------------------------------------------------------------------------- */
 /*
- * Returns pty file descriptor, or -1 on failure 
+ * Returns pty file descriptor, or -1 on failure
  * If successful, ttydev is set to the name of the slave device.
  * fd_tty _may_ also be set to an open fd to the slave device
  */
@@ -187,7 +187,7 @@ ptytty_get_pty(int *fd_tty, const char **ttydev)
 
 /*----------------------------------------------------------------------*/
 /*
- * Returns tty file descriptor, or -1 on failure 
+ * Returns tty file descriptor, or -1 on failure
  */
 /* EXTPROTO */
 int
@@ -207,7 +207,7 @@ int
 ptytty_control_tty(int fd_tty, const char *ttydev)
 {
 
-  
+
 
   DPRINTF3(DEBUG_TERMIO, "pid: %d, tty fd: %d, dev: %s", getpid(), fd_tty,
            ttydev);
@@ -227,10 +227,10 @@ ptytty_control_tty(int fd_tty, const char *ttydev)
   /* ------------------- Get controlling tty                 --------------------- */
 #ifndef __QNX__  /* in QNX, the only way to get a controlling tty is at process creation time, using
                     qnx_spawn() instead of fork(). I'm too lazy to re-write my_pty_fork(), so I let rlwrap
-                    soldier on without a controlling tty */ 
+                    soldier on without a controlling tty */
   {
     int fd;
-    
+
 # ifdef TIOCNOTTY
     fd = open("/dev/tty", O_RDWR | O_NOCTTY);
     DPRINTF1(DEBUG_TERMIO, "Voiding tty associations: previous=%s",
@@ -255,9 +255,9 @@ ptytty_control_tty(int fd_tty, const char *ttydev)
 
 #ifdef HAVE_ISASTREAM
     if (isastream(fd_tty) == 1) {
-#  if defined(I_SWROPT) 
+#  if defined(I_SWROPT)
         ioctl(fd_tty, I_SWROPT, 0);
-#  endif      
+#  endif
 #  if defined(PTYS_ARE_PTMX) && defined(I_PUSH)
     /*
      * Push STREAMS modules:
@@ -276,15 +276,15 @@ ptytty_control_tty(int fd_tty, const char *ttydev)
      * close() - on the master side which causes a hang up to be sent
      * through - Geoff Wing
      */
-     
+
         DPRINTF0(DEBUG_TERMIO, "Pushing STREAMS modules");
         ioctl(fd_tty, I_PUSH, "ptem");
         ioctl(fd_tty, I_PUSH, "ldterm");
         ioctl(fd_tty, I_PUSH, "ttcompat");
-      
+
 #  endif
-    }    
-#endif        
+    }
+#endif
     /* ---------------------------------------- */
 # if defined(TIOCSCTTY)
     fd = ioctl(fd_tty, TIOCSCTTY, NULL);
@@ -331,7 +331,7 @@ ptytty_openpty(int *amaster, int *aslave, const char **name)
     *aslave = ptytty_get_tty(scrap);
   if (*aslave < 0)
     myerror(FATAL|USE_ERRNO, "Could not open slave pty %s", scrap);
-  else 
+  else
     if (name != NULL)
       *name = scrap;
 

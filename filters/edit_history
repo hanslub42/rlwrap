@@ -60,7 +60,7 @@ sub hotkey {
       if ($empty_counter > 0) {
         # remember position of last line after an empty line,
         # and the number of empty lines:
-        ($last_counter, $last_empty_counter) = ($counter, $empty_counter); 
+        ($last_counter, $last_empty_counter) = ($counter, $empty_counter);
       }
       $empty_counter = 0;
       $counter++; # We count 0-based, so increment only now

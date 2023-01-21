@@ -5,11 +5,11 @@
 /* rlwrap was written without worrying about multibyte characters.
    the functions below "retrofit" multi-byte support by providing
    functions that can be used with minimal adaptations in the usual
-   idioms like 
+   idioms like
       for (char *p = s; *p; p++)
    which can be re-written as:
       for(mbc_initstate(&st), p = s; *p;  mbc_inc(&p, &st)) {
- 
+
 
    c.f. https://kirste.userpage.fu-berlin.de/chemnet/use/info/libc/libc_18.html
 
@@ -32,7 +32,7 @@ mbc_copystate(MBSTATE st, MBSTATE *stc)
 {
   *stc = st;
   return stc;
-}  
+}
 
 int
 mbc_is_valid(const char *mb_string, const MBSTATE *st)
@@ -45,10 +45,10 @@ const char *
 mbc_next(const char *mb_string, MBSTATE *st)
 {
   if (!*mb_string || !mbc_is_valid(mb_string, st))
-    return mb_string + 1;     
+    return mb_string + 1;
   else
     return mb_string + mbrlen(mb_string, MB_LEN_MAX, st);
-}  
+}
 
 
 
@@ -67,7 +67,7 @@ mbc_first(const char *mb_string, const MBSTATE *st)
   strncpy(buffer, mb_string, len);
   buffer[len] = '\0';
   return mysavestring(buffer);
-}       
+}
 
 
 int
@@ -75,7 +75,7 @@ mbc_charwidth(const char *p, MBSTATE *st)
 {
   int width =  mbrlen(p, MB_LEN_MAX, st);
   if (width < 0) {
-    DPRINTF1(DEBUG_READLINE, "invalid multi-byte charavter at stert of %s", M(p)); 
+    DPRINTF1(DEBUG_READLINE, "invalid multi-byte charavter at stert of %s", M(p));
     width = 1; /* if we don''n recognise it, interpret it as a byte */
   }
   return width;
@@ -122,7 +122,7 @@ mbc_copystate(MBSTATE st, MBSTATE *stc)
 {
   *stc = st;
   return stc;
-}  
+}
 
 int
 mbc_is_valid(const char *UNUSED(string), const MBSTATE *UNUSED(st))
@@ -134,7 +134,7 @@ const char *
 mbc_next(const char *string, MBSTATE *UNUSED(st))
 {
   return string + 1;
-}  
+}
 
 const char *
 mbc_inc(const char **p, MBSTATE *UNUSED(st))
@@ -148,7 +148,7 @@ mbc_first(const char *string, const MBSTATE *UNUSED(st))
   char p[2] = " ";
   p[0] = string[0];
   return mysavestring(p);
-}       
+}
 
 int
 mbc_charwidth(const char *UNUSED(p), MBSTATE *UNUSED(st))

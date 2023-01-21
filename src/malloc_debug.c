@@ -12,9 +12,9 @@
 
     if DEBUG_WITH_TIMESTAMPS is set in debug  , the timestamp of those
     blocks (i.e. of their allocation) will be listed as well.
- 
 
-    
+
+
 */
 
 /*  This program is free software; you can redistribute it and/or modify
@@ -64,12 +64,12 @@ typedef void (*sighandler_t)(int);
 typedef struct freed_stamp
 {
   char magic[SLOGAN_MAXLEN];  /* magical string that tells us this something about this memory: malloced or freed? */
-  char *file;                 /* source file where we were malloced/freed */ 
+  char *file;                 /* source file where we were malloced/freed */
   int line;                   /* source line where we were malloced/freed */
   int size;
   char timestamp[TIMESTAMP_MAXLEN];
   void *previous;             /* maintain a linked list of malloced/freed memory for post-mortem investigations*/
-} *Freed_stamp; 
+} *Freed_stamp;
 
 
 static void* blocklist = 0;   /* start of linked list of allocated blocks. when freed, blocks stay on the list */
@@ -90,7 +90,7 @@ handle_segfault(int UNUSED(sig))
 }
 
 
-                      
+
 /* allocates chunk of memory including a freed_stamp, in which we write
    line and file where we were alllocated, and a slogan to testify that
    we have been allocated and not yet freed. returns the address past the stamp
@@ -105,11 +105,11 @@ debug_malloc(size_t size,  char *file, int line)
 
   if (!(debug & DEBUG_MEMORY_MANAGEMENT))
     return mymalloc(size);
-  
+
   chunk = mymalloc(sizeof(struct freed_stamp) + size);
   stamp = (Freed_stamp) chunk;
   memory_usage += size;
-  DPRINTF4(DEBUG_MEMORY_MANAGEMENT, "malloc size: %d at %s:%d: (total usage now: %d)",  (int) size, file, line, memory_usage); 
+  DPRINTF4(DEBUG_MEMORY_MANAGEMENT, "malloc size: %d at %s:%d: (total usage now: %d)",  (int) size, file, line, memory_usage);
   strncpy(stamp->magic, SLAVERY_SLOGAN, SLOGAN_MAXLEN);
   stamp -> file = file;
   stamp -> line = line;
@@ -120,8 +120,8 @@ debug_malloc(size_t size,  char *file, int line)
     stamp -> timestamp[0] = '\0';
   stamp -> previous = blocklist;
   blocklist = chunk;
-  return (char *) chunk + sizeof(struct freed_stamp); 
-}       
+  return (char *) chunk + sizeof(struct freed_stamp);
+}
 
 
 
@@ -161,26 +161,26 @@ debug_free(void *ptr, char *file, int line)
             file, line, mangle_string_for_debug_log(ptr, 30));
     close_logfile();
     exit(1);
-  }     
-}       
+  }
+}
 
 /* this function calls free() directly, and should be used on memory that was malloc'ed outside our own jurisdiction,
    i.e. not by debug_malloc(); */
 void free_foreign(void *ptr) {
-  free(ptr); 
+  free(ptr);
 }
 
 /* this function calls malloc() directly, and should be used on memory that could be freed  outside our own jurisdiction,
    i.e. not by debug_free(); */
 void *malloc_foreign(size_t size) {
   return malloc(size);
-}       
+}
 
 /* sometimes we put in one structure objects that were malloced elsewhere and our own mymalloced objects.
    we cannot free such a structure with free(), nor with free_foreign(). Solution: before using the "foreign" objects,
    copy them to mymalloced memory and free them immediately
    This function will be redefined to a NOP (i.e. just return its first argument) unless DEBUG is defined */
-   
+
 void *copy_and_free_for_malloc_debug(void *ptr, size_t size) {
   void *copy;
   if (ptr == NULL)
@@ -196,7 +196,7 @@ char *copy_and_free_string_for_malloc_debug(char* str) {
   if (str == NULL)
     return NULL;
   return copy_and_free_for_malloc_debug(str, strlen(str)+1);
-}       
+}
 
 
 /* this function logs all non-freed memory blocks (in order to hunt for memory leaks) */
@@ -209,13 +209,13 @@ void debug_postmortem(void) {
     if (strcmp(FREEDOM_SLOGAN, p -> magic) == 0)
       continue;
     else if (strcmp(SLAVERY_SLOGAN, p -> magic) == 0) {
-      block = (char *) p + sizeof(struct freed_stamp);   
+      block = (char *) p + sizeof(struct freed_stamp);
       DPRINTF5(DEBUG_MEMORY_MANAGEMENT, "%d bytes malloced at %s %s:%d, contents: <%s>", p->size, p -> timestamp, p ->file, p ->line, M(block));
-    } else {    
+    } else {
       DPRINTF0(DEBUG_MEMORY_MANAGEMENT, "Hmmm,  unmalloced memory, or memory not malloced by debug_malloc()");
     }
-  }     
-}             
+  }
+}
 
 
 #endif /* def USE_MALLOC_DEBUGGER */

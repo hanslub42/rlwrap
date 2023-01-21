@@ -15,13 +15,13 @@ use strict;
 my %sig_num;
 my @sig_name;
 
-# print help text when run as 'rlwrap -z pipeline' (without command) 
+# print help text when run as 'rlwrap -z pipeline' (without command)
 if ($ENV{RLWRAP_COMMAND_PID}== 0) {
   RlwrapFilter ->new(help_text => help()) -> run;
   exit; # not reached
 }
 
-# use signal *names* when reporting errors 
+# use signal *names* when reporting errors
 init_signal_names();
 
 # pipeline cannot be used stand-alone (wouldn't be useful anyway)

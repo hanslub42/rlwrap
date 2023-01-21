@@ -70,10 +70,10 @@ AC_ARG_ENABLE(spy-on-readline,
     AS_HELP_STRING([--enable-spy-on-readline], [use private readline variable to keep screen tidy when resizing terminal (default=yes)]),
     opt_spy_on_readline=$enableval)
 
-AC_ARG_ENABLE(proc-mountpoint,                                                                                                                    
-     AS_HELP_STRING([--enable-proc-mountpoint],                                                                                  
-       [specify mountpoint for Linux-style procfs (used for determination of command's PWD) (default=/proc)]), # '                               
-     opt_proc_mountpoint=$enableval) 
+AC_ARG_ENABLE(proc-mountpoint,
+     AS_HELP_STRING([--enable-proc-mountpoint],
+       [specify mountpoint for Linux-style procfs (used for determination of command's PWD) (default=/proc)]), # '
+     opt_proc_mountpoint=$enableval)
 
 
 if test x$opt_debug = xyes ; then
@@ -95,7 +95,7 @@ test x$opt_homegrown_redisplay = xyes && AC_DEFINE(HOMEGROWN_REDISPLAY,1 ,[Defin
 
 test x$opt_multibyte_aware  = xyes && AC_DEFINE(MULTIBYTE_AWARE,1 ,Define to 1 to be aware of  wide chars in prompts)
 
-AC_CONFIG_FILES([Makefile filters/Makefile doc/Makefile src/Makefile doc/rlwrap.man]) 
+AC_CONFIG_FILES([Makefile filters/Makefile doc/Makefile src/Makefile doc/rlwrap.man])
 
 # Checks for programs.
 
@@ -138,7 +138,7 @@ fi
 # argument.  On most systems that argument is an int, but on some (you
 # know who you are, Solaris!) it is a char.  Determine which:
 
-_savedwerror_flag=$ac_c_werror_flag 
+_savedwerror_flag=$ac_c_werror_flag
 ac_c_werror_flag=yes # make $CC fail after warning
 AC_MSG_CHECKING([argument type of tputs putc function])
 AC_COMPILE_IFELSE( [AC_LANG_PROGRAM(
@@ -146,7 +146,7 @@ AC_COMPILE_IFELSE( [AC_LANG_PROGRAM(
                #  include <curses.h>
                #  ifdef HAVE_TERM_H
                #    include <term.h>
-               #  else 
+               #  else
                #    ifdef HAVE_NCURSES_TERM_H /* cygwin? AIX? */
                #      include <ncurses/term.h>
                #    endif
@@ -163,7 +163,7 @@ AC_COMPILE_IFELSE( [AC_LANG_PROGRAM(
 AC_MSG_RESULT($ac_cv_type_tputs_putc)
 AC_DEFINE_UNQUOTED(TPUTS_PUTC_ARGTYPE, $ac_cv_type_tputs_putc,
                    [Define as the type for the argument to the putc function of tputs ('int' or 'char')])
-ac_c_werror_flag=$_savedwerror_flag       
+ac_c_werror_flag=$_savedwerror_flag
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
@@ -178,7 +178,7 @@ AC_PROG_GCC_TRADITIONAL
 
 # Up to 0.45, rlwrap would test if getopt() understands option strings like "a:b::c" with double colons
 # I now tend to think that that only happens if (POSIX) getopt() is implemented using (GNU) getopt_long(), so this test
-# is actually superfluous. I leave GETOPT_GROKS_OPTIONAL_ARGS alone for the moment, in case some getopt_long() 
+# is actually superfluous. I leave GETOPT_GROKS_OPTIONAL_ARGS alone for the moment, in case some getopt_long()
 # implementation that doesnt grok double colons turns up:
 
 
@@ -194,8 +194,8 @@ AC_CHECK_FUNCS(setenv setitimer setsid setrlimit sigaction snprintf strlcpy strl
 
 # Try to determine the kind of pty support on this system
 # This is not so easy and may guess wrong; if this happens:
-#    - edit config.h by hand (and keep a copy of it somewhere as configure will overwrite it), and 
-#    - *please* notify the author! (hanslub42@gmail.com) 
+#    - edit config.h by hand (and keep a copy of it somewhere as configure will overwrite it), and
+#    - *please* notify the author! (hanslub42@gmail.com)
 # Most of the code below is taken from rxvt-2.7.10 (Copyright (c) 1999-2001
 # Geoff Wing <gcw@pobox.com>)
 
@@ -238,10 +238,10 @@ fi
 AC_CACHE_CHECK(for pty/tty type, ptyttylib_cv_ptys,
 [if test x$ac_cv_func_openpty = xyes; then
     ptyttylib_cv_ptys=OPENPTY
-    AC_CHECK_HEADERS([pty.h])    
+    AC_CHECK_HEADERS([pty.h])
  else if test x$ac_cv_func__getpty = xyes; then
     ptyttylib_cv_ptys=SGI4
- else if test -c /dev/ttyp20 -a ! -c /dev/ptmx; then 
+ else if test -c /dev/ttyp20 -a ! -c /dev/ptmx; then
    ptyttylib_cv_ptys=SCO
  else if test -c /dev/ptym/clone; then
     ptyttylib_cv_ptys=HPUX
@@ -348,7 +348,7 @@ AC_CHECK_FUNCS(tigetnum)
 AC_CHECK_HEADER([readline/readline.h],[],AC_MSG_ERROR([readline.h not found - you may need to install a readline development package]))
 
 # AC_EGREP_RL_HEADER_AND_CHECK_FUNC(function_or_variable, [code using function_or_variable],  HAVE_FUNCTION_OR_VARIABLE)
-# This macro looks for <function_or_variable>, both as a declaration in header.h, and as a symbol in $LIBS  
+# This macro looks for <function_or_variable>, both as a declaration in header.h, and as a symbol in $LIBS
 # ------------------------------------------------------------------------------------------
 
 # @@ Haal hier TRY_LINK uit!
@@ -397,7 +397,7 @@ AC_DEFUN([AC_EGREP_RL_HEADER_AND_CHECK_FUNC],
 
 AC_DEFUN([AC_MY_ERROR],
 [AC_MSG_ERROR([
-           
+
 ********************************************************************************
 $1
 ********************************************************************************
@@ -409,17 +409,17 @@ test $last_check = no && AC_MY_ERROR([You need a more recent version (at least 4
 library (ftp://ftp.gnu.org/gnu/readline/) to build this program!])
 
 
-AC_EGREP_RL_HEADER_AND_CHECK_FUNC([rl_basic_quote_characters], [printf("%s", rl_basic_quote_characters)], [HAVE_RL_BASIC_QUOTE_CHARS]) 
+AC_EGREP_RL_HEADER_AND_CHECK_FUNC([rl_basic_quote_characters], [printf("%s", rl_basic_quote_characters)], [HAVE_RL_BASIC_QUOTE_CHARS])
 
 test $last_check = no && AC_MY_ERROR([[The readline library that I found is incomplete, probably just a wrapper
 around libedit (like on Mac OS X) Please install GNU Readline and re-configure
 with the correct CFLAGS and LDFLAGS (cf. the instructions in INSTALL)]])
 
-AC_EGREP_RL_HEADER_AND_CHECK_FUNC([rl_variable_value], [rl_variable_value("blah")], [HAVE_RL_VARIABLE_VALUE]) 
+AC_EGREP_RL_HEADER_AND_CHECK_FUNC([rl_variable_value], [rl_variable_value("blah")], [HAVE_RL_VARIABLE_VALUE])
 
-AC_EGREP_RL_HEADER_AND_CHECK_FUNC([rl_readline_version],[printf("%d",rl_readline_version)], [HAVE_RL_READLINE_VERSION]) 
+AC_EGREP_RL_HEADER_AND_CHECK_FUNC([rl_readline_version],[printf("%d",rl_readline_version)], [HAVE_RL_READLINE_VERSION])
 
-AC_EGREP_RL_HEADER_AND_CHECK_FUNC([rl_executing_keyseq],[printf("%s", rl_executing_keyseq)], [HAVE_RL_EXECUTING_KEYSEQ]) 
+AC_EGREP_RL_HEADER_AND_CHECK_FUNC([rl_executing_keyseq],[printf("%s", rl_executing_keyseq)], [HAVE_RL_EXECUTING_KEYSEQ])
 
 # rlwrap tries to read a global (but private) readline variable _rl_horizontal_scroll_mode if the the option spy-on-realine is enabled
 # Depending on the linker (or linker options like gcc's -fvisibility=xxx) it may or may not be visible:
@@ -457,9 +457,9 @@ if test x$cross_compiling = xyes; then
    AC_DEFINE(HAVE_PROC_PID_CWD, 0, [Define to 1 if <opt_proc_mountpoint>/<pid>/cwd is a link to working directory of process <pid>])
    AC_SUBST(HAVE_PROC_PID_CWD,[no])
    echo
-   AC_MSG_WARN([This test doesn't work when cross-compiling. Edit HAVE_PROC_PID_CWD in config.h by hand. Guessing: ])   
-else 
-   AC_CHECK_FILES($opt_proc_mountpoint/$$/cwd/configure.ac,                                                                                      
+   AC_MSG_WARN([This test doesn't work when cross-compiling. Edit HAVE_PROC_PID_CWD in config.h by hand. Guessing: ])
+else
+   AC_CHECK_FILES($opt_proc_mountpoint/$$/cwd/configure.ac,
               [AC_DEFINE(HAVE_PROC_PID_CWD, 1 ,[Define to 1 if <opt_proc_mountpoint>/<pid>/cwd is a link to working directory of process <pid>])]
               ,[])
 fi
@@ -493,7 +493,7 @@ else
                          ]])])
 
   result="no"
-  $CC -o conftest conftest.c  
+  $CC -o conftest conftest.c
   ./conftest $random_nonsense1 >/dev/null 2>&1 &
   CONFTEST_PID=$!
   for N in  1 2 3 ; do # retry a few times because of a possible  race (on 1-processor systems) where ./conftest has been forked by the shell, ...
@@ -531,13 +531,13 @@ echo
 
 AC_OUTPUT
 
-cat <<EOF 
+cat <<EOF
 
 Now do:
-    make (or gmake)  to build rlwrap 
+    make (or gmake)  to build rlwrap
     make check       for instructions how to test it
     make install     to install it
- 
+
 EOF
 
 

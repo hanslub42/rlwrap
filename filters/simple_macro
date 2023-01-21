@@ -61,7 +61,7 @@ sub read_macros {
 
 sub save_macros {
 	return unless $saved_macros;
-	open MACROS, ">$saved_macros" or die  "cannot write to $saved_macros: $!\n"; # ths error may be lost 
+	open MACROS, ">$saved_macros" or die  "cannot write to $saved_macros: $!\n"; # ths error may be lost
         foreach my $macro (sort keys %expansions) {
 		print MACROS "$macro $expansions{$macro}\n";
 	}

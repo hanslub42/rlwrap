@@ -1,7 +1,7 @@
 #line 1 "completion.rb"
 /*  Completion.c is generated from completion.rb by the program rbgen
     (cf. http://libredblack.sourceforge.net/)
-    
+
     completion.rb: maintaining the completion list, my_completion_function()
     (callback for readline lib)
 
@@ -40,7 +40,7 @@ int
 compare(const char *string1, const char *string2)
 {
   const char *p1;
-  const char *p2; 
+  const char *p2;
   int count;
 
   for (p1 = string1, p2 = string2, count = 0;
@@ -101,10 +101,10 @@ compare(const char *string1, const char *string2)
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-/* Header file for redblack.c, should be included by any code that 
-** uses redblack.c since it defines the functions 
-*/ 
- 
+/* Header file for redblack.c, should be included by any code that
+** uses redblack.c since it defines the functions
+*/
+
 /* Stop multiple includes */
 #ifndef _REDBLACK_H
 
@@ -151,12 +151,12 @@ typedef enum
 }
 VISIT;
 
-struct RB_ENTRY(lists) { 
-const struct RB_ENTRY(node) *rootp; 
-const struct RB_ENTRY(node) *nextp; 
-}; 
- 
-#define RBLIST struct RB_ENTRY(lists) 
+struct RB_ENTRY(lists) {
+const struct RB_ENTRY(node) *rootp;
+const struct RB_ENTRY(node) *nextp;
+};
+
+#define RBLIST struct RB_ENTRY(lists)
 
 struct RB_ENTRY(tree) {
 #ifndef RB_CUSTOMIZE
@@ -199,13 +199,13 @@ RB_STATIC void RB_ENTRY(destroy)(struct RB_ENTRY(tree) *);
 #ifndef no_walk
 RB_STATIC void RB_ENTRY(walk)(const struct RB_ENTRY(tree) *,
 		void (*)(const RB_ENTRY(data_t) *, const VISIT, const int, void *),
-		void *); 
+		void *);
 #endif
 
 #ifndef no_readlist
-RB_STATIC RBLIST *RB_ENTRY(openlist)(const struct RB_ENTRY(tree) *); 
-RB_STATIC const RB_ENTRY(data_t) *RB_ENTRY(readlist)(RBLIST *); 
-RB_STATIC void RB_ENTRY(closelist)(RBLIST *); 
+RB_STATIC RBLIST *RB_ENTRY(openlist)(const struct RB_ENTRY(tree) *);
+RB_STATIC const RB_ENTRY(data_t) *RB_ENTRY(readlist)(RBLIST *);
+RB_STATIC void RB_ENTRY(closelist)(RBLIST *);
 #endif
 
 /* Some useful macros */
@@ -454,7 +454,7 @@ RB_ENTRY(search)(const RB_ENTRY(data_t) *key, struct RB_ENTRY(tree) *rbinfo)
 #endif /* no_search */
 
 #ifndef no_find
-RB_STATIC const RB_ENTRY(data_t) * 
+RB_STATIC const RB_ENTRY(data_t) *
 RB_ENTRY(find)(const RB_ENTRY(data_t) *key, struct RB_ENTRY(tree) *rbinfo)
 {
 	struct RB_ENTRY(node) *x;
@@ -473,7 +473,7 @@ RB_ENTRY(find)(const RB_ENTRY(data_t) *key, struct RB_ENTRY(tree) *rbinfo)
 #endif /* no_find */
 
 #ifndef no_delete
-RB_STATIC const RB_ENTRY(data_t) * 
+RB_STATIC const RB_ENTRY(data_t) *
 RB_ENTRY(delete)(const RB_ENTRY(data_t) *key, struct RB_ENTRY(tree) *rbinfo)
 {
 	struct RB_ENTRY(node) *x;
@@ -519,7 +519,7 @@ RB_ENTRY(openlist)(const struct RB_ENTRY(tree) *rbinfo)
 	return(RB_ENTRY(_openlist)(rbinfo->rb_root));
 }
 
-RB_STATIC const RB_ENTRY(data_t) * 
+RB_STATIC const RB_ENTRY(data_t) *
 RB_ENTRY(readlist)(RBLIST *rblistp)
 {
 	if (rblistp==NULL)
@@ -539,7 +539,7 @@ RB_ENTRY(closelist)(RBLIST *rblistp)
 #endif /* no_readlist */
 
 #ifndef no_lookup
-RB_STATIC const RB_ENTRY(data_t) * 
+RB_STATIC const RB_ENTRY(data_t) *
 RB_ENTRY(lookup)(int mode, const RB_ENTRY(data_t) *key, struct RB_ENTRY(tree) *rbinfo)
 {
 	struct RB_ENTRY(node) *x;
@@ -1155,7 +1155,7 @@ RB_ENTRY(_openlist)(const struct RB_ENTRY(node) *rootp)
 	return(rblistp);
 }
 
-static const RB_ENTRY(data_t) * 
+static const RB_ENTRY(data_t) *
 RB_ENTRY(_readlist)(RBLIST *rblistp)
 {
 	const RB_ENTRY(data_t) *key=NULL;
@@ -1410,7 +1410,7 @@ RB_ENTRY(dumptree)(struct RB_ENTRY(node) *x, int n)
 #line 77 "completion.rb"
 
 
- 
+
 
 /* forward declarations */
 static struct rbtree *completion_tree;
@@ -1487,7 +1487,7 @@ remove_word_from_completions(const char *word)
 void
 feed_line_into_completion_list(const char *line)
 {
-  
+
   char **words = split_with(line, rl_basic_word_break_characters);
   char **plist, *word;
   for(plist = words;(word = *plist); plist++)
@@ -1509,7 +1509,7 @@ feed_file_into_completion_list(const char *completions_file)
   }
   if (! feof(compl_fp) && ferror(compl_fp))   /* at least in GNU libc, errno will be set in this case. If not, no harm is done */
     myerror(FATAL|USE_ERRNO, "Couldn't read completions from %s", completions_file);
-   
+
   fclose(compl_fp);
   /* print_list(); */
 }
@@ -1521,7 +1521,7 @@ feed_file_into_completion_list(const char *completions_file)
 #define FILTER_COMPLETIONS 8
 #define COMPLETE_PARANORMALLY 16 /* read user's thoughts */
 
-                                                         
+
 
 int
 get_completion_type(void)
@@ -1561,9 +1561,9 @@ my_completion_function(char *prefix, int state)
   int completion_type, count;
   const char *word;
   const char *completion;
-  
+
   rl_completion_append_character = *extra_char_after_completion;
-  
+
   /* if (*prefix == '!')
     return my_history_completion_function(prefix + 1, state); */
 
@@ -1598,7 +1598,7 @@ my_completion_function(char *prefix, int state)
     }
 
     scratch_list = rbopenlist(scratch_tree); /* OK, we now have our list with completions. We may have to filter it ... */
-    if (completion_type & FILTER_COMPLETIONS) {  
+    if (completion_type & FILTER_COMPLETIONS) {
       char *filter_food = NULL;
       char *filtered, **filtered_components, **plist;
       int count;
@@ -1606,21 +1606,21 @@ my_completion_function(char *prefix, int state)
       /* build the "filter food" (input for the filter) as a field list
          <rl_line_buffer><prefix><completion1><completion2>....                    */
       filter_food = append_field_and_free_old(filter_food, rl_line_buffer);
-      filter_food = append_field_and_free_old(filter_food, prefix); 
-      while((completion = rbreadlist(scratch_list))) 
+      filter_food = append_field_and_free_old(filter_food, prefix);
+      while((completion = rbreadlist(scratch_list)))
         filter_food = append_field_and_free_old(filter_food, completion);
-      
+
       filtered = pass_through_filter(TAG_COMPLETION, filter_food);
       free(filter_food);
-      rbcloselist(scratch_list);  
+      rbcloselist(scratch_list);
       DPRINTF1(DEBUG_ALL, "Filtered: %s", mangle_string_for_debug_log(filtered, 40));
 
       filtered_components = split_filter_message(filtered, &count);
       free(filtered);
-      
-      if ( count <2 || strcmp(filtered_components[0], rl_line_buffer) ||  strcmp(filtered_components[1], prefix)) 
+
+      if ( count <2 || strcmp(filtered_components[0], rl_line_buffer) ||  strcmp(filtered_components[1], prefix))
 	  myerror(FATAL|NOERRNO, "filter has illegally messed with completion message\n"); /* it should ONLY have changed the completion word list  */
-    
+
 
       my_rbdestroy(scratch_tree); /* burn the old scratch tree (but leave the completion tree alone)  */
       scratch_tree = rbinit();    /* now grow a new one */
@@ -1629,10 +1629,10 @@ my_completion_function(char *prefix, int state)
         if (!**plist)
           continue; /* empty space at beginning or end of the word list results in an empty word, ignore those now */	
         rbsearch(mysavestring(*plist), scratch_tree); /* add the filtered completions to the new scratch tree */
-        DPRINTF1(DEBUG_COMPLETION, "Adding %s to completion list ", *plist); 
+        DPRINTF1(DEBUG_COMPLETION, "Adding %s to completion list ", *plist);
       }
       free_splitlist(filtered_components);
-      scratch_list = rbopenlist(scratch_tree);      /* flatten the tree into a new list */	    
+      scratch_list = rbopenlist(scratch_tree);      /* flatten the tree into a new list */	
       DPRINTF1(DEBUG_COMPLETION, "scratch list: %s", rbtree_to_string(scratch_tree, 6));
     } /* if (completion_type & FILTER_COMPLETIONS) */
   } /* if state ==  0 */
@@ -1641,12 +1641,12 @@ my_completion_function(char *prefix, int state)
   assert(scratch_tree != NULL);
   assert(scratch_list != NULL);
   if ((completion = rbreadlist(scratch_list))) {	/* read next possible completion */
-    struct stat buf; 
+    struct stat buf;
     char *copy_for_readline = malloc_foreign(strlen(completion)+1);
     strcpy(copy_for_readline, completion);
-    
-  
-    rl_filename_completion_desired = rl_filename_quoting_desired = (stat(completion, &buf) ? FALSE : TRUE); 
+
+
+    rl_filename_completion_desired = rl_filename_quoting_desired = (stat(completion, &buf) ? FALSE : TRUE);
 
     DPRINTF1(DEBUG_COMPLETION, "Returning completion to readline: <%s>", copy_for_readline);
     return copy_for_readline;	/* we cannot just return the original as  readline will free it (and make rlwrap explode) */

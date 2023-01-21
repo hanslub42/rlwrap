@@ -112,7 +112,7 @@ rlwraps behaviour when the client does things like:
 :c change prompt
 :cd [<dir>] chdir to <dir> (or \$HOME)
 :C countdown in prompt
-:d die eloquently 
+:d die eloquently
 :e [N] exit (with error code N)
 :f fork and let child take over (parent waits)
 :h help
@@ -241,7 +241,7 @@ sub hanky_panky {
   }
    print "\nYawn!\n"
 }
-    
+
 
 sub toggle_interrupt_char {
   $interrupt_char = $interrupt_char eq "^C" ? "^G" : "^C";
@@ -279,7 +279,7 @@ sub show_input {
 
 sub change_prompt {
   my $input;
-  my ($termwidth) = eval "GetTerminalSize"; 
+  my ($termwidth) = eval "GetTerminalSize";
   { local $prompt = "New prompt here > ";
     my $redblah = red("blah");
     lprint "\%p -> pid, \%t -> tty, %d -> pwd, red{blah} -> $redblah, \\n -newline, 4*x -> xxxx" .($have_ReadKey ? ", %w -> termwidth\n" : "\n");
@@ -326,7 +326,7 @@ sub reset_prompt {
 
 sub ridiculously_wide_prompt {
   $prompt = "Supercalifragilistic, " x 10; # 220
-  $prompt .= "Expialidocious > ";         # + 17 = 237 
+  $prompt .= "Expialidocious > ";         # + 17 = 237
 }
 
 sub utf8 {
@@ -385,7 +385,7 @@ sub print_chunky {
   }
   binmode STDOUT,':utf8';
 }
-  
+
 sub handle_signal {
   my ($sig) = @_;
   my ($old_sigset);

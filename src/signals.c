@@ -25,7 +25,7 @@ int commands_exit_status = 0;
 int filter_is_dead = FALSE;
 int filters_exit_status = 0;
 int deferred_adapt_commands_window_size = FALSE; /* whether we have to adapt clients winsize when accepting a line */
-int signal_handlers_were_installed = FALSE; 
+int signal_handlers_were_installed = FALSE;
 int received_sigALRM =  FALSE;
 
 static void change_signalmask(int, int *);
@@ -63,16 +63,16 @@ int sigterm_received = FALSE;
 
 void
 mysignal(int sig, sighandler_type handler, const char *handler_name) {
-  
+
 #ifdef HAVE_SIGACTION
   struct sigaction action;
   if (handler == SIG_DFL)
     DPRINTF2(DEBUG_SIGNALS,"Re-setting handler for signal %d (%s) to its default", sig, signal_name(sig));
   else if (handler == SIG_IGN)
-    DPRINTF2(DEBUG_SIGNALS,"Ignoring signal %d (%s)", sig, signal_name(sig)); 
+    DPRINTF2(DEBUG_SIGNALS,"Ignoring signal %d (%s)", sig, signal_name(sig));
   else
     DPRINTF3(DEBUG_SIGNALS,"Setting handler for signal %d (%s) to %s()", sig, signal_name(sig), handler_name);
-    
+
   action.sa_handler = handler;
   sigfillset(&action.sa_mask); /* don't bother making our signal handlers re-entrant (they aren't) */
   action.sa_flags = (sig == SIGCHLD ? SA_NOCLDSTOP : 0); /* no SA_RESTART */
@@ -80,8 +80,8 @@ mysignal(int sig, sighandler_type handler, const char *handler_name) {
 # else /* rlwrap running in Ye Olde Computer Museum?? */
   if (signal(sig, handler) == SIG_ERR)
 # endif
-    if(handler != SIG_DFL) /* allow e.g. KILL to be set to its default */ 
-      myerror(FATAL|USE_ERRNO, "Failed setting handler for signal %d (%s)", sig, signal_name(sig));   
+    if(handler != SIG_DFL) /* allow e.g. KILL to be set to its default */
+      myerror(FATAL|USE_ERRNO, "Failed setting handler for signal %d (%s)", sig, signal_name(sig));
 }
 
 
@@ -100,7 +100,7 @@ install_signal_handlers(void)
   for (i = 1;  signals_to_be_passed_on[i]; i++) {
     assert(!signals_program_error(signals_to_be_passed_on[i]));
     mysignal(signals_to_be_passed_on[i], HANDLER(pass_on_signal));
-  }   
+  }
   signal_handlers_were_installed = TRUE;
 }
 
@@ -136,7 +136,7 @@ void
 unblock_signals(int *sigs)
 {
   change_signalmask(SIG_UNBLOCK, sigs);
-} 
+}
 
 
 void
@@ -150,12 +150,12 @@ change_signalmask(int how, int *sigs)
 {                               /* sigs should point to a *zero-terminated* list of signals */
   int i;
   sigset_t mask;
-  
+
   sigemptyset(&mask);
   for (i = 0; sigs[i]; i++) {
     DPRINTF2(DEBUG_SIGNALS, "%sblocking signal %s", how == SIG_UNBLOCK ? "un-" : "", signal_name(sigs[i]));
     sigaddset(&mask, sigs[i]);
-  }     
+  }
   sigprocmask(how, &mask, NULL);
 }
 
@@ -166,7 +166,7 @@ unblock_all_signals(void)
   sigset_t mask;
   sigfillset(&mask);
   sigprocmask(SIG_UNBLOCK, &mask, NULL);
-} 
+}
 
 void
 block_all_signals(void)
@@ -186,10 +186,10 @@ handle_sigTSTP(int signo)
 {
   sigset_t all_signals;
   int error, saved_errno = errno;
-  
+
   DEBUG_RANDOM_SLEEP;
   sigfillset(&all_signals);
-  
+
   DPRINTF2(DEBUG_SIGNALS, "got %s, sending it to pgid %d", signal_name(signo), command_pid);
   zero_select_timeout();
   /* Hand the SIGTSTP down to command and its process group */
@@ -200,9 +200,9 @@ handle_sigTSTP(int signo)
   if (within_line_edit)
     save_rl_state();
 
-  
+
   mysignal(SIGTSTP, SIG_DFL, NULL);   /* reset disposition to default (i.e. suspend) */
-  sigprocmask(SIG_UNBLOCK, &all_signals, NULL); /* respond to sleep- and wake-up signals  */  
+  sigprocmask(SIG_UNBLOCK, &all_signals, NULL); /* respond to sleep- and wake-up signals  */
   kill(getpid(), SIGTSTP); /* suspend */
   /* keyboard gathers dust, kingdoms crumble,.... */
 
@@ -210,7 +210,7 @@ handle_sigTSTP(int signo)
 
   /* Beautiful princess types "fg", (or her father tries to kill us...) and we wake up HERE: */
   sigprocmask(SIG_BLOCK, &all_signals, NULL);
-  mysignal(SIGTSTP, HANDLER(handle_sigTSTP)); 
+  mysignal(SIGTSTP, HANDLER(handle_sigTSTP));
   DPRINTF0(DEBUG_SIGNALS, "woken up");
 
   /* On most systems, command's process group will have been woken up by the handler of
@@ -221,7 +221,7 @@ handle_sigTSTP(int signo)
     myerror(FATAL|USE_ERRNO, "Failed to deliver SIGCONT");
   }
   #endif
-  
+
   if (within_line_edit) {
     restore_rl_state();
   } else {
@@ -247,13 +247,13 @@ pass_on_signal(int signo)
 {
   int ret, saved_errno = errno, pass_it_on = TRUE;
   char signo_as_str[4];
-  
+
   DEBUG_RANDOM_SLEEP;
   zero_select_timeout();
 #ifdef DEBUG
   log_named_signal(signo);
 #endif
-  
+
   if(pass_on_sigINT_as_sigTERM && signo == SIGINT)
     signo=SIGTERM;
 
@@ -281,10 +281,10 @@ pass_on_signal(int signo)
   if (pass_it_on) {             /* we resend the signal to the process *group* of the child */
     ret = kill( -command_pid, signo);
     DPRINTF3(DEBUG_SIGNALS, "kill(%d,%s) = %d", -command_pid, signal_name(signo), ret);
-    we_just_got_a_signal_or_EOF = TRUE; /* signal to main loop that next command output should leave the prompt alone */ 
+    we_just_got_a_signal_or_EOF = TRUE; /* signal to main loop that next command output should leave the prompt alone */
   }
   errno = saved_errno;
-  
+
 }
 
 
@@ -304,34 +304,34 @@ adapt_tty_winsize(int from_fd, int to_fd)
 
   ret = ioctl(from_fd, TIOCGWINSZ, &winsize);
   DPRINTF1(DEBUG_SIGNALS, "ioctl (..., TIOCGWINSZ) = %d", ret);
-  if (winsize.ws_col != old_winsize.ws_col || winsize.ws_row != old_winsize.ws_row) { 
+  if (winsize.ws_col != old_winsize.ws_col || winsize.ws_row != old_winsize.ws_row) {
     DPRINTF4(DEBUG_SIGNALS, "ws.col: %d -> %d, ws.row: %d -> %d", old_winsize.ws_col, winsize.ws_col, old_winsize.ws_row, winsize.ws_row);
     if (always_readline &&!dont_wrap_command_waits())  /* if --always_readline option is set, the client will probably spew a */
       deferred_adapt_commands_window_size = TRUE;      /* volley of control chars at us when its terminal is resized. Hence we don't do it now */
-    else {  
-      ret = ioctl(to_fd, TIOCSWINSZ, &winsize); 
+    else {
+      ret = ioctl(to_fd, TIOCSWINSZ, &winsize);
       DPRINTF1(DEBUG_SIGNALS, "ioctl (..., TIOCSWINSZ) = %d", ret);
-    }   
+    }
     DPRINTF2(DEBUG_READLINE, "rl_prompt: %s, line_buffer: %s", mangle_string_for_debug_log(rl_prompt, 100), rl_line_buffer);
     rl_set_screen_size(winsize.ws_row, winsize.ws_col); /* this is safe: we know that right now rlwrap is not calling
                                                            the readline library because we keep SIGWINCH blocked all the time */
 
     if (!within_line_edit && !skip_rlwrap()) {
       wipe_textarea(&old_winsize);
-     
+
       received_WINCH = TRUE;           /* we can't start line edit in signal handler, so we only set a flag */
     } else if (within_line_edit) {      /* try to keep displayed line tidy */
       wipe_textarea(&old_winsize);
       rl_on_new_line();
       rl_redisplay();
-      
+
     }
-    
+
     return (!always_readline || dont_wrap_command_waits()); /* pass the signal on (except when always_readline is set and command is not waiting) */
   } else {                      /* window size has not changed */
     return FALSE;
   }
-  
+
 }
 
 /* After a resize, clear all the lines that were occupied by prompt + line buffer before the resize */
@@ -341,27 +341,27 @@ void wipe_textarea(struct winsize *old_winsize)
   int point, lineheight, linelength, cursor_height, i, promptlength;
   if (!prompt_is_single_line()) {       /* Don't need to do anything in horizontal_scroll_mode  */
     promptlength = colourless_strlen((saved_rl_state.cooked_prompt ? saved_rl_state.cooked_prompt:  saved_rl_state.raw_prompt),
-                                     NULL, old_winsize -> ws_col, 0, NULL); 
+                                     NULL, old_winsize -> ws_col, 0, NULL);
     linelength = (within_line_edit ? strlen(rl_line_buffer) : 0) + promptlength;
     point = (within_line_edit ? rl_point : 0) + promptlength;
     assert(old_winsize -> ws_col > 0);
     lineheight = (linelength == 0 ? 0 : (1 + (max(point, (linelength - 1)) / old_winsize -> ws_col)));
     if (lineheight > 1 && term_cursor_up != NULL && term_cursor_down != NULL) {
       /* i.e. if we have multiple rows displayed, and we can clean them up first */
-      cr(); 
+      cr();
       cursor_height = point / old_winsize -> ws_col;    /* cursor is still on old line */
       DPRINTF2(DEBUG_SIGNALS, "lineheight: %d, cursor_height: %d", lineheight, cursor_height);
       for (i = 1 + cursor_height; i < lineheight; i++)
         curs_down();    /* ...move it down to last line */
       for (i = lineheight; i > 1; i--) {        /* go up again, erasing every line */
-        clear_line(); 
+        clear_line();
         curs_up();
       }
     }
     clear_line();
     cr();
   }
-}       
+}
 
 static void
 child_died(int UNUSED(signo))
@@ -371,21 +371,21 @@ child_died(int UNUSED(signo))
   zero_select_timeout();
   saved_errno = errno;
   DPRINTF0(DEBUG_SIGNALS, "Caught SIGCHLD");
-  
+
   if(command_pid && waitpid(command_pid, &commands_exit_status, WNOHANG)) {
     DPRINTF2(DEBUG_SIGNALS, "child (pid %d) has died, exit status: %x", command_pid, commands_exit_status);
     command_is_dead = TRUE;
     command_pid = 0;            /* thus we know that there is no child anymore to pass signals to */
-  } else if (filter_pid && waitpid(filter_pid, &filters_exit_status, WNOHANG)) { 
+  } else if (filter_pid && waitpid(filter_pid, &filters_exit_status, WNOHANG)) {
     DPRINTF2(DEBUG_SIGNALS, "filter (pid %d) has died, exit status: %x", filter_pid, filters_exit_status);
     filter_is_dead = TRUE;
     filter_pid = 0;
   } else  {
     DPRINTF0(DEBUG_ALL, "Whoa, got a SIGCHLD, but not from slave command or filter! I must have children I don't know about (blush...)!");
     /* ignore */
-  }     
+  }
 
-  errno = saved_errno;  
+  errno = saved_errno;
   return;   /* allow remaining output from child to be processed in main loop */
             /* (so that we will see childs good-bye talk)                     */
             /* this will then clean up and terminate                          */
@@ -397,15 +397,15 @@ child_died(int UNUSED(signo))
 static void
 log_named_signal(int signo)
 {
-  if (debug) 
-    DPRINTF1(DEBUG_SIGNALS, "got %s", signal_name(signo));  
+  if (debug)
+    DPRINTF1(DEBUG_SIGNALS, "got %s", signal_name(signo));
 }
 #else
 static void
 handle_program_error_signal(int sig)
 {  /* Even after sudden and unexpected death, leave the terminal in a tidy state */
   int res;
-  
+
   printf("\n%s: Oops, crashed (caught %s) - this should not have happened!\n"
          "If you need a core dump, re-configure with --enable-debug and rebuild\n"
          "Resetting terminal and cleaning up...\n", program_name, signal_name(sig));
@@ -413,7 +413,7 @@ handle_program_error_signal(int sig)
     res = write(STDOUT_FILENO,"\033[0m",4); /* reset terminal colours */
   if (terminal_settings_saved)
     tcsetattr(STDIN_FILENO, TCSAFLUSH, &saved_terminal_settings);
- 
+
   exit(EXIT_FAILURE);
 }
 #endif
@@ -431,8 +431,8 @@ void suicide_by(int signal, int status) {
   /* Some signals suggest a program error. When rlwrap kills itself with one of those,
      the shell may tell the user that rlwrap itself has failed. Make clear that
      it didn't. @@@ We could also try argv[0] = command_name just before dying ? */
-  
-  if (signals_program_error(signal)) {  
+
+  if (signals_program_error(signal)) {
     myerror(WARNING|NOERRNO, "%s crashed, killed by %s%s.\n%s itself has not crashed, but for transparency,\n"
            "it will now kill itself %swith the same signal\n",
            command_name, signal_name(signal), (coredump(status) ? " (core dumped)" : ""),
@@ -466,7 +466,7 @@ void myalarm(int msecs) {
   DPRINTF3(DEBUG_AD_HOC, "setitimer() = %d (tv_sec = %d, tv_usec=%ld)", retval, secs, awhile.it_value.tv_usec);
 #else
   received_sigALRM = FALSE;
-  alarm(msecs == 0 ? 0 : 1 + msecs/1000)); 
+  alarm(msecs == 0 ? 0 : 1 + msecs/1000));
 #endif
 DPRINTF1(DEBUG_AD_HOC, "set alarm (%d msecs)", msecs);
 if (msecs == 0)
@@ -552,5 +552,5 @@ static int signals_program_error(int signal) {
     signal ==  SIGXCPU ||
     signal ==  SIGXFSZ ||
     FALSE ? TRUE : FALSE;
-}       
+}
 

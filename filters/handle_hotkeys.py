@@ -26,11 +26,11 @@ import rlwrapfilter
 # If the hotkey was bound to "rlwrap-hotkey-without-history" the last two parameters will be empty and can be ignored
 # The return value is a similar list (where all values may be changed: the input line could be re-written,
 # the history revised, etc. The first parameter makes no sense as a return value: if it is != $key
-# it will pe put in the "echo area". If the key was bound to rlwrap-hotkey-without-history the last two elements of the 
+# it will pe put in the "echo area". If the key was bound to rlwrap-hotkey-without-history the last two elements of the
 # returned list are ignored.
 #
 # If the postfix is returned with a concluding newline, the resulting input line is accepted immediately, otherwise
-# it is put in readlines input buffer again, with the cursor at the beginning of the returned postfix 
+# it is put in readlines input buffer again, with the cursor at the beginning of the returned postfix
 #
 # Summary: ($echo, $prefix, $postfix, $history, $histpos) = handler($key, $prefix, $postfix, $history, $histpos)
 
@@ -122,7 +122,7 @@ def edit_history(doc, prefix, postfix, history, histpos):
 def split_off_last_word(string):
     '''split_off_last_word("In the gener") = ("In the ", "gener") '''
     break_chars = os.environ['RLWRAP_BREAK_CHARS'] if 'RLWRAP_BREAK_CHARS' in os.environ else " \t\n" # old rlwrap with newer filter - use a sensible default
-    break_chars =  re.sub(r'([\[\]])', r'\\1', break_chars)      
+    break_chars =  re.sub(r'([\[\]])', r'\\1', break_chars)
     break_chars = break_chars or ' ' # prevent python from choking on a bad regex '[]' in the next line
     words       = re.split('[{}]'.format(break_chars), string)
     last_word  = words[-1]
@@ -178,7 +178,7 @@ def document_all_hotkeys():
             if (handler):
                 doclist = doclist + "CTRL+{0}:   ".format(k) + handler(1, *dontcare) + "\n"
         except:
-            
+
             pass
     inputrc = "{0}/.inputrc".format(os.environ['HOME'])
     doclist = doclist + "Currently bound hotkeys in .inputrc:\n"

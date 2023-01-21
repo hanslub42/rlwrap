@@ -7,7 +7,7 @@ Many (most) bug reports, especially the really weird ones, stem from
 "version skew" on distributions (RedHat, Debian) that have separate
 development packages (e.g. readline and readline-dev). For some reason
 it can happen that the devel package is out of sync with the main
-package, and then really strange things may happen. So: always update your 
+package, and then really strange things may happen. So: always update your
 {readline, ncurses}-devel packages before you complain to me!
 
 
@@ -53,7 +53,7 @@ Re-sizing the terminal may confuse the editor
 The code that determines whether a cooked prompt should be overwritten
 (when it turns out to not have been a prompt) is needlessly complex
 and not quite correct (e.g. substitute prompts may be left standing
-when they should be erased). 
+when they should be erased).
 
 --
 

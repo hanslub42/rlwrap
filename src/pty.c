@@ -29,7 +29,7 @@
 int slave_pty_sensing_fd = -1;       /* slave pty: client uses this to communicate with rlwrap,
 				      * we keep it open after forking in order to keep track of
 				      * client's terminal settings */
-static char *sensing_pty = "uninitialized"; 
+static char *sensing_pty = "uninitialized";
 
 pid_t
 my_pty_fork(int *ptr_master_fd,
@@ -42,7 +42,7 @@ my_pty_fork(int *ptr_master_fd,
   const char *slave_name;
   struct termios pterm;
   int only_sigchld[] = { SIGCHLD, 0 };
-  
+
 
 
   ptytty_openpty(&fdm, &fds, &slave_name);
@@ -59,7 +59,7 @@ my_pty_fork(int *ptr_master_fd,
     if (debug)
         my_fopen(&debug_fp, DEBUG_FILENAME, "a+", "debug log");
 
-    unblock_all_signals();    
+    unblock_all_signals();
     close(fdm);                 /* fdm not used in child */
     ptytty_control_tty(fds, slave_name);
 
@@ -91,31 +91,31 @@ my_pty_fork(int *ptr_master_fd,
     for(timeout = 10; timeout < 2000 && slave_pty_sensing_fd < 0; timeout *= 2) {
       if (tcgetattr(fdm, &pterm) == 0) {        /* if we can do a tcgetattr on the master, assume that it reflects the slave's
                                                  terminal settings (at least on Linux and FreeBSD, this works), and use it as
-                                                 slave_pty_sensing_fd, to keep tabs on slave terminal settings. In this case we can 
+                                                 slave_pty_sensing_fd, to keep tabs on slave terminal settings. In this case we can
                                                  close fds (the slave), avoiding problems with lost output on FreeBSD  when the slave dies */
-        slave_pty_sensing_fd = fdm; 
-        sensing_pty = "master";     
+        slave_pty_sensing_fd = fdm;
+        sensing_pty = "master";
         close(fds);
       } else if (mymicrosleep(timeout),         /* wait a little                                                      */
-                 tcgetattr(fds, &pterm) == 0) { /* ... then try slave pty                                             */ 
+                 tcgetattr(fds, &pterm) == 0) { /* ... then try slave pty                                             */
         slave_pty_sensing_fd = fds;
         sensing_pty = "slave";                  /* keep the slave pty open to get its terminal settings               */
-      } 
-    }  
+      }
+    }
 
-    if (slave_pty_sensing_fd < 0)             /* both master and slave unusable: give up                              */ 
+    if (slave_pty_sensing_fd < 0)             /* both master and slave unusable: give up                              */
       myerror(FATAL|USE_ERRNO, "cannot determine terminal mode of slave command");
-  
+
     DPRINTF1(DEBUG_TERMIO, "Using %s pty to sense slave settings in parent", sensing_pty);
 
 
     if (!isatty(STDOUT_FILENO) || !isatty(STDERR_FILENO)) {     /* stdout or stderr redirected? */
       ttyfd = open("/dev/tty", O_WRONLY);                       /* open users terminal          */
-      DPRINTF1(DEBUG_TERMIO, "stdout or stderr are not a terminal, opening /dev/tty with fd=%d", ttyfd);       
-      if (ttyfd <0)     
+      DPRINTF1(DEBUG_TERMIO, "stdout or stderr are not a terminal, opening /dev/tty with fd=%d", ttyfd);
+      if (ttyfd <0)
         myerror(FATAL|USE_ERRNO, "Could not open /dev/tty");
-      if (dup2(ttyfd, STDOUT_FILENO) != STDOUT_FILENO) 
-        myerror(FATAL|USE_ERRNO, "dup2 of stdout to ttyfd failed");  
+      if (dup2(ttyfd, STDOUT_FILENO) != STDOUT_FILENO)
+        myerror(FATAL|USE_ERRNO, "dup2 of stdout to ttyfd failed");
       if (dup2(ttyfd, STDERR_FILENO) != STDERR_FILENO)
         myerror(FATAL|USE_ERRNO, "dup2 of stderr to ttyfd failed");
       close (ttyfd);
@@ -124,15 +124,15 @@ my_pty_fork(int *ptr_master_fd,
     errno = 0;
     if (renice) {
       int retval = nice(1);
-      if (retval < 0 && errno)  
-        myerror(FATAL|USE_ERRNO, "could not increase my own niceness"); 
+      if (retval < 0 && errno)
+        myerror(FATAL|USE_ERRNO, "could not increase my own niceness");
     }
 
     if (slave_winsize != NULL)
-      if (ioctl(slave_pty_sensing_fd, TIOCSWINSZ, slave_winsize) < 0) 
-        myerror(FATAL|USE_ERRNO, "TIOCSWINSZ failed on %s pty", sensing_pty); /* This is done in parent and not in child as that would fail on Solaris (why?) */ 
+      if (ioctl(slave_pty_sensing_fd, TIOCSWINSZ, slave_winsize) < 0)
+        myerror(FATAL|USE_ERRNO, "TIOCSWINSZ failed on %s pty", sensing_pty); /* This is done in parent and not in child as that would fail on Solaris (why?) */
 
-    return (pid); 
+    return (pid);
   }
 }
 
@@ -144,8 +144,8 @@ slave_is_in_raw_mode(void)
   static int been_warned = 0;
   int in_raw_mode;
 
-  
-  
+
+
   if (command_is_dead)
     return FALSE; /* filter last words  too (even if ncurses-ridden) */
   if (!(pterm_slave = my_tcgetattr(slave_pty_sensing_fd, "slave pty"))) {
@@ -153,12 +153,12 @@ slave_is_in_raw_mode(void)
                                    - this is still a race when signals get delivered very late*/
       myerror(WARNING|USE_ERRNO, "tcgetattr error on slave pty (from parent process)");
     return TRUE;
-  }     
- 
+  }
+
   in_raw_mode = !(pterm_slave -> c_lflag & ICANON);
   free(pterm_slave);
   return in_raw_mode;
-  
+
 }
 
 void
@@ -168,22 +168,22 @@ mirror_slaves_echo_mode(void)
   int should_echo_anyway = always_echo || (always_readline && !dont_wrap_command_waits());
 
   if ( !(pterm_slave = my_tcgetattr(slave_pty_sensing_fd, "slave pty")) ||
-       command_is_dead 
+       command_is_dead
        )
     /* race condition here: SIGCHLD may not yet have been caught */
     return;
 
   assert (pterm_slave != NULL);
-  
+
   if (tcsetattr(STDIN_FILENO, TCSANOW, pterm_slave) < 0 && errno != ENOTTY) /* @@@ */
     myerror(FATAL|USE_ERRNO, "cannot prepare terminal (tcsetattr error on stdin)");
 
   term_eof = pterm_slave -> c_cc[VEOF];
-  
+
   /* if the --always-readline option is set with argument "assword:", determine whether prompt ends with "assword:\s" */
   if (should_echo_anyway && password_prompt_search_string) {
     char *p, *q;
-    DPRINTF2(DEBUG_READLINE, "matching prompt <%s> and password search string <%s>..", saved_rl_state.raw_prompt, password_prompt_search_string); 
+    DPRINTF2(DEBUG_READLINE, "matching prompt <%s> and password search string <%s>..", saved_rl_state.raw_prompt, password_prompt_search_string);
     p = saved_rl_state.raw_prompt + strlen(saved_rl_state.raw_prompt) - 1;
     q =
       password_prompt_search_string + strlen(password_prompt_search_string) -
@@ -235,7 +235,7 @@ write_EOL_to_master_pty(char *received_eol)
   char *sent_eol = mysavestring("?");
 
   *sent_eol = *received_eol;
-  if (pterm_slave) { 
+  if (pterm_slave) {
     switch (*received_eol) {
     case '\n':
       if (pterm_slave->c_iflag & INLCR)
@@ -247,7 +247,7 @@ write_EOL_to_master_pty(char *received_eol)
       if (pterm_slave->c_iflag & ICRNL)
         *sent_eol = '\n';
     }
-  } 
+  }
   put_in_output_queue(sent_eol);
   free(pterm_slave);
   free(sent_eol);
@@ -256,7 +256,7 @@ write_EOL_to_master_pty(char *received_eol)
 void
 completely_mirror_slaves_terminal_settings(void)
 {
-  
+
   struct termios *pterm_slave;
   DEBUG_RANDOM_SLEEP;
   pterm_slave = my_tcgetattr(slave_pty_sensing_fd, "slave pty");
@@ -268,16 +268,16 @@ completely_mirror_slaves_terminal_settings(void)
 }
 
 void
-completely_mirror_slaves_output_settings(void) 
+completely_mirror_slaves_output_settings(void)
 {
-  struct termios *pterm_stdin, *pterm_slave;  
+  struct termios *pterm_stdin, *pterm_slave;
   DEBUG_RANDOM_SLEEP;
   pterm_stdin = my_tcgetattr(STDIN_FILENO, "stdin");
   pterm_slave = my_tcgetattr(slave_pty_sensing_fd, "slave pty");
   if (pterm_slave && pterm_stdin) { /* no error message -  we can be called while slave is already dead */
     pterm_stdin -> c_oflag = pterm_slave -> c_oflag;
     tcsetattr(STDIN_FILENO, TCSANOW, pterm_stdin);
-  }     
+  }
   free(pterm_slave);
   free(pterm_stdin);
   DEBUG_RANDOM_SLEEP;
@@ -299,14 +299,14 @@ completely_mirror_slaves_output_settings(void)
    Rlwrap solves this problem by copying the relevant flags and special characters from the slave pty to
    stdin/stdout. Of course, ideally this should happen *before* the user presses her key. This can be done by
    calling rlwrap with the -W (--polling) option.
-*/ 
+*/
 
 
 /* Many termios flags and characters are serial-specific and will never be used on a pty
    Possible exceptions (cf: http://www.lafn.org/~dave/linux/termios.txt)
    ISTRIP IGNCR (and related flags) and all the c_cc characters (although only VINTR seems to be changed
    in practice, e.g. by emacs to CTRL-G)
-*/  
+*/
 
 void
 completely_mirror_slaves_special_characters(void)
@@ -322,10 +322,10 @@ completely_mirror_slaves_special_characters(void)
     cc_t ic_slave  = pterm_slave -> c_cc[VINTR];
     if ((isig_stdin == isig_slave) &&  (ic_stdin == ic_slave)) /* nothing to do */
       return;
-    DPRINTF4(DEBUG_TERMIO,"stdin interrupt handling copied from slave: ISIG: %0x->%0x, VINTR: %0x->%0x", 
-             isig_stdin, isig_slave, ic_stdin, ic_slave); 
+    DPRINTF4(DEBUG_TERMIO,"stdin interrupt handling copied from slave: ISIG: %0x->%0x, VINTR: %0x->%0x",
+             isig_stdin, isig_slave, ic_stdin, ic_slave);
     pterm_stdin -> c_cc[VINTR] = ic_slave;
-    pterm_stdin -> c_lflag ^= (isig_slave ^ ISIG); /* copy ISIG bit from slave */ 
+    pterm_stdin -> c_lflag ^= (isig_slave ^ ISIG); /* copy ISIG bit from slave */
     tcsetattr(STDIN_FILENO, TCSANOW, pterm_stdin);
   }
   free(pterm_slave);
@@ -341,17 +341,17 @@ completely_mirror_slaves_special_characters(void)
    children if otherwise returns FALSE
 */
 
-  
+
 int dont_wrap_command_waits(void) {
   static char command_wchan[MAXPATHLEN+1];
-  static char *wait_phrases[] = {"wait4", "suspend", "do_wait", NULL}; 
+  static char *wait_phrases[] = {"wait4", "suspend", "do_wait", NULL};
   static int initialised = FALSE;
   static int wchan_fd;
   static int been_warned = 0;
   char buffer[BUFFSIZE], **p;
   int nread, result = FALSE;
 
-  
+
   DEBUG_RANDOM_SLEEP;
   if (!commands_children_not_wrapped)
     return FALSE;
@@ -364,7 +364,7 @@ int dont_wrap_command_waits(void) {
 
   if (screen_is_alternate)
     return TRUE;  /* assume that programs that use the alternate screen never need rlwrap */
-  
+
   wchan_fd =  open(command_wchan, O_RDONLY);
   if (wchan_fd < 0) { /* don't assume that programs that don't use the alternate screen always need rlwrap */
     if (been_warned++ == 0 && !(term_rmcup && term_smcup)) {
@@ -373,13 +373,13 @@ int dont_wrap_command_waits(void) {
                                "cannot sense the 'alternate screen',and cannot read %s", command_name, command_wchan);
     }
     return FALSE;
-  }     
+  }
 
 
   if (((nread = read(wchan_fd, buffer, BUFFSIZE -1)) > 0)) {
     buffer[nread] =  '\0';
     result = FALSE;
-    for (p = wait_phrases; *p; p++) /* Not quite watertight: I don't have a complete (and unchanging) list 
+    for (p = wait_phrases; *p; p++) /* Not quite watertight: I don't have a complete (and unchanging) list
                                        of syscalls that make client wait for one of its children */
       if (strstr(buffer, *p)) {
         result = TRUE;
@@ -390,7 +390,7 @@ int dont_wrap_command_waits(void) {
   close(wchan_fd);
   DEBUG_RANDOM_SLEEP;
   return result;
-}       
+}
 
 
 int skip_rlwrap(void) { /* this function is called from sigTSTP signal handler. Is it re-entrant? */
