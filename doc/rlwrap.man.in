@@ -245,7 +245,14 @@ making rlwrap hold back the prompt until it has been cooked ("patient mode"). Th
 
 .TP
 .OL \-W \-\-polling 
-EXPERIMENTAL: Wake up every \fItimeout\fP millisecs, where \fItimeout\fP is the same as for the \-w (\-\-wait\-before\-prompt) option, 40 ms by default. This is used to sense the slave's interrupt character and ISIG flag and to adjust stdin's terminal settings accordingly, even before you press a key. Try this option e.g. when CTRL-C acts differently on \fIcommand\fP with, and without, rlwrap. 
+EXPERIMENTAL: Wake up every \fItimeout\fP millisecs, where \fItimeout\fP is the same as for the \-w (\-\-wait\-before\-prompt) option, 40 ms by default. This is used to sense the slave's interrupt character and ISIG flag and to adjust stdin's terminal settings accordingly, even before you press a key. Try this option e.g. when CTRL-C acts
+differently on \fIcommand\fP with, and without, rlwrap. 
+
+.TP
+.OL \-X \-\-skip_setctty 
+EXPERIMENTAL: Don't create a new session for \fIcommand\fP (\fIcommand\fP will inherit the controlling terminal of the process
+that invokes \fBrlwrap\fP)
+
 
 .TP
 .OL \-z \-\-filter \fIsome_filter\fP

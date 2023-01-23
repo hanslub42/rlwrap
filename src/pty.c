@@ -61,7 +61,10 @@ my_pty_fork(int *ptr_master_fd,
 
     unblock_all_signals();    
     close(fdm);                 /* fdm not used in child */
-    ptytty_control_tty(fds, slave_name);
+    if (skip_setctty) 
+      DPRINTF0(DEBUG_TERMIO, "--skip-setccty: don't make slave pty a controlling terminal");
+    else
+      ptytty_control_tty(fds, slave_name);
 
     if (dup2(fds, STDIN_FILENO) != STDIN_FILENO) /* extremely unlikely */
       myerror(FATAL|USE_ERRNO, "dup2 to stdin failed");

@@ -52,6 +52,7 @@ int polling = FALSE;                         /* -W option: always give select() 
 int impatient_prompt = TRUE;                 /* show raw prompt as soon as possible, even before we cook it. may result in "flashy" prompt */
 char *substitute_prompt = NULL;              /* -S option: substitute our own prompt for <command>s */
 char *filter_command = NULL;                 /* -z option: pipe prompts, input, output, history and completion requests through an external filter */
+int skip_setctty = FALSE;                    /* --skip-setctty option (experimental) */
 
 
 /* variables for global bookkeeping */
@@ -113,11 +114,11 @@ static void main_loop(void);
 
 /* options */
 #ifdef GETOPT_GROKS_OPTIONAL_ARGS
-static char optstring[] = "+:a::A::b:cC:d::D:e:Ef:F:g:hH:iIl:nNM:m::oO:p::P:q:rRs:S:t:TUvw:Wz:";
+static char optstring[] = "+:a::A::b:cC:d::D:e:Ef:F:g:hH:iIl:nNM:m::oO:p::P:q:rRs:S:t:TUvw:WXz:";
 /* +: is not really documented. configure checks wheteher it works as expected
    if not, GETOPT_GROKS_OPTIONAL_ARGS is undefined. @@@ */
 #else
-static char optstring[] = "+:a:A:b:cC:d:D:e:Ef:F:g:hH:iIl:nNM:m:oO:p:P:q:rRs:S:t:TUvw:Wz:"; 
+static char optstring[] = "+:a:A:b:cC:d:D:e:Ef:F:g:hH:iIl:nNM:m:oO:p:P:q:rRs:S:t:TUvw:WXz:"; 
 #endif
 
 #ifdef HAVE_GETOPT_LONG
@@ -158,6 +159,7 @@ static struct option longopts[] = {
   {"version",                     no_argument,        NULL, 'v'},
   {"wait-before-prompt",          required_argument,  NULL, 'w'},    
   {"polling",                     no_argument,        NULL, 'W'},
+  {"skip-setctty",                no_argument,        NULL, 'X'},  
   {"filter",                      required_argument,  NULL, 'z'}, 
   {0, 0, 0, 0}
 };
@@ -942,6 +944,8 @@ read_options_and_command_name(int argc, char **argv)
       break;
     case 'W': 
       polling = TRUE; break;
+    case 'X':
+      skip_setctty = TRUE; break;
     case 'z': filter_command = mysavestring(optarg); break;
     case '?':
       assert(optind > 0);

@@ -214,6 +214,9 @@ ptytty_control_tty(int fd_tty, const char *ttydev)
   DPRINTF2(DEBUG_TERMIO, "tcgetpgrp(): %d  getpgrp(): %d", tcgetpgrp(fd_tty),
            getpgrp());
 
+
+
+  
   /* ------------------- Become leader of our own session:   --------------------- */
 # ifdef HAVE_SETSID
   {
