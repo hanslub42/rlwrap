@@ -1505,7 +1505,7 @@ feed_file_into_completion_list(const char *completions_file, bool warn_if_unread
     if (warn_if_unreadable)
        myerror(WARNING|USE_ERRNO, "Could not open %s", completions_file);
     return;
-  }'
+  }
   while (fgets(buffer, BUFFSIZE - 1, compl_fp) != NULL) {
     buffer[BUFFSIZE - 1] = '\0';	/* make sure buffer is properly terminated (it should be anyway, according to ANSI) */
     feed_line_into_completion_list(buffer);
