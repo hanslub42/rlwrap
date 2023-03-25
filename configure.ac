@@ -324,7 +324,7 @@ AC_CHECK_FUNC(tgetent,
             [READLINE_SUPPLIB=-lncurses],
             [AC_CHECK_LIB(termcap, tgetent,
                [READLINE_SUPPLIB=-ltermcap],
-               [AC_MSG_WARN(No termcap nor curses library found)])
+               [AC_MSG_ERROR(No termcap nor curses library found)])
             ])
          ])
       ])
