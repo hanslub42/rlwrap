@@ -722,7 +722,7 @@ init_rlwrap(char *command_line)
   read_history(history_filename); /* ignore errors here: history file may not yet exist, but will be created on exit */
 
   if (feed_history_into_completion_list)
-    feed_file_into_completion_list(history_filename);
+    feed_file_into_completion_list(history_filename, FALSE);
   /* Determine completion file name (completion files are never written to,
      and ignored when unreadable or non-existent) */
 
@@ -736,9 +736,9 @@ init_rlwrap(char *command_line)
 
   /* Initialise completion list (if <completion_filename> is readable) */
   if (access(completion_filename, R_OK) == 0) {
-    feed_file_into_completion_list(completion_filename);
+    feed_file_into_completion_list(completion_filename, FALSE);
   } else if (access(default_completion_filename, R_OK) == 0) {
-    feed_file_into_completion_list(default_completion_filename);
+    feed_file_into_completion_list(default_completion_filename, FALSE);
   }
 
   
@@ -874,7 +874,7 @@ read_options_and_command_name(int argc, char **argv)
       if (strcmp(optarg, ".") == 0)
         feed_history_into_completion_list =  TRUE;
       else
-        feed_file_into_completion_list(optarg);
+        feed_file_into_completion_list(optarg, TRUE);
       opt_f = TRUE;
       break;
     case 'F': WONTRETURN(myerror(FATAL|NOERRNO, "The -F (--history-format) option is obsolete. Use -z \"history_format '%s'\" instead", optarg));

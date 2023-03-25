@@ -457,7 +457,7 @@ int ptytty_openpty(int *amaster, int *aslave, const char **name);
 
 /* in completion.rb: */
 void init_completer(void);
-void feed_file_into_completion_list(const char *completions_file);
+void feed_file_into_completion_list(const char *completions_file, bool warn_if_unreadable);
 void feed_line_into_completion_list(const char *line);
 void add_word_to_completions(const char *word);
 void remove_word_from_completions(const char *word);

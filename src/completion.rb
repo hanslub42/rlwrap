@@ -163,19 +163,22 @@ feed_line_into_completion_list(const char *line)
 }
 
 void
-feed_file_into_completion_list(const char *completions_file)
+feed_file_into_completion_list(const char *completions_file, bool warn_if_unreadable)
 {
   FILE *compl_fp;
   char buffer[BUFFSIZE];
 
-  if ((compl_fp = fopen(completions_file, "r")) == NULL)
-    myerror(FATAL|USE_ERRNO, "Could not open %s", completions_file);
+  if ((compl_fp = fopen(completions_file, "r")) == NULL) {
+    if (warn_if_unreadable)
+       myerror(WARNING|USE_ERRNO, "Could not open %s", completions_file);
+    return;
+  }'
   while (fgets(buffer, BUFFSIZE - 1, compl_fp) != NULL) {
     buffer[BUFFSIZE - 1] = '\0';	/* make sure buffer is properly terminated (it should be anyway, according to ANSI) */
     feed_line_into_completion_list(buffer);
   }
-  if (! feof(compl_fp) && ferror(compl_fp))   /* at least in GNU libc, errno will be set in this case. If not, no harm is done */
-    myerror(FATAL|USE_ERRNO, "Couldn't read completions from %s", completions_file);
+  if (! feof(compl_fp) && ferror(compl_fp) && warn_if_unreadable)   /* at least in GNU libc, errno will be set in this case. If not, no harm is done */
+    myerror(WARNING|USE_ERRNO, "Couldn't read completions from %s", completions_file);
    
   fclose(compl_fp);
   /* print_list(); */
@@ -340,7 +343,7 @@ my_history_completion_function(char *prefix, int state)
 
 
 
-/* The following sets edit modes for GNU EMACS
-   Local Variables:
-   mode:c
-   End:  */
+/* The following sets edit modes for GNU EMACS */
+/*   Local Variables:                          */
+/*   mode:c                                    */
+/*   End:                                      */
