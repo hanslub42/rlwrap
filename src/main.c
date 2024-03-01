@@ -225,8 +225,8 @@ main(int argc, char **argv)
   
   run_unit_test(argc - optind, argv + optind, TEST_AFTER_OPTION_PARSING); /* argv points at the first non-option rlwrap argument */
 
-  /* if stdin is not a tty, or we're inside emacs, just execute <command>: */ 
-  if (!isatty(STDIN_FILENO) || getenv("INSIDE_EMACS"))
+  /* if stdin is not a tty, or we're inside emacs shell/eshell, just execute <command>: */
+  if (!isatty(STDIN_FILENO) || (getenv("INSIDE_EMACS") && strcmp(getenv("TERM"),"dumb") == 0))
     if (execvp(argv[optind], &argv[optind]) < 0)
       myerror(FATAL|USE_ERRNO, "Cannot execute %s", argv[optind]);
   
