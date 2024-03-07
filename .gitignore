@@ -1,3 +1,19 @@
+##
+#
+# @(#) : rlwrap gitignore
+#
+# @version  1.0.0
+# @date		2024-03-07
+# @license  GPLv2
+#
+# @description <<
+#
+# setting git ignoe files aboout rlwrap development
+# ignore files about created by autotools, c compiler.
+# and man file, Makefile, config.*, .deps
+#
+#<<
+
 Makefile
 Makefile.in
 aclocal.m4
@@ -21,3 +37,5 @@ src/rlwrap
 stamp-h1
 tools/
 filters/RlwrapFilter.3pm
+**testit.trs
+
