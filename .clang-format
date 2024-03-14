@@ -1,0 +1,9 @@
+---
+BasedOnStyle: Google
+ColumnLimit: 120
+IndentWidth: 4
+
+# style of align
+AlignConsecutiveDeclarations: true
+AlignConsecutiveAssignments: true
+AlignTrailingComments: true
