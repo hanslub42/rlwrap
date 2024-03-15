@@ -1,9 +1,23 @@
 ---
 BasedOnStyle: Google
+LineEnding: LF
 ColumnLimit: 120
+# indent
+UseTab: Never
 IndentWidth: 4
+TabWidth: 4
 
-# style of align
-AlignConsecutiveDeclarations: true
+# indent style
+IndentPPDirectives: AfterHash
+
+# Brace Position
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterFunction: true
+  AfterStruct: true
+  AfterControlStatement: MultiLine
+
+# Align style
 AlignConsecutiveAssignments: true
 AlignTrailingComments: true
+AlignArrayOfStructures: Left
