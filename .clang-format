@@ -7,17 +7,27 @@ UseTab: Never
 IndentWidth: 4
 TabWidth: 4
 
+---
+## C/C++ style definitions
+Language: Cpp
+
+# include
+IncludeCategories:
+  - Regex: '../'
+
 # indent style
 IndentPPDirectives: AfterHash
+
 
 # Brace Position
 BreakBeforeBraces: Custom
 BraceWrapping:
   AfterFunction: true
   AfterStruct: true
-  AfterControlStatement: MultiLine
+  AfterControlStatement: Never
 
 # Align style
-AlignConsecutiveAssignments: true
+AlignConsecutiveDeclarations: true
 AlignTrailingComments: true
 AlignArrayOfStructures: Left
+AlignConsecutiveMacros: true
