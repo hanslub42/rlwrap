@@ -31,3 +31,5 @@ AlignConsecutiveDeclarations: true
 AlignTrailingComments: true
 AlignArrayOfStructures: Left
 AlignConsecutiveMacros: true
+AlignOperands: false
+
