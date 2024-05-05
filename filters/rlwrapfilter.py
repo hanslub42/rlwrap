@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-"""
+r"""
 Python 3 library for [rlwrap](https://github.com/hanslub42/rlwrap) filters
 
 * Synopsis
@@ -208,7 +208,7 @@ def read_from_stdin():
     tagname = None
     while (tag is None):
         try:
-            m = re.match("(\S+) (.*?)\r?\n", sys.stdin.readline())
+            m = re.match(r"(\S+) (.*?)\r?\n", sys.stdin.readline())
         except KeyboardInterrupt:
             sys.exit()
         if not m:
