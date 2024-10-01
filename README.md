@@ -20,9 +20,9 @@ the filter mechanism.
 As it is often used with older or even obsolete software, `rlwrap`
 strives to compile and run on a fairly wide range of not necessarily
 recent Unix-like systems (FreeBSD, OSX, HP-UX, AIX, Solaris, QNX,
-cygwin, linux and probably quite a few more) This would not have been
-without [Polarhome](http://polarhome.com)'s now retired 'dinosaur zoo'
-of ageing Unix systems
+cygwin, linux and probably quite a few more).  This would not have
+been possible without [Polarhome](http://polarhome.com)'s now retired
+'dinosaur zoo' of ageing Unix systems.
 
 ## HOW TO USE IT:
 
