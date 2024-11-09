@@ -11,7 +11,7 @@ Python 3 library for [rlwrap](https://github.com/hanslub42/rlwrap) filters
     filter.output_handler = lambda x: re.sub('apple', 'orange', x) # re−write output
     filter.prompt_handler = munge_prompt
     filter.completion_handler = complete_handler
-    filter.history_handler = lambda x: re.sub(r'(identified\s+by\s+)(\S+)', r'\\1xXxXxXxX', x)
+    filter.history_handler = lambda x: re.sub(r'(identified\\s+by\\s+)(\\S+)', r'\\1xXxXxXxX', x)
     filter.run()
 
 This is an [RlwrapFilter](https://github.com/hanslub42/rlwrap/wiki/RlwrapFilter.pm-manpage)
