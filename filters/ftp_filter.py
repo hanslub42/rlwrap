@@ -54,7 +54,7 @@ def listing (dir, where, what):
 
     pattern = "^d" if what == "directories" else "^-"
     lines = [l for l in lines if re.search(pattern, l)] # makes only sense if there is a column with drwxr-xr-x
-    results = [re.split('\s+', l)[dir_filename_column[where]] for l in lines]
+    results = [re.split(r'\s+', l)[dir_filename_column[where]] for l in lines]
     return results
 
 
@@ -97,7 +97,7 @@ def commands():
 
 def complete_handler(line, prefix, completions):
 
-    nwords = len(re.split('\s+', line))
+    nwords = len(re.split(r'\s+', line))
     if prefix == None:
         nwords += 1 # TAB at start of a new (empty) argument
 
@@ -105,8 +105,8 @@ def complete_handler(line, prefix, completions):
         completions.extend([c for c in ftp_commands if re.search(r'^' + prefix, c)])
         return completions
 
-    command = re.search('\s*(\S+)', line).group(1)
-    prefix_match = re.search('((.*)/)?([^/]*)', prefix)
+    command = re.search(r'\s*(\S+)', line).group(1)
+    prefix_match = re.search(r'((.*)/)?([^/]*)', prefix)
     dir = prefix_match.group(2)
     name_prefix = prefix_match.group(3)
     #dir = '.' if dir == None else dir

@@ -208,7 +208,7 @@ def read_from_stdin():
     tagname = None
     while (tag is None):
         try:
-            m = re.match("(\S+) (.*?)\r?\n", sys.stdin.readline())
+            m = re.match(r'(\S+) (.*?)\r?\n', sys.stdin.readline())
         except KeyboardInterrupt:
             sys.exit()
         if not m:
@@ -493,8 +493,8 @@ class RlwrapFilter:
         response = read_until(CMD_OUT, prompt, timeout,
                               prompt_search_from=prompt_search_from,
                               prompt_search_to=prompt_search_to)
-        response = re.sub('^.*?\n', '', response) # chop off echoed question;
-        response = re.sub('{0}$'.format(prompt), '', response) # chop off prompt;
+        response = re.sub(r'^.*?\n', '', response) # chop off echoed question;
+        response = re.sub(r'{0}$'.format(prompt), '', response) # chop off prompt;
         if (self.cloak_and_dagger_verbose):
             self.send_output_oob("cloak_and_dagger response: {0}\n".format(response))
         return response
@@ -625,14 +625,14 @@ class RlwrapFilter:
                     write_message(tag,REJECT_PROMPT);
                     # don't update <previous_tag> and don't reset <cumulative_input>
                     next
-                if (os.environ.get('RLWRAP_IMPATIENT') and not re.search('\n$', self.cumulative_output)):
+                if (os.environ.get('RLWRAP_IMPATIENT') and not re.search(r'\n$', self.cumulative_output)):
                     # cumulative output contains prompt: chop it off!
                     # s/[^\n]*$// takes way too long on big strings,
                     # what is the optimal regex to do this?
-                    self.cumulative_output = re.sub('(?<![^\n])[^\n]*$', '', self.cumulative_output)
+                    self.cumulative_output = re.sub(r'(?<![^\n])[^\n]*$', '', self.cumulative_output)
 
                 response = when_defined(self.prompt_handler, message)
-                if (re.search('\n', response)):
+                if (re.search(r'\n', response)):
                     send_error('prompts may not contain newlines!')
             elif (tag == TAG_SIGNAL):
                 response = when_defined(self.signal_handler, message)
