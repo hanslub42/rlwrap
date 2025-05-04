@@ -367,22 +367,23 @@ int dont_wrap_command_waits(void) {
 
   if (screen_is_alternate)
     return TRUE;  /* assume that programs that use the alternate screen never need rlwrap */
+
   
   wchan_fd =  open(command_wchan, O_RDONLY);
-  if (wchan_fd < 0) { /* don't assume that programs that don't use the alternate screen always need rlwrap */
+  if (wchan_fd < 0) { /* Even if screen is not alternate, the wrapped command might ask for a single keypress like "Continue Y/N?" */
     if (been_warned++ == 0 && !(term_rmcup && term_smcup)) {
       myerror(WARNING|NOERRNO, "you specified the -N (--no-children) option  - but spying\n"
                                "on %s's wait status doesn't work on your system, as rlwrap\n "
                                "cannot sense the 'alternate screen',and cannot read %s", command_name, command_wchan);
     }
     return FALSE;
-  }     
+  }
 
 
   if (((nread = read(wchan_fd, buffer, BUFFSIZE -1)) > 0)) {
     buffer[nread] =  '\0';
     result = FALSE;
-    for (p = wait_phrases; *p; p++) /* Not quite watertight: I don't have a complete (and unchanging) list 
+    for (p = wait_phrases; *p; p++) /* Not quite watertight: I don't have a complete (and unchanging) list
                                        of syscalls that make client wait for one of its children */
       if (strstr(buffer, *p)) {
         result = TRUE;
@@ -399,10 +400,10 @@ int dont_wrap_command_waits(void) {
 int skip_rlwrap(void) { /* this function is called from sigTSTP signal handler. Is it re-entrant? */
   int retval = FALSE;
   DEBUG_RANDOM_SLEEP;
-  if (always_readline)
+  if (dont_wrap_command_waits())
+    retval = TRUE;
+  else  if (always_readline)
     retval =  FALSE;
-  else if (dont_wrap_command_waits())
-    retval = TRUE; 
   else if (slave_is_in_raw_mode())
     retval= TRUE;
   DEBUG_RANDOM_SLEEP;

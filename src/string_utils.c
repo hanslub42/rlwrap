@@ -1391,7 +1391,8 @@ void check_cupcodes(const char *client_output) {
   static int rmcup_len, smcup_len, max_cuplen;
   char *output_copy, *outputptr;
   int cut_here;
-  
+
+
   if (!(commands_children_not_wrapped && term_smcup && term_rmcup))
     return; /* check is impossible or unnecessary */
 
@@ -1402,6 +1403,8 @@ void check_cupcodes(const char *client_output) {
     max_cuplen = max(rmcup_len, smcup_len);
   }     
   outputptr = output_copy = append_and_free_old(still_unchecked, client_output);
+
+  DPRINTF1(DEBUG_READLINE, "check_cupcodes in (%s)", M(outputptr));
 
   /* keep the very end for next time, as it might contain a partial cupcode */
   /* in the worst case we will notice the shortest of the two cupcodes twice */

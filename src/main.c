@@ -602,7 +602,7 @@ main_loop(void)
           /* remote possibility of a race condition here: when the first half of a multi-byte char is read in
              direct mode and the second half in readline mode. Oh well... */
           DPRINTF0(DEBUG_TERMIO, "passing it on (in transparent mode)");
-          if (!user_has_typed_first_NL && (byte_read == '\r' || byte_read == '\n')) {
+          if (!user_has_typed_first_NL && (byte_read == '\r' || byte_read == '\n') && ! always_readline) {
             user_has_typed_first_NL = TRUE;
             advise_always_readline = TRUE; /* first NL is in direct mode: advise the user that she probably wants --always-readline */ 
           }
