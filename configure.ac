@@ -170,12 +170,8 @@ AC_C_CONST
 AC_TYPE_PID_T
 
 
-# Checks for library functions.
-AC_PROG_GCC_TRADITIONAL
 
 # Let groff -Tman know whether we have long options
-
-
 # Up to 0.45, rlwrap would test if getopt() understands option strings like "a:b::c" with double colons
 # I now tend to think that that only happens if (POSIX) getopt() is implemented using (GNU) getopt_long(), so this test
 # is actually superfluous. I leave GETOPT_GROKS_OPTIONAL_ARGS alone for the moment, in case some getopt_long() 
