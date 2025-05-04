@@ -223,7 +223,7 @@ Limit the history list to N entries, truncating the history file
 Substitute the specified prompt for \fIcommand\fP's own prompt. Mainly useful when \fIcommand\fP doesn't have a prompt.
 
 .TP
-.OL \-t \-\-set\-term\-name \fIname\fP
+.OL \-t \-\-set\-terminal\-name \fIname\fP
 Set \fIcommand\fP's TERM to \fIname\fP. Programs that confuse \fBrlwrap\fP with fancy screen control codes can sometimes be tamed by specifying \fB\-t dumb\fP 
 
 .TP
