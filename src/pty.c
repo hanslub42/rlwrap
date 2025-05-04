@@ -399,10 +399,10 @@ int dont_wrap_command_waits(void) {
 int skip_rlwrap(void) { /* this function is called from sigTSTP signal handler. Is it re-entrant? */
   int retval = FALSE;
   DEBUG_RANDOM_SLEEP;
-  if (dont_wrap_command_waits())
-    retval = TRUE;
-  else if (always_readline)
+  if (always_readline)
     retval =  FALSE;
+  else if (dont_wrap_command_waits())
+    retval = TRUE; 
   else if (slave_is_in_raw_mode())
     retval= TRUE;
   DEBUG_RANDOM_SLEEP;

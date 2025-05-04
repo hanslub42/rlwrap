@@ -416,7 +416,7 @@ my_homegrown_redisplay(int hide_passwords)
   int i, printed_length,
     new_curpos,                    /* cursor position on screen */
     keep_old_line, vlinestart, printwidth, last_column;
-  DPRINTF3(DEBUG_AD_HOC,"rl_prompt: <%s>, prompt_without_ignore_markers: <%s>,  prompt_plus_line: <%s>", rl_prompt, prompt_without_ignore_markers, prompt_plus_line);   
+  DPRINTF3(DEBUG_AD_HOC,"hgrown: rl_prompt: <%s>, prompt_without_ignore_markers: <%s>,  prompt_plus_line: <%s>", rl_prompt, prompt_without_ignore_markers, prompt_plus_line);   
 
   /* In order to handle prompt with colour we either print the whole prompt, or start past it:
      starting in the middle is too difficult (i.e. I am too lazy) to get it right.
@@ -541,7 +541,7 @@ my_redisplay(void)
 }
 
 
-
+/* (setq font-lock-maximum-decoration t) */
 
 static void
 munge_file_in_editor(const char *filename, int lineno, int colno)
