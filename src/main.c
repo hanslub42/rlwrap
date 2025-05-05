@@ -464,8 +464,10 @@ main_loop(void)
             mymicrosleep(50);           /* yet caught) Therefore we wait a bit,                                                 */
             seen_EOF = TRUE;            /* set a flag                                                                           */   
             continue;                   /* and try one more time (hopefully catching the signal this time round                 */
+          } else if (command_pid && !kill(command_pid, 0)) { /* command should really have died at this point. If not, complain: */
+               myerror(FATAL|USE_ERRNO, "read error on master pty");
           } else {
-            myerror(FATAL|USE_ERRNO, "read error on master pty"); 
+              cleanup_rlwrap_and_exit(0);
           } 
         }
         remove_padding_and_terminate(buf, nread);

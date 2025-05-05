@@ -487,26 +487,26 @@ handle_sigALRM(int UNUSED(signo)) {
    architectures signal values may coincide */
 char *signal_name(int signal) {
   return
-    signal ==  SIGHUP  ? "SIGHUP" :
-    signal ==  SIGINT  ? "SIGINT" :
+    signal ==  SIGHUP   ? "SIGHUP" :
+    signal ==  SIGINT   ? "SIGINT" :
     signal ==  SIGQUIT  ? "SIGQUIT" :
-    signal ==  SIGILL  ? "SIGILL" :
+    signal ==  SIGILL   ? "SIGILL" :
     signal ==  SIGABRT  ? "SIGABRT" :
     signal ==  SIGTRAP  ? "SIGTRAP" :
 #ifdef SIGIOT  /* 4.2 BSD (IOT trap ) */
-    signal ==  SIGIOT  ? "SIGIOT" :
+    signal ==  SIGIOT   ? "SIGIOT" :
 #endif
 #ifdef SIGEMT  /* 4.2 BSD (EMT trap ) */
-    signal ==  SIGEMT  ? "SIGEMT" :
+    signal ==  SIGEMT   ? "SIGEMT" :
 #endif
-    signal ==  SIGFPE  ? "SIGFPE" :
+    signal ==  SIGFPE   ? "SIGFPE" :
     signal ==  SIGKILL  ? "SIGKILL" :
 #ifdef SIGBUS  /* 4.2 BSD (Bus error ) */
-    signal ==  SIGBUS  ? "SIGBUS" :
+    signal ==  SIGBUS   ? "SIGBUS" :
 #endif
     signal ==  SIGSEGV  ? "SIGSEGV" :
 #ifdef SIGSYS  /* 4.2 BSD (Bad argument to system call ) */
-    signal ==  SIGSYS  ? "SIGSYS" :
+    signal ==  SIGSYS   ? "SIGSYS" :
 #endif
     signal ==  SIGPIPE  ? "SIGPIPE" :
     signal ==  SIGALRM  ? "SIGALRM" :
@@ -518,10 +518,10 @@ char *signal_name(int signal) {
     signal ==  SIGTSTP  ? "SIGTSTP" :
     signal ==  SIGCONT  ? "SIGCONT" :
 #ifdef SIGCLD  /* System V (Same as SIGCHLD ) */
-    signal ==  SIGCLD  ? "SIGCLD" :
+    signal ==  SIGCLD   ? "SIGCLD" :
 #endif
 #ifdef SIGPWR  /* System V (Power failure restart ) */
-    signal ==  SIGPWR  ? "SIGPWR" :
+    signal ==  SIGPWR   ? "SIGPWR" :
 #endif
     signal ==  SIGXCPU  ? "SIGXCPU" :
     signal ==  SIGXFSZ  ? "SIGXFSZ" :
