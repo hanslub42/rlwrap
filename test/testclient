@@ -59,6 +59,7 @@ while(1) {
   /^:d/ and die_eloquently();
   (/^:e\s*([+-]?\d+)?/) and exit ($1 || 0);
   /^:f/ and do_fork();
+  /^:F/ and forget_last_newline();
   /^:h/ and help();
   /^:H/ and hanky_panky();
   /^:i/ and toggle_interrupt_char();
@@ -115,6 +116,7 @@ rlwraps behaviour when the client does things like:
 :d die eloquently 
 :e [N] exit (with error code N)
 :f fork and let child take over (parent waits)
+:F forget last newline
 :h help
 :H hanky-panky with backspace and carriage return
 :i toggle interrupt char between CTRL C and CTRL G
@@ -350,6 +352,11 @@ sub raw {
 sub toggle_verbosity {
   $verbose = not $verbose;
   print ($verbose ? "verbose now\n" : "not verbose now\n");
+}
+
+sub forget_last_newline {
+  print "Some long\ntext, but without\na final newline";
+  sleep 20;
 }
 
 sub die_eloquently {

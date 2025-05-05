@@ -11,7 +11,7 @@ EXTRA_DIST = BUGS COPYING INSTALL README.md  src/rlwrap.h src/redblack.h src/mal
              filters/paint_prompt.py filters/handle_hotkeys.py filters/logger.py filters/pipeto.py\
              filters/rlwrapfilter.py filters/null.py filters/censor_passwords.py filters/edit_history\
              filters/count_in_prompt.py filters/ftp_filter.py  filters/debug_null filters/handle_sigwinch filters/outfilter\
-             filters/makefilter filters/dissect_prompt
+             filters/makefilter filters/dissect_prompt filters/nl_and_then_prompt.py
 
 
 
@@ -25,7 +25,7 @@ nobase_pkgdata_DATA  = completions/testclient completions/coqtop\
                        filters/paint_prompt.py filters/handle_hotkeys.py filters/logger.py filters/pipeto.py\
                        filters/rlwrapfilter.py filters/null.py filters/censor_passwords.py filters/edit_history\
                        filters/count_in_prompt.py filters/ftp_filter.py  filters/debug_null filters/handle_sigwinch filters/outfilter\
-                       filters/makefilter filters/dissect_prompt
+                       filters/makefilter filters/dissect_prompt filters/nl_and_then_prompt.py
 
 
 
