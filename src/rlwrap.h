@@ -127,6 +127,8 @@ char *strchr(), *strrchr();
 #endif
 
 
+
+
 #ifdef HAVE_PTY_H /* glibc (even if BSD) */
 #  include <pty.h>
 #elif HAVE_LIBUTIL_H /* BSD, non-glibc */
@@ -183,7 +185,6 @@ char *strchr(), *strrchr();
 #ifndef HAVE_STRNLEN
 # define strnlen(s,l) strlen(s)
 #endif
-
 
 
 #include <readline/readline.h>
