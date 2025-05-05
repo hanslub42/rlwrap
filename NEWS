@@ -1,3 +1,22 @@
+0.46.2 python filters would cause "invalid escape sequence" SyntaxWarnings
+      with python 3.12 or newer.
+
+      --skip-ctty option skips making slave pty a controlling terminal
+
+      warn (don't die) when specified completion file is not found
+
+      configure script will bail out (not just warn) when no termcap-like
+      library is found.
+
+      additionally check for TERM when INSIDE_EMACS is set
+      (allowing the use of rlwrap within shells run by emacs)
+
+      gcc -Wformat-security would warn about rl_message() being
+      used in an unsafe manner.
+
+      silence unhelpful input/output error messages at command exit
+      
+
 0.46.1  when compiled with readline-8.2, correctly handle echo'ed user
       input when accepting a line. This will disable
       bracketed-paste when compiled with readline-8.1 or earlier.
