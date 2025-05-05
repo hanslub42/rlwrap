@@ -358,6 +358,7 @@ my_add_history(char *line)
       lookback = 1; break;
     case ELIMINATE_ALL_DOUBLES:
       lookback = history_length; break;
+    default: lookback = 0;
     }
 
   
@@ -861,12 +862,13 @@ colourise (const char *prompt)
   return result;
 }
 
+
 void
 move_cursor_to_start_of_prompt(int erase)
 {
   int termwidth = winsize.ws_col;
   int promptlen_on_screen, number_of_lines_in_prompt, curpos, count;
-  int cooked = (saved_rl_state.cooked_prompt != NULL);
+  int ATTR_ONLY_FOR_DEBUGGING cooked = (saved_rl_state.cooked_prompt != NULL);
   
   DPRINTF2(DEBUG_READLINE,"prompt_is_still_uncooked: %d, impatient_prompt: %d", prompt_is_still_uncooked, impatient_prompt);
   if (prompt_is_still_uncooked && ! impatient_prompt)

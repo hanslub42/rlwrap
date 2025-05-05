@@ -220,9 +220,9 @@ ptytty_control_tty(int fd_tty, const char *ttydev)
   /* ------------------- Become leader of our own session:   --------------------- */
 # ifdef HAVE_SETSID
   {
-    pid_t ret = setsid();
+    pid_t ATTR_ONLY_FOR_DEBUGGING ret = setsid();
 
-    DPRINTF2(DEBUG_TERMIO, "setsid() returned %d %s", (int)ret,
+    DPRINTF2(DEBUG_TERMIO, "setsid() returned %d %s", (int) ret,
              ERRMSG(ret < 0));
   }
 # endif
@@ -239,7 +239,7 @@ ptytty_control_tty(int fd_tty, const char *ttydev)
     DPRINTF1(DEBUG_TERMIO, "Voiding tty associations: previous=%s",
              fd < 0 ? "no" : "yes");
     if (fd >= 0) {
-      int ret = ioctl(fd, TIOCNOTTY, NULL);       /* void tty associations */
+      int ATTR_ONLY_FOR_DEBUGGING ret = ioctl(fd, TIOCNOTTY, NULL);       /* void tty associations */
 
       DPRINTF2(DEBUG_TERMIO, "ioctl(..., TIOCNOTTY): %d %s", ret,
                ERRMSG(ret < 0));
@@ -324,7 +324,7 @@ ptytty_control_tty(int fd_tty, const char *ttydev)
 int
 ptytty_openpty(int *amaster, int *aslave, const char **name)
 {
-  const char *scrap;
+  const char *scrap = mysavestring("");
 
   *aslave = -1;
   *amaster = ptytty_get_pty(aslave, &scrap);

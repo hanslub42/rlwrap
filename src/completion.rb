@@ -22,8 +22,12 @@
        e-mail:  hanslub42@gmail.com
 */
 
+
+/* this uses a template redblack.c with ancient C code (@HL:  TODO: update libredblack ) */
+#pragma GCC diagnostic ignored "-Wunused-variable"
 #pragma GCC diagnostic ignored "-Wunused-but-set-variable"
 #pragma GCC diagnostic ignored "-Wunused-function"
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
 
 
 #include "rlwrap.h"

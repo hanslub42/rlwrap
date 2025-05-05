@@ -535,7 +535,9 @@ main_loop(void)
 
         if (impatient_prompt && !leave_prompt_alone)
           old_raw_prompt =  mysavestring(saved_rl_state.raw_prompt);
-
+        else
+          old_raw_prompt = mysavestring(""); /*  don't leave  old_raw_prompt untialised, as it might be freed */
+        
         new_output_minus_prompt = process_new_output(buf, &saved_rl_state); /* chop off the part after the last newline and put this in
                                                                                saved_rl_state.raw_prompt (or append buf if  no newline found)*/
 

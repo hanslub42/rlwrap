@@ -603,6 +603,10 @@ typedef enum  {TEST_AT_PROGRAM_START, TEST_AFTER_OPTION_PARSING, TEST_AFTER_SPAW
 
 #define MAYBE_UNUSED(x) (void) (x)
 
+#define ATTR_ONLY_FOR_DEBUGGING __attribute__((__unused__)) /* some variables get defined, but are only ever used in DEBUG statements. USE this macro to prevent
+                                                               -Wunused-variables complaining*/
+ 
+
 #ifdef  DEBUG
 
 
@@ -686,6 +690,7 @@ typedef enum  {TEST_AT_PROGRAM_START, TEST_AFTER_OPTION_PARSING, TEST_AFTER_SPAW
 #  define ERRMSG(b)
 #  define SHOWCURSOR
 #  define DEBUG_RANDOM_SLEEP  
+
 
 /* Don't #define NDEBUG!  There are assertions that cannot be skipped, as in assert(important_function_call()) */
 /* Todo (maybe) #define myassert(x) if(DEBUG){assert(x)} for the other (skippable) assertions                  */

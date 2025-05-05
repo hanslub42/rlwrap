@@ -481,7 +481,7 @@ mangle_string_for_debug_log(const char *string, int maxlen)
 
 char *mangle_buffer_for_debug_log(const char *buffer, int length) {
   char *string = mymalloc(length+1);
-  int debug_saved = debug; /* needed by macro MANGLE_LENGTH */
+  int ATTR_ONLY_FOR_DEBUGGING debug_saved = debug; /* needed by macro MANGLE_LENGTH */
   memcpy(string, buffer, length);
   string[length] = '\0';
   return mangle_string_for_debug_log(string, MANGLE_LENGTH);

@@ -701,7 +701,7 @@ static void print_option(char shortopt, char *longopt, char*argument, int option
   /* don't free allocated strings: we'll exit() soon */
 }
 
-static void
+static void ATTR_ONLY_FOR_DEBUGGING
 print_debug_flag(int flag, char *explanation) {
   fprintf(stderr, "    %4d    %s\n", flag, explanation);
 }
@@ -830,7 +830,7 @@ free_multiple(void *ptr, ...)
 
 void mysetsid(void) {
 # ifdef HAVE_SETSID /* c'mon, this is POSIX! */
-  pid_t ret = setsid();
+  pid_t ATTR_ONLY_FOR_DEBUGGING ret = setsid();
 
   DPRINTF2(DEBUG_TERMIO, "setsid() returned %d %s", (int)ret,
            ERRMSG(ret < 0));
