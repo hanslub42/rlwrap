@@ -24,7 +24,7 @@
 */
 
 
-/* this uses a template redblack.c with ancient C code (@HL:  TODO: update libredblack ) */
+/* this uses a template redblack.c with ancient C code */
 #pragma GCC diagnostic ignored "-Wunused-variable"
 #pragma GCC diagnostic ignored "-Wunused-but-set-variable"
 #pragma GCC diagnostic ignored "-Wunused-function"
@@ -71,10 +71,10 @@ compare(const char *string1, const char *string2)
 
 
 
-/* This file has to be processed by the program rbgen  */
+/* This file has to be processed by the program rbgen (https://github.com/hanslub42/libredblack) */
 
 /* rbgen generated code begins here */
-/* rbgen: $Id: rbgen.in,v 1.3 2003/10/24 01:31:21 damo Exp $ */
+/* About rbgen see: https://github.com/hanslub42/libredblack  */
 #define RB_CUSTOMIZE
 #define rbdata_t char
 #define RB_CMP(s, t) compare(s, t)
@@ -270,7 +270,6 @@ RB_STATIC void RB_ENTRY(closelist)(RBLIST *);
  *
  */
 
-static char rcsid[]="$Id: redblack.c,v 1.9 2003/10/24 01:31:21 damo Exp $";
 
 /*
    Redblack balanced tree algorithm
@@ -412,9 +411,6 @@ RB_STATIC struct RB_ENTRY(tree) *RB_ENTRY(init)(void)
 #endif /* RB_CUSTOMIZE */
 {
 	struct RB_ENTRY(tree) *retval;
-	char c;
-
-	c=rcsid[0]; /* This does nothing but shutup the -Wall */
 
 	if ((retval=(struct RB_ENTRY(tree) *) malloc(sizeof(struct RB_ENTRY(tree))))==NULL)
 		return(NULL);
@@ -1414,14 +1410,8 @@ RB_ENTRY(dumptree)(struct RB_ENTRY(node) *x, int n)
 #line 81 "completion.rb"
 
 
- 
-
 /* forward declarations */
 static struct rbtree *completion_tree;
-
-
-static char *my_history_completion_function(char *prefix, int state);
-static void print_list(void);
 
 
 static void
@@ -1438,7 +1428,7 @@ my_rbdestroy(struct rbtree *rb)
 }
 
 
-static void
+static __attribute__((__unused__)) void
 print_list(void)
 {
   const char *word;
@@ -1449,6 +1439,7 @@ print_list(void)
     printf("%s\n", word);
   rbcloselist(completion_list);
 }
+
 
 static char *rbtree_to_string(const struct rbtree *rb, int max_items) {
    const char *word;
@@ -1664,15 +1655,6 @@ my_completion_function(char *prefix, int state)
 
 
 
-
-static char *
-my_history_completion_function(char *prefix, int state)
-{
-  while (next_history());
-  if (state || history_search_prefix(prefix, -1) < 0)
-    return NULL;
-  return mysavestring(current_history()->line);
-}
 
 
 

@@ -23,12 +23,12 @@
 */
 
 
-/* this uses a template redblack.c with ancient C code (@HL:  TODO: update libredblack ) */
+/* this uses a template redblack.c with ancient C code (@HL:  TODO: update libredblack )
 #pragma GCC diagnostic ignored "-Wunused-variable"
 #pragma GCC diagnostic ignored "-Wunused-but-set-variable"
 #pragma GCC diagnostic ignored "-Wunused-function"
 #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
-
+*/
 
 #include "rlwrap.h"
 
@@ -70,7 +70,7 @@ compare(const char *string1, const char *string2)
 
 
 
-/* This file has to be processed by the program rbgen  */
+/* This file has to be processed by the program rbgen (https://github.com/hanslub42/libredblack) */
 
 %%rbgen
 %type char
@@ -81,14 +81,8 @@ compare(const char *string1, const char *string2)
 %%rbgen
 
 
- 
-
 /* forward declarations */
 static struct rbtree *completion_tree;
-
-
-static char *my_history_completion_function(char *prefix, int state);
-static void print_list(void);
 
 
 static void
@@ -105,7 +99,7 @@ my_rbdestroy(struct rbtree *rb)
 }
 
 
-static void
+static __attribute__((__unused__)) void
 print_list(void)
 {
   const char *word;
@@ -116,6 +110,7 @@ print_list(void)
     printf("%s\n", word);
   rbcloselist(completion_list);
 }
+
 
 static char *rbtree_to_string(const struct rbtree *rb, int max_items) {
    const char *word;
@@ -331,15 +326,6 @@ my_completion_function(char *prefix, int state)
 
 
 
-
-static char *
-my_history_completion_function(char *prefix, int state)
-{
-  while (next_history());
-  if (state || history_search_prefix(prefix, -1) < 0)
-    return NULL;
-  return mysavestring(current_history()->line);
-}
 
 
 
