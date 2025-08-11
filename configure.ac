@@ -311,21 +311,23 @@ fi
 
 
 AC_CHECK_FUNC(tgetent,
-   [READLINE_SUPPLIB=],
-     [AC_CHECK_LIB(tinfo, tgetent,
-     [READLINE_SUPPLIB=-ltinfo],
-       [AC_CHECK_LIB(curses, tgetent,
-         [READLINE_SUPPLIB=-lcurses],
-         [AC_CHECK_LIB(ncurses, tgetent,
-            [READLINE_SUPPLIB=-lncurses],
-            [AC_CHECK_LIB(termcap, tgetent,
-               [READLINE_SUPPLIB=-ltermcap],
-               [AC_MSG_ERROR(No termcap nor curses library found)])
+  [READLINE_SUPPLIB=],
+  [AC_CHECK_LIB(tinfo, tgetent,
+    [READLINE_SUPPLIB=-ltinfo],
+    [AC_CHECK_LIB(tinfo, tgetent,
+      [READLINE_SUPPLIB=-ltinfow],
+      [AC_CHECK_LIB(curses, tgetent,
+        [READLINE_SUPPLIB=-lcurses],
+        [AC_CHECK_LIB(ncurses, tgetent,
+          [READLINE_SUPPLIB=-lncurses],
+          [AC_CHECK_LIB(termcap, tgetent,
+            [READLINE_SUPPLIB=-ltermcap],
+            [AC_MSG_ERROR(No termcap nor curses library found)])
             ])
          ])
       ])
    ])
-
+ ])
 
 
 
