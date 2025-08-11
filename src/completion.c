@@ -24,12 +24,11 @@
 */
 
 
-/* this uses a template redblack.c with ancient C code */
+/* this uses a template redblack.c with ancient C code (@HL:  TODO: update libredblack ) */
 #pragma GCC diagnostic ignored "-Wunused-variable"
 #pragma GCC diagnostic ignored "-Wunused-but-set-variable"
 #pragma GCC diagnostic ignored "-Wunused-function"
 #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
-
 
 #include "rlwrap.h"
 
@@ -1407,7 +1406,7 @@ RB_ENTRY(dumptree)(struct RB_ENTRY(node) *x, int n)
  */
 
 /* rbgen generated code ends here */
-#line 81 "completion.rb"
+#line 80 "completion.rb"
 
 
 /* forward declarations */
