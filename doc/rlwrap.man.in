@@ -250,8 +250,8 @@ differently on \fIcommand\fP with, and without, rlwrap.
 
 .TP
 .OL \-X \-\-skip_setctty 
-EXPERIMENTAL: Don't create a new session for \fIcommand\fP (\fIcommand\fP will inherit the controlling terminal of the process
-that invokes \fBrlwrap\fP)
+Don't create a new session for \fIcommand\fP: \fIcommand\fP will inherit the controlling terminal of the process
+that invokes \fBrlwrap\fP. This can be useful to wrap commands that spawn children that are expected to stay running (in particular: not receive a SIGHUP) when the command itself exits.
 
 
 .TP

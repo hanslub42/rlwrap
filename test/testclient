@@ -57,6 +57,7 @@ while(1) {
   /^:C/ and countdown();
   /^:cd(\s+(.*))?/  and chdir($2 ? $2 : $ENV{HOME});
   /^:d/ and die_eloquently();
+  /^:D/ and fork_child_and_then_die();
   (/^:e\s*([+-]?\d+)?/) and exit ($1 || 0);
   /^:f/ and do_fork();
   /^:F/ and forget_last_newline();
@@ -114,6 +115,7 @@ rlwraps behaviour when the client does things like:
 :cd [<dir>] chdir to <dir> (or \$HOME)
 :C countdown in prompt
 :d die eloquently 
+:D fork, spawn a child and die (testing --skip-setctty).
 :e [N] exit (with error code N)
 :f fork and let child take over (parent waits)
 :F forget last newline
@@ -269,6 +271,23 @@ sub test_controlling_terminal {
   }
 }
 
+sub fork_child_and_then_die {
+  my $pid;
+  if ($pid = fork) { # parent
+     select(undef, undef, undef, 0.1);
+     die "parent dying while child is still alive\n";
+   } else { # child
+     open DEVTTY, ">/dev/tty";
+     $SIG{'HUP'} = sub {print DEVTTY "Child received SIGHUP, goodbye!\n"; exit}; # parent may already have closed DEVTTY 
+     for (my $i = 0; $i < 5; $i++) {
+       print DEVTTY "child at $i/5....\n";
+       sleep 1;
+     }
+     print DEVTTY "Child says goodbye!\n";
+     exit;
+   }
+}
+
 
 sub show_input {
   my ($input) = @_;
@@ -349,6 +368,10 @@ sub raw {
 
 }
 
+  
+  
+
+  
 sub toggle_verbosity {
   $verbose = not $verbose;
   print ($verbose ? "verbose now\n" : "not verbose now\n");
