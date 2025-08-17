@@ -22,14 +22,15 @@
 
 
 #if !defined(__STDC_VERSION__) || __STDC_VERSION__ < 199901L
-typedef int bool;
-#define true 1
-#define false 0
+  typedef int bool;
+  #define true 1
+  #define false 0
 #endif
 
 
 #include "../config.h"
 #include <sys/types.h>
+
 #if HAVE_SYS_WAIT_H
 #  include <sys/wait.h>
 #endif
@@ -37,7 +38,6 @@ typedef int bool;
 #ifndef WEXITSTATUS
 #  define WEXITSTATUS(stat_val) ((unsigned)(stat_val) >> 8)
 #endif
-
 
 
 #include <sys/stat.h>
@@ -127,16 +127,15 @@ char *strchr(), *strrchr();
 #endif
 
 
-
-
-#ifdef HAVE_PTY_H /* glibc (even if BSD) */
-#  include <pty.h>
-#elif HAVE_LIBUTIL_H /* BSD, non-glibc */
-#  include <libutil.h>
-#elif HAVE_UTIL_H /* BSD, other varriants */
-#  include <util.h>
+#if ! USE_LIBPTYTTY
+#  ifdef HAVE_PTY_H /* glibc (even if BSD) */
+#    include <pty.h>
+#  elif HAVE_LIBUTIL_H /* BSD, non-glibc */
+#    include <libutil.h>
+#  elif HAVE_UTIL_H /* BSD, other varriants */
+#    include <util.h>
+#  endif
 #endif
-
 
 #if HAVE_DECL_PROC_PIDVNODEPATHINFO
 #  include <libproc.h>
@@ -451,10 +450,10 @@ int dont_wrap_command_waits(void);
 int skip_rlwrap(void);
 
 /* in ptytty.c: */
-int ptytty_get_pty(int *fd_tty, const char **ttydev);
-int ptytty_get_tty(const char *ttydev);
+
 int ptytty_control_tty(int fd_tty, const char *ttydev);
 int ptytty_openpty(int *amaster, int *aslave, const char **name);
+
 
 /* in completion.rb: */
 void init_completer(void);

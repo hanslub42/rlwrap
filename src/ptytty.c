@@ -1,7 +1,4 @@
 /*
- * Shamelessly ripped out of rxvt-2.7.10 (Copyright (c) 1999-2001
- * Geoff Wing <gcw@pobox.com>) by Hans Lub <hanslub42@gmail.com>
- *
  * All portions of code are copyright by their respective author/s.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -20,6 +17,46 @@
  *---------------------------------------------------------------------*/
 
 #include "rlwrap.h"
+
+
+#if USE_LIBPTYTTY
+
+
+#include <libptytty.h>
+
+int ptytty_control_tty(int fd_tty, const char *ttydev){
+  return 0;
+}
+
+
+
+int ptytty_openpty(int *amaster, int *aslave, const char **name) {
+  DPRINTF0(DEBUG_TERMIO, "Using libptytty to obtain pty/tty pair");
+  PTYTTY ptytty = ptytty_create();
+  if (! ptytty_get(ptytty)) {
+      myerror(FATAL|USE_ERRNO, "Could not create pty for  %s", program_name);
+  }
+  *amaster = ptytty_pty(ptytty);
+  *aslave  = ptytty_tty(ptytty);
+  if (skip_setctty) 
+      DPRINTF0(DEBUG_TERMIO, "--skip-setccty: don't make slave pty a controlling terminal");
+  else
+    if (ptytty_make_controlling_tty(ptytty))
+      myerror(WARNING|USE_ERRNO, "Could not make slave a controlling terminal");
+  *name = "<nameless>"; /* No way to retrieve pty name when we are using libptytty */
+  return 0;
+}
+
+
+
+
+
+
+#else  /* Don't use libptytty, use our own ancient implementation instead,
+          It was shamelessly ripped out of rxvt-2.7.10 (Copyright (c) 1999-2001
+          Geoff Wing <gcw@pobox.com>) by the rlwrap author */
+
+
 
 
 #include <stdio.h>
@@ -61,7 +98,7 @@
 
 #define O_RWNN  O_RDWR | O_NDELAY | O_NOCTTY
 
-int
+static int
 ptytty_get_pty(int *fd_tty, const char **ttydev)
 {
   int pfd;
@@ -190,7 +227,7 @@ ptytty_get_pty(int *fd_tty, const char **ttydev)
  * Returns tty file descriptor, or -1 on failure 
  */
 /* EXTPROTO */
-int
+static int
 ptytty_get_tty(const char *ttydev)
 {
   return open(ttydev, O_RDWR | O_NOCTTY, 0);
@@ -321,6 +358,8 @@ ptytty_control_tty(int fd_tty, const char *ttydev)
 }
 
 
+
+
 int
 ptytty_openpty(int *amaster, int *aslave, const char **name)
 {
@@ -340,3 +379,6 @@ ptytty_openpty(int *amaster, int *aslave, const char **name)
 
   return 0;
 }
+
+#endif /* HAVE_LIBPTYTTY */
+

@@ -76,6 +76,28 @@ AC_ARG_ENABLE(proc-mountpoint,
      opt_proc_mountpoint=$enableval) 
 
 
+
+AC_ARG_WITH(libptytty,
+     AS_HELP_STRING([--with-libptytty], [Use libptytty for pty handling (default: yes). If not, fall back to rlwrap's own ptytty.c]),
+     [], [with_libptytty="yes"])
+
+
+saved_libs=$LIBS
+AC_CHECK_LIB(ptytty, ptytty_create) 
+
+
+AH_TEMPLATE(USE_LIBPTYTTY) # why is this necessary?
+if test x$with_libptytty != xno ; then
+   if test x$ac_cv_lib_ptytty_ptytty_create = xno ; then
+          AC_MSG_ERROR([libptytty not found, install it or specify  --without-libptytty]) 
+   fi
+   AC_DEFINE(USE_LIBPTYTTY,1)
+else
+   LIBS=$saved_libs
+   AC_DEFINE(USE_LIBPTYTTY,0)
+fi
+
+
 if test x$opt_debug = xyes ; then
     AC_DEFINE(DEBUG,1 ,Define to 1 to get debugging info)
     test -z "$CFLAGS" || AC_MSG_WARN([Because CFLAGS is set, configure will not add -g and -Wall to them - do it yourself if necessary])
@@ -89,7 +111,7 @@ fi
 # wait with defining SPY_ON_READLINE until we know we can use _rl_horizontal_scroll_mode (cf below)
 
 
-AC_USE_SYSTEM_EXTENSIONS
+
 
 test x$opt_homegrown_redisplay = xyes && AC_DEFINE(HOMEGROWN_REDISPLAY,1 ,[Define to 1 to use homegrown_redisplay()])
 
@@ -100,7 +122,7 @@ AC_CONFIG_FILES([Makefile filters/Makefile doc/Makefile src/Makefile doc/rlwrap.
 # Checks for programs.
 
 
-AC_PROG_CC
+OBAC_PROG_CC
 AC_PROG_CPP
 
 AC_PATH_PROG(PERL,perl)
@@ -188,123 +210,118 @@ AC_CHECK_FUNC([getopt_long],
 AC_CHECK_FUNCS(basename dirname flock getopt_long isastream  mkstemps pselect putenv readlink sched_yield )
 AC_CHECK_FUNCS(setenv setitimer setsid setrlimit sigaction snprintf strlcpy strlcat strnlen system)
 
-# Try to determine the kind of pty support on this system
-# This is not so easy and may guess wrong; if this happens:
-#    - edit config.h by hand (and keep a copy of it somewhere as configure will overwrite it), and 
-#    - *please* notify the author! (hanslub42@gmail.com) 
-# Most of the code below is taken from rxvt-2.7.10 (Copyright (c) 1999-2001
-# Geoff Wing <gcw@pobox.com>)
 
-# In the newest FreeBSD, we need openpty, which exists in libutil
-# NB: The rxvt configure script warns against this. Why?
+if test x$with_libptytty == xno
+then
+  # If we don't use libtyttty, try to determine the kind of pty support on this system
+  # This is not so easy and may guess wrong; if this happens:
+  #    - edit config.h by hand (and keep a copy of it somewhere as configure will overwrite it), and 
+  #    - *please* notify the author! (hanslub42@gmail.com) 
+  # Most of the code below is taken from rxvt-2.7.10 (Copyright (c) 1999-2001
+  # Geoff Wing <gcw@pobox.com>)
 
-
-AC_CHECK_LIB(util, openpty)
-AC_CHECK_FUNCS(openpty getpty grantpt unlockpt)
-
-
-
-# AC_CACHE_CHECK(for getpt, ptyttylib_cv_func_getpt,
-# [AC_TRY_LINK([#define _GNU_SOURCE
-# #ifdef HAVE_STDLIB_H
-# # include <stdlib.h>
-# #endif],
-#   [(void)getpt();],
-#   ptyttylib_cv_func_getpt=yes, ptyttylib_cv_func_getpt=no)])
-
-
-
-AC_CACHE_CHECK(for getpt, ptyttylib_cv_func_getpt,
-[AC_LINK_IFELSE(
-  [AC_LANG_PROGRAM([[
-  #define _GNU_SOURCE
-  #ifdef HAVE_STDLIB_H
-  # include <stdlib.h>
-  #endif
-  ]],
-  [[(void)getpt();]],
-  ptyttylib_cv_func_getpt=yes, ptyttylib_cv_func_getpt=no)])])
-
-
-if test x$ptyttylib_cv_func_getpt = xyes; then
-  AC_DEFINE(HAVE_GETPT, 1, Define if you have _GNU_SOURCE getpt() )
-fi
-
-
-AC_CACHE_CHECK(for pty/tty type, ptyttylib_cv_ptys,
-[if test x$ac_cv_func_openpty = xyes; then
-    ptyttylib_cv_ptys=OPENPTY
-    AC_CHECK_HEADERS([pty.h])    
- else if test x$ac_cv_func__getpty = xyes; then
-    ptyttylib_cv_ptys=SGI4
- else if test -c /dev/ttyp20 -a ! -c /dev/ptmx; then 
-   ptyttylib_cv_ptys=SCO
- else if test -c /dev/ptym/clone; then
-    ptyttylib_cv_ptys=HPUX
- else if test x$ptyttylib_cv_func_getpt = xyes; then
-    ptyttylib_cv_ptys=GLIBC
- else if test -c /dev/ptc -a -c /dev/pts; then
-    ptyttylib_cv_ptys=PTC
- else if test -c /dev/ptc -a -d /dev/pts; then
-    ptyttylib_cv_ptys=PTC
- else if test -c /dev/ptmx -a -c /dev/pts/0; then
-    ptyttylib_cv_ptys=STREAMS
- else case "$host_os" in
-         *cygwin*) ptyttylib_cv_ptys=STREAMS ;;
-         *)        ptyttylib_cv_ptys=PREHISTORIC ;;
-      esac
-fi
-fi
-fi
-fi
-fi
-fi
-fi
-fi
-])
-
-if test x$ptyttylib_cv_ptys = xOPENPTY; then
-  AC_DEFINE(PTYS_ARE_OPENPTY, 1, Define for this pty type)
-fi
-if test x$ptyttylib_cv_ptys = xSCO; then
-  AC_DEFINE(PTYS_ARE_NUMERIC, 1, Define for this pty type)
-fi
-if test x$ptyttylib_cv_ptys = xSTREAMS; then
-  AC_DEFINE(PTYS_ARE_PTMX, 1, Define for this pty type)
-fi
-if test x$ptyttylib_cv_ptys = xPTC; then
-  AC_DEFINE(PTYS_ARE_PTC, 1, Define for this pty type)
-fi
-if test x$ptyttylib_cv_ptys = xSGI4; then
-  AC_DEFINE(PTYS_ARE__GETPTY, 1, Define for this pty type)
-fi
-if test x$ptyttylib_cv_ptys = xCONVEX; then
-  AC_DEFINE(PTYS_ARE_GETPTY, 1, Define for this pty type)
-fi
-if test x$ptyttylib_cv_ptys = xGLIBC; then
-  AC_DEFINE(PTYS_ARE_GETPT, 1, Define for this pty type)
-fi
-if test x$ptyttylib_cv_ptys = xHPUX; then
-  AC_DEFINE(PTYS_ARE_CLONE, 1, Define for this pty type)
-fi
-if test x$ptyttylib_cv_ptys = xPREHISTORIC -o x$ptyttylib_cv_ptys = xHPUX -o x$ptyttylib_cv_ptys = xGLIBC; then
-  AC_DEFINE(PTYS_ARE_SEARCHED, 1, Define for this pty type)
-fi
+  # In the newest FreeBSD, we need openpty, which exists in libutil
+  # NB: The rxvt configure script warns against this. Why?
 
 
 
 
-AC_MSG_NOTICE(checking for pty ranges)
-ptys=`echo /dev/pty??`
-pch1=`echo $ptys | tr ' ' '\012' | sed -e 's/^.*\(.\).$/\1/g' | sort -u | tr -d '\012'`
-pch2=`echo $ptys | tr ' ' '\012' | sed -e 's/^.*\(.\)$/\1/g' | sort -u | tr -d '\012'`
-if test x$pch1 != x; then
-  AC_DEFINE_UNQUOTED(PTYCHAR1, "$pch1", Define for first char in devptyXX)
-fi
-if test x$pch2 != x; then
-  AC_DEFINE_UNQUOTED(PTYCHAR2, "$pch2", Define for second char in devptyXX)
-fi
 
+  AC_CHECK_LIB(util, openpty)
+  AC_CHECK_FUNCS(openpty getpty grantpt unlockpt)
+
+
+  AC_CACHE_CHECK(for getpt, ptyttylib_cv_func_getpt,
+    [AC_LINK_IFELSE(
+    [AC_LANG_PROGRAM([[
+      #define _GNU_SOURCE
+      #ifdef HAVE_STDLIB_H
+      # include <stdlib.h>
+      #endif
+    ]],
+    [[(void)getpt();]],
+     ptyttylib_cv_func_getpt=yes, ptyttylib_cv_func_getpt=no)])])
+
+
+   if test x$ptyttylib_cv_func_getpt = xyes; then
+     AC_DEFINE(HAVE_GETPT, 1, Define if you have _GNU_SOURCE getpt() )
+   fi
+
+
+  AC_CACHE_CHECK(for pty/tty type, ptyttylib_cv_ptys,
+   [if test x$ac_cv_func_openpty = xyes; then
+     ptyttylib_cv_ptys=OPENPTY
+     AC_CHECK_HEADERS([pty.h])    
+     else if test x$ac_cv_func__getpty = xyes; then
+        ptyttylib_cv_ptys=SGI4
+       else if test -c /dev/ttyp20 -a ! -c /dev/ptmx; then 
+        ptyttylib_cv_ptys=SCO
+         else if test -c /dev/ptym/clone; then
+            ptyttylib_cv_ptys=HPUX
+           else if test x$ptyttylib_cv_func_getpt = xyes; then
+            ptyttylib_cv_ptys=GLIBC
+             else if test -c /dev/ptc -a -c /dev/pts; then
+                ptyttylib_cv_ptys=PTC
+               else if test -c /dev/ptc -a -d /dev/pts; then
+                ptyttylib_cv_ptys=PTC
+                 else if test -c /dev/ptmx -a -c /dev/pts/0; then
+                   ptyttylib_cv_ptys=STREAMS
+                   else case "$host_os" in
+                          *cygwin*) ptyttylib_cv_ptys=STREAMS ;;
+                          *)         ptyttylib_cv_ptys=PREHISTORIC ;;
+                        esac
+                  fi
+                fi
+              fi
+            fi
+          fi
+        fi
+      fi
+    fi
+  ])
+
+  if test x$ptyttylib_cv_ptys = xOPENPTY; then
+    AC_DEFINE(PTYS_ARE_OPENPTY, 1, Define for this pty type)
+  fi
+  if test x$ptyttylib_cv_ptys = xSCO; then
+    AC_DEFINE(PTYS_ARE_NUMERIC, 1, Define for this pty type)
+  fi
+  if test x$ptyttylib_cv_ptys = xSTREAMS; then
+    AC_DEFINE(PTYS_ARE_PTMX, 1, Define for this pty type)
+  fi
+  if test x$ptyttylib_cv_ptys = xPTC; then
+    AC_DEFINE(PTYS_ARE_PTC, 1, Define for this pty type)
+  fi
+  if test x$ptyttylib_cv_ptys = xSGI4; then
+     AC_DEFINE(PTYS_ARE__GETPTY, 1, Define for this pty type)
+  fi
+  if test x$ptyttylib_cv_ptys = xCONVEX; then
+     AC_DEFINE(PTYS_ARE_GETPTY, 1, Define for this pty type)
+  fi
+  if test x$ptyttylib_cv_ptys = xGLIBC; then
+    AC_DEFINE(PTYS_ARE_GETPT, 1, Define for this pty type)
+  fi
+  if test x$ptyttylib_cv_ptys = xHPUX; then
+    AC_DEFINE(PTYS_ARE_CLONE, 1, Define for this pty type)
+  fi
+  if test x$ptyttylib_cv_ptys = xPREHISTORIC -o x$ptyttylib_cv_ptys = xHPUX -o x$ptyttylib_cv_ptys = xGLIBC; then
+    AC_DEFINE(PTYS_ARE_SEARCHED, 1, Define for this pty type)
+  fi
+
+
+
+
+  AC_MSG_NOTICE(checking for pty ranges)
+  ptys=`echo /dev/pty??`
+  pch1=`echo $ptys | tr ' ' '\012' | sed -e 's/^.*\(.\).$/\1/g' | sort -u | tr -d '\012'`
+  pch2=`echo $ptys | tr ' ' '\012' | sed -e 's/^.*\(.\)$/\1/g' | sort -u | tr -d '\012'`
+  if test x$pch1 != x; then
+    AC_DEFINE_UNQUOTED(PTYCHAR1, "$pch1", Define for first char in devptyXX)
+  fi
+  if test x$pch2 != x; then
+    AC_DEFINE_UNQUOTED(PTYCHAR2, "$pch2", Define for second char in devptyXX)
+  fi
+fi # if test x$with_libptytty = no
 
 
 # Checks whether readline needs additional libs.
@@ -314,7 +331,7 @@ AC_CHECK_FUNC(tgetent,
   [READLINE_SUPPLIB=],
   [AC_CHECK_LIB(tinfo, tgetent,
     [READLINE_SUPPLIB=-ltinfo],
-    [AC_CHECK_LIB(tinfo, tgetent,
+    [AC_CHECK_LIB(tinfow, tgetent,
       [READLINE_SUPPLIB=-ltinfow],
       [AC_CHECK_LIB(curses, tgetent,
         [READLINE_SUPPLIB=-lcurses],
@@ -328,6 +345,8 @@ AC_CHECK_FUNC(tgetent,
       ])
    ])
  ])
+
+
 
 
 
