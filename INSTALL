@@ -32,6 +32,9 @@ install rlwrap in a non-standard place). Do
 to see them all. Most of them are not specific to rlwrap, except the
 following:
 
+--with-libptytty (default: YES) Use libptytty instead of rlwrap's own
+  pty handling. 
+  
 --enable-spy-on-readline (default: YES) If we want to keep the display
   tidy when re-sizing the terminal window or printing multi-line
   prompts, we have to know whether or not readline is in
@@ -111,12 +114,4 @@ On recent OS X sytems, libreadline is not the real thing, but a
 non-GNU replacement. If the linker complains about missing
 symbols, install GNU readline and try again (or, better, use
 a tool like brew)
-
-Even though rlwrap now uses the excellent pseudo-terminal (pty)
-handling code from rxvt, portable programming with ptys is something
-of a black art. The configure script tries to guess how ptys have to
-be created and handled on your system, but it may guess wrong. To
-quote rxvt's configure script: "if we don't guess right then it's up
-to the user", which means that you have to manually edit config.h, and
-save a copy of it somewhere, as configure will re-create config.h
 

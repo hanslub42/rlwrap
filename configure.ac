@@ -85,8 +85,7 @@ AC_ARG_WITH(libptytty,
 saved_libs=$LIBS
 AC_CHECK_LIB(ptytty, ptytty_create) 
 
-
-AH_TEMPLATE(USE_LIBPTYTTY) # why is this necessary?
+AH_TEMPLATE(USE_LIBPTYTTY)
 if test x$with_libptytty != xno ; then
    if test x$ac_cv_lib_ptytty_ptytty_create = xno ; then
           AC_MSG_ERROR([libptytty not found, install it or specify  --without-libptytty]) 
@@ -122,7 +121,7 @@ AC_CONFIG_FILES([Makefile filters/Makefile doc/Makefile src/Makefile doc/rlwrap.
 # Checks for programs.
 
 
-OBAC_PROG_CC
+AC_PROG_CC
 AC_PROG_CPP
 
 AC_PATH_PROG(PERL,perl)

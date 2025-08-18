@@ -19,13 +19,16 @@
 #include "rlwrap.h"
 
 
-#if USE_LIBPTYTTY
+#if USE_LIBPTYTTY /* Use libptytty. If USE_LIBPTTY is not defined (or 0),
+                     use rlwrap's original ancient implementation of the same functionality.
+                     This could be useful on really old systems, where libptytty is not available,
+                     or not working for some reason. */
 
 
 #include <libptytty.h>
 
 int ptytty_control_tty(int fd_tty, const char *ttydev){
-  return 0;
+  return 0; /* ptty_make_controlling_tty() is already called in ptty_openpty */
 }
 
 
@@ -46,9 +49,6 @@ int ptytty_openpty(int *amaster, int *aslave, const char **name) {
   *name = "<nameless>"; /* No way to retrieve pty name when we are using libptytty */
   return 0;
 }
-
-
-
 
 
 
