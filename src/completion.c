@@ -28,7 +28,9 @@
 #pragma GCC diagnostic ignored "-Wunused-variable"
 #pragma GCC diagnostic ignored "-Wunused-but-set-variable"
 #pragma GCC diagnostic ignored "-Wunused-function"
-#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#pragma GCC diagnostic ignored "-Wuninitialized"
+#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
+
 
 #include "rlwrap.h"
 
@@ -1406,7 +1408,7 @@ RB_ENTRY(dumptree)(struct RB_ENTRY(node) *x, int n)
  */
 
 /* rbgen generated code ends here */
-#line 80 "completion.rb"
+#line 82 "completion.rb"
 
 
 /* forward declarations */

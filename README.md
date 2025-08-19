@@ -24,6 +24,9 @@ cygwin, linux and probably quite a few more).  This would not have
 been possible without [Polarhome](http://polarhome.com)'s now retired
 'dinosaur zoo' of ageing Unix systems.
 
+Now that Polarhome has closed shop I cannot do much more than make
+sure that the `rlwrap` source code  still conforms to POSIX.1c (1995)
+
 ## HOW TO USE IT:
 
 If 
@@ -33,7 +36,7 @@ If
 displays the infamous `^[[D` when you press a left arrow key, or if
 you just want decent input history and completion, try:
 
-    $ rlwrap [-options] <command> <args>
+    $ rlwrap [rlwrap-options] <command> [command-args]
 
 You should not notice any difference compared to directly calling `<command>
 <args>`, except that you now can edit `<command>`'s input and recall
@@ -41,8 +44,8 @@ its entire input history using the arrow keys.
 
 
 Input history is remembered accross invocations, separately for
-different `<command>`s. `CTRL-R` will search the input
-history, like in `bash`.  With the `-r` and `-f` options you can specify the list of
+different `<command>`s. `CTRL-R` will search the input history, like
+in `bash`.  With the `-r` and `-f` options you can specify the list of
 words which `rlwrap` will use as possible completions, taking them
 from a file (`-f` option) or from `<command>`'s past in/output (-r
 option).

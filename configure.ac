@@ -47,16 +47,16 @@ opt_multibyte_aware=yes
 opt_proc_mountpoint=/proc
 
 AC_ARG_ENABLE(debug,
-    AS_HELP_STRING([--enable-debug], [enable debugging (default=NO)]),
+    AS_HELP_STRING([--enable-debug], [enable rlwrap --debug option  (default=NO)]),
     opt_debug=$enableval)
 
 AC_ARG_ENABLE(pedantic-ansi,
-    AS_HELP_STRING([--enable-pedantic-ansi], [compile with -ansi and -pedantic (default=NO)]),
+    AS_HELP_STRING([--enable-pedantic-ansi], [compile with -ansi, -D_POSIX_C_SOURCE=199506L and -pedantic (default=no, don't use in production!)]),
     opt_pedantic_ansi=$enableval)
 
 
 AC_ARG_ENABLE(homegrown-redisplay,
-    AS_HELP_STRING([--enable-homegrown-redisplay], [try this only if rlwrap messes up the prompt (default=NO)]),
+    AS_HELP_STRING([--enable-homegrown-redisplay], [try this only if rlwrap messes up the prompt (default=no)]),
     opt_homegrown_redisplay=$enableval)
 
 
@@ -75,11 +75,22 @@ AC_ARG_ENABLE(proc-mountpoint,
        [specify mountpoint for Linux-style procfs (used for determination of command's PWD) (default=/proc)]), # '                               
      opt_proc_mountpoint=$enableval) 
 
-
-
 AC_ARG_WITH(libptytty,
-     AS_HELP_STRING([--with-libptytty], [Use libptytty for pty handling (default: yes). If not, fall back to rlwrap's own ptytty.c]),
+     AS_HELP_STRING([--with-libptytty], [Use libptytty for pty handling (default: yes). If not, fall back to rlwrap's own crusty ptytty.c]),
      [], [with_libptytty="yes"])
+
+
+
+if test x$opt_debug = xyes ; then
+    AC_DEFINE(DEBUG,1 ,Define to 1 to get debugging info)
+    test -z "$CFLAGS" || AC_MSG_WARN([Because CFLAGS is set, configure will not add -g and -Wall to them - do it yourself if necessary])
+    test -z "$CFLAGS" && AC_SUBST(CFLAGS,"-O0 -g -Wall") # compile for debugging, and  give plenty of warnings
+fi
+
+# test for backwards compatibility 
+if test x$opt_pedantic_ansi = xyes ; then
+    AC_SUBST(CFLAGS,"$CFLAGS -Icompat.h -ansi -Werror -Wimplicit-function-declaration -Wimplicit -pedantic -Wextra -D_POSIX_C_SOURCE=199506L")
+fi
 
 
 saved_libs=$LIBS
@@ -96,16 +107,6 @@ else
    AC_DEFINE(USE_LIBPTYTTY,0)
 fi
 
-
-if test x$opt_debug = xyes ; then
-    AC_DEFINE(DEBUG,1 ,Define to 1 to get debugging info)
-    test -z "$CFLAGS" || AC_MSG_WARN([Because CFLAGS is set, configure will not add -g and -Wall to them - do it yourself if necessary])
-    test -z "$CFLAGS" && AC_SUBST(CFLAGS,"-O0 -g -Wall") # compile for debugging, and  give plenty of warnings
-fi
-
-if test x$opt_pedantic_ansi = xyes ; then
-    AC_SUBST(CFLAGS,"$CFLAGS -ansi -Wimplicit-function-declaration -Wimplicit -pedantic -Wextra")
-fi
 
 # wait with defining SPY_ON_READLINE until we know we can use _rl_horizontal_scroll_mode (cf below)
 
@@ -206,9 +207,10 @@ AC_CHECK_FUNC([getopt_long],
   [AC_SUBST(HAVE_LONG_OPTS,[no])]
    AC_SUBST(HAVE_OPTIONAL_ARGS,no))
 
-AC_CHECK_FUNCS(basename dirname flock getopt_long isastream  mkstemps pselect putenv readlink sched_yield )
-AC_CHECK_FUNCS(setenv setitimer setsid setrlimit sigaction snprintf strlcpy strlcat strnlen system)
+AC_CHECK_FUNCS(basename dirname flock getopt_long isastream  pselect sched_yield )
+AC_CHECK_FUNCS(setitimer setsid setrlimit sigaction  system)
 
+AC_CHECK_DECLS([mkstemps,snprintf,strlcat,strnlen,setenv,putenv,readlink,nice])
 
 if test x$with_libptytty == xno
 then

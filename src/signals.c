@@ -420,6 +420,7 @@ handle_program_error_signal(int sig)
 
 
 static int coredump(int status) {
+  MAYBE_UNUSED(status);
 #ifdef WCOREDUMP
   return WCOREDUMP(status);
 #else

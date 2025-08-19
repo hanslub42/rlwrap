@@ -275,9 +275,9 @@ mysetenv(const char *name, const char *value)
   int return_value = 0;
   
   
-#ifdef HAVE_SETENV
+#if HAVE_DECL_SETENV
   return_value = setenv(name, value, TRUE);   
-#elif defined(HAVE_PUTENV)
+#elif HAVE_DECL_PUTENV
   char *name_is_value = add3strings (name, "=", value);
   return_value = putenv (name_is_value);
 #else /* won't happen, but anyway: */      
@@ -313,7 +313,7 @@ int open_unique_tempfile(const char *suffix, char **tmpfile_name) {
  
   *tmpfile_name = mymalloc(MAXPATHLEN+1);
 
-#ifdef HAVE_MKSTEMPS
+#if HAVE_DECL_MKSTEMPS
   snprintf4(*tmpfile_name, MAXPATHLEN, "%s/%s_%s_XXXXXX%s", tmpdir, program_name, command_name, suffix); 
   tmpfile_fd = mkstemps(*tmpfile_name, strlen(suffix));  /* this will write into *tmpfile_name */
 #else
@@ -480,6 +480,7 @@ timestamp(char *buf, int size)
   static int never_called = 1;
   long diff_usec;
   float diff_sec;
+  MAYBE_UNUSED(size); /* on systems without snprintf */
   
   gettimeofday(&now, NULL);
   if (never_called) {
@@ -534,17 +535,17 @@ get_new_slave_cwd(char **cwd)
 {
   char *possibly_new_cwd = NULL;
   int return_value = 0;
-
   
 #if defined(HAVE_PROC_PID_CWD) /* Linux, Solaris, and FreeBSD with the proc filesystem */
 
   static char *proc_pid_cwd = NULL;
   char readlink_buffer[MAXPATHLEN+1];
+  MAYBE_UNUSED(readlink_buffer);
     
   if (!proc_pid_cwd)
     proc_pid_cwd = add3strings(PROC_MOUNTPOINT, "/", add2strings(as_string(command_pid), "/cwd"));
 
-# ifdef HAVE_READLINK
+# if HAVE_DECL_READLINK
   if  (readlink(proc_pid_cwd, readlink_buffer, MAXPATHLEN) > 0)
     possibly_new_cwd = mysavestring(readlink_buffer);
 # else

@@ -54,7 +54,7 @@ mystrlcpy(char *dst, const char *src, size_t size)
 void
 mystrlcat(char *dst, const char *src, size_t size)
 {
-#ifdef HAVE_STRLCAT
+#if HAVE_DECL_STRLCAT
   strlcat(dst, src, size);
   dst[size - 1] = '\0';         /* we don't check for truncation, just assure '\0'-termination. */
 #else
@@ -155,13 +155,13 @@ mybasename(const char *filename)
   free(filename_copy);
   return result; /* basename on HP-UX is toxic: the result will be overwritten by subsequent invocations! */
 #else
-  char *p;
+  const char *p;
 
   /* find last '/' in name (if any) */
   for (p = filename + strlen(filename) - 1; p > filename; p--)
     if (*(p - 1) == '/')
       break;
-  return p;
+  return mysavestring(p);
 #endif
 }
 
@@ -879,6 +879,7 @@ colourless_strlen(const char *str, char ** pcopy_without_ignore_markers, int UNU
 
 
 DEF_UNIT_TEST(test_colourless_strlen) {
+  MAYBE_UNUSED(argv); MAYBE_UNUSED(argc);
   if (STAGE(TEST_AT_PROGRAM_START))   {
     char test[] = "\033[0;31mblא\033[0m bla \033[0;33mblא\033[0m";
     char *result, *copy;

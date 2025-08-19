@@ -27,15 +27,15 @@
 
 #include <libptytty.h>
 
-int ptytty_control_tty(int fd_tty, const char *ttydev){
+int ptytty_control_tty(int UNUSED(fd_tty), const char *UNUSED(ttydev)){
   return 0; /* ptty_make_controlling_tty() is already called in ptty_openpty */
 }
 
 
 
 int ptytty_openpty(int *amaster, int *aslave, const char **name) {
-  DPRINTF0(DEBUG_TERMIO, "Using libptytty to obtain pty/tty pair");
   PTYTTY ptytty = ptytty_create();
+  DPRINTF0(DEBUG_TERMIO, "Using libptytty to obtain pty/tty pair");
   if (! ptytty_get(ptytty)) {
       myerror(FATAL|USE_ERRNO, "Could not create pty for  %s", program_name);
   }

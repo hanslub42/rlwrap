@@ -20,7 +20,6 @@
 */
 
 
-
 #if !defined(__STDC_VERSION__) || __STDC_VERSION__ < 199901L
   typedef int bool;
   #define true 1
@@ -160,7 +159,7 @@ char *strchr(), *strrchr();
 #endif
 
 
-#ifdef  HAVE_SNPRINTF           /* don't rely on the compiler understanding variadic macros */
+#if  HAVE_DECL_SNPRINTF           /* don't rely on the compiler understanding variadic macros */
 # define snprintf0(buf,bufsize,format)                           snprintf(buf,bufsize,format)
 # define snprintf1(buf,bufsize,format,arg1)                      snprintf(buf,bufsize,format,arg1)
 # define snprintf2(buf,bufsize,format,arg1,arg2)                 snprintf(buf,bufsize,format,arg1,arg2)

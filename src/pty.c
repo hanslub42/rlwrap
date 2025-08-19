@@ -126,11 +126,14 @@ my_pty_fork(int *ptr_master_fd,
 
     errno = 0;
     if (renice) {
+#if HAVE_DECL_NICE
       int retval = nice(1);
       if (retval < 0 && errno)  
         myerror(FATAL|USE_ERRNO, "could not increase my own niceness"); 
+#else
+      myerror(FATAL, "This system doesnt't have the nice (2) function");
+#endif
     }
-
     if (slave_winsize != NULL)
       if (ioctl(slave_pty_sensing_fd, TIOCSWINSZ, slave_winsize) < 0) 
         myerror(FATAL|USE_ERRNO, "TIOCSWINSZ failed on %s pty", sensing_pty); /* This is done in parent and not in child as that would fail on Solaris (why?) */ 
