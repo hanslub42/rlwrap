@@ -39,13 +39,13 @@ my_pty_fork(int *ptr_master_fd,
   int fdm, fds = -1;
   int ttyfd, timeout;
   pid_t pid;
-  const char *slave_name;
+  const char *slave_name_or_ptytty; /* opaque PTYTTY pointer when using libptytty, else slave name */
   struct termios pterm;
   int only_sigchld[] = { SIGCHLD, 0 };
   
 
 
-  ptytty_openpty(&fdm, &fds, &slave_name);
+  ptytty_openpty(&fdm, &fds, &slave_name_or_ptytty);
 
 
   block_signals(only_sigchld);  /* block SIGCHLD until we have had a chance to install a handler for it after the fork() */
@@ -64,7 +64,7 @@ my_pty_fork(int *ptr_master_fd,
     if (skip_setctty) 
       DPRINTF0(DEBUG_TERMIO, "--skip-setccty: don't make slave pty a controlling terminal");
     else
-      ptytty_control_tty(fds, slave_name);
+      ptytty_control_tty(fds, slave_name_or_ptytty);
 
     if (dup2(fds, STDIN_FILENO) != STDIN_FILENO) /* extremely unlikely */
       myerror(FATAL|USE_ERRNO, "dup2 to stdin failed");

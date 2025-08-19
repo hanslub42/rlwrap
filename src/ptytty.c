@@ -27,13 +27,19 @@
 
 #include <libptytty.h>
 
-int ptytty_control_tty(int UNUSED(fd_tty), const char *UNUSED(ttydev)){
+int
+ptytty_control_tty(int UNUSED(fd_tty), const char *ptytty)  /* called by child */
+{
+  if (! ptytty_make_controlling_tty((PTYTTY) ptytty))
+      myerror(WARNING|USE_ERRNO, "Could not make slave a controlling terminal");
   return 0; /* ptty_make_controlling_tty() is already called in ptty_openpty */
 }
 
 
 
-int ptytty_openpty(int *amaster, int *aslave, const char **name) {
+int
+ptytty_openpty(int *amaster, int *aslave, const char **ptytty_ptr)
+{
   PTYTTY ptytty = ptytty_create();
   DPRINTF0(DEBUG_TERMIO, "Using libptytty to obtain pty/tty pair");
   if (! ptytty_get(ptytty)) {
@@ -41,12 +47,7 @@ int ptytty_openpty(int *amaster, int *aslave, const char **name) {
   }
   *amaster = ptytty_pty(ptytty);
   *aslave  = ptytty_tty(ptytty);
-  if (skip_setctty) 
-      DPRINTF0(DEBUG_TERMIO, "--skip-setccty: don't make slave pty a controlling terminal");
-  else
-    if (ptytty_make_controlling_tty(ptytty))
-      myerror(WARNING|USE_ERRNO, "Could not make slave a controlling terminal");
-  *name = "<nameless>"; /* No way to retrieve pty name when we are using libptytty */
+  *ptytty_ptr = (char *) ptytty ; /* cast to char * in order to expose same sigature as without USE_LIBPTYTTY */
   return 0;
 }
 
@@ -222,24 +223,17 @@ ptytty_get_pty(int *fd_tty, const char **ttydev)
   return -1;
 }
 
-/*----------------------------------------------------------------------*/
-/*
- * Returns tty file descriptor, or -1 on failure 
- */
-/* EXTPROTO */
+
+
+/* Returns tty file descriptor, or -1 on failure  */
 static int
 ptytty_get_tty(const char *ttydev)
 {
   return open(ttydev, O_RDWR | O_NOCTTY, 0);
 }
 
-/*----------------------------------------------------------------------*/
-/*
- * Make our tty a controlling tty so that /dev/tty points to us
- */
-/* EXTPROTO */
 
-
+/* Make our tty a controlling tty so that /dev/tty points to us */
 int
 ptytty_control_tty(int fd_tty, const char *ttydev)
 {
