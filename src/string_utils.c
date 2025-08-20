@@ -107,6 +107,7 @@ strifnull(char *string)
    successively copy the three arguments into it */
 
 char *
+
 add3strings(const char *str1, const char *str2, const char *str3)
 {
   int size;

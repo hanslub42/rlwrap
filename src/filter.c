@@ -90,7 +90,8 @@ static void mypipe(int filedes[2]) {
 void spawn_filter(const char *filter_command) {
   int input_pipe_fds[2];
   int output_pipe_fds[2];
-
+  char *filter_command_full_path;
+  
   mypipe(input_pipe_fds);
   filter_input_fd = input_pipe_fds[1]; /* rlwrap writes filter input to this */ 
   
@@ -118,7 +119,8 @@ void spawn_filter(const char *filter_command) {
     
     if ((! getenv("RLWRAP_FILTERDIR")) || (! *getenv("RLWRAP_FILTERDIR")))
       mysetenv("RLWRAP_FILTERDIR", add2strings(DATADIR,"/rlwrap/filters"));
-    mysetenv("PATH", add3strings(getenv("RLWRAP_FILTERDIR"),":",getenv("PATH")));
+    filter_command_full_path = add3strings(getenv("RLWRAP_FILTERDIR"), "/",filter_command);
+
     mysetenv("RLWRAP_VERSION", VERSION);
     mysetenv("RLWRAP_COMMAND_PID",  as_string(command_pid));
     mysetenv("RLWRAP_COMMAND_LINE", command_line); 
@@ -135,16 +137,16 @@ void spawn_filter(const char *filter_command) {
     close(filter_output_fd);
 
     /* @@@TODO: split the command in words (possibly quoted when containing spaces). DONT use the shell (|, < and > are never used on filter command lines */
-    if (scan_metacharacters(filter_command, "'|\"><"))  { /* if filter_command contains shell metacharacters, let the shell unglue them */
+    if (scan_metacharacters(filter_command_full_path, "'|\"><"))  { /* if filter_command contains shell metacharacters, let the shell unglue them */
       char *exec_command = add3strings("exec", " ", filter_command);
-      argv = list4("sh", "-c", exec_command, NULL);
+      argv = list4("/bin/sh", "-c", exec_command, NULL);
       DPRINTF1(DEBUG_FILTERING, "exec_command = <%s>", exec_command);
 
     } else {                                              /* if not, split and feed to execvp directly (cheaper, better error message) */
-      argv = split_with(filter_command, " ");
+      argv = split_with(filter_command_full_path, " ");
     }   
     assert(argv[0]);    
-    if(execvp(argv[0], argv) < 0) {
+    if(execv(argv[0], argv) < 0) {
       char *sorry = add3strings("Cannot exec filter '", argv[0], add2strings("': ", strerror(errno))); 
       write_message(output_pipe_fds[1], TAG_ERROR, sorry, "to stdout"); /* this will kill rlwrap */
       mymicrosleep(100 * 1000); /* 100 sec for rlwrap to go away should be enough */
