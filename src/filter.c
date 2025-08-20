@@ -1,5 +1,5 @@
 /* filter.c : spawning a filter and using it to re-write input, output, history and 
- * (C) 2000-2007 Hans Lub
+ * (C) 2000-2025 Hans Lub
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by

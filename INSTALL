@@ -87,9 +87,9 @@ like so:
 
 BUILD PROBLEMS
 
-If configure complains about missing Xyz (where Xyz can be ncurses, or
-readline) and you are sure that Xyz is installed on your system,
-consider installing Xyz-devel
+If configure complains about missing Xyz (where Xyz can be ncurses,
+libptytty, or readline) and you are sure that Xyz is installed on your
+system, consider installing Xyz-devel
 
 completion.c is made from completion.rb by the program rbgen
 (https://github.com/hanslub42/libredblack), but both files are included in

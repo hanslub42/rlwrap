@@ -1,3 +1,23 @@
+0.47  use libptytty by default and add --with-libptytty option to
+      configure.  Keep the original ptytty.c code as a fallback for
+      obsolete systems
+
+      add libtinfow to the libraries that are checked for the presence
+      of tgetent()
+
+      Only look for filters in $RLWRAP_FILTERDIR and don't add this
+      directory to filters PATH
+
+      Make source conform to POSIX.1c (we cannot use Polarhome anymore to
+      test on ancient systems)
+
+      Extend testclient with a test that spawns a child and then dies
+      (testing --skip-setctty)'
+
+      make configure backdate src/completion.rb a few secs to prevent
+      spurious calls to rbgen
+
+
 0.46.2 python filters would cause "invalid escape sequence" SyntaxWarnings
       with python 3.12 or newer.
 
