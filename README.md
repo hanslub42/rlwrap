@@ -24,8 +24,6 @@ cygwin, linux and probably quite a few more).  This would not have
 been possible without [Polarhome](http://polarhome.com)'s now retired
 'dinosaur zoo' of ageing Unix systems.
 
-Now that Polarhome has closed shop I cannot do much more than make
-sure that the `rlwrap` source code  still conforms to POSIX.1c (1995)
 
 ## HOW TO USE IT:
 

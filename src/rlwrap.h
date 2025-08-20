@@ -450,8 +450,8 @@ int skip_rlwrap(void);
 
 /* in ptytty.c: */
 
-int ptytty_control_tty(int fd_tty, const char *ttydev);
-int ptytty_openpty(int *amaster, int *aslave, const char **name);
+int ptytty_control_tty(int fd_tty, const void *ptytty_or_ttydev);
+int ptytty_openpty(int *amaster, int *aslave, const void **ptytty_or_ttydev);
 
 
 /* in completion.rb: */

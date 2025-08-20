@@ -19,16 +19,17 @@
 #include "rlwrap.h"
 
 
-#if USE_LIBPTYTTY /* Use libptytty. If USE_LIBPTTY is not defined (or 0),
-                     use rlwrap's original ancient implementation of the same functionality.
-                     This could be useful on really old systems, where libptytty is not available,
-                     or not working for some reason. */
+/* The use of 'void' in the signatures of the ptytty_* functions avoids having
+*  different signatures depending on USE_LIBPTYTTY
+*/ 
+   
 
+#if USE_LIBPTYTTY /* Use libptytty (if configured with --with-libptytty) */
 
 #include <libptytty.h>
 
 int
-ptytty_control_tty(int UNUSED(fd_tty), const char *ptytty)  /* called by child */
+ptytty_control_tty(int UNUSED(fd_tty), const void *ptytty)  /* called by child */
 {
   if (! ptytty_make_controlling_tty((PTYTTY) ptytty))
       myerror(WARNING|USE_ERRNO, "Could not make slave a controlling terminal");
@@ -38,7 +39,7 @@ ptytty_control_tty(int UNUSED(fd_tty), const char *ptytty)  /* called by child *
 
 
 int
-ptytty_openpty(int *amaster, int *aslave, const char **ptytty_ptr)
+ptytty_openpty(int *amaster, int *aslave, const void  **ptytty_ptr)
 {
   PTYTTY ptytty = ptytty_create();
   DPRINTF0(DEBUG_TERMIO, "Using libptytty to obtain pty/tty pair");
@@ -47,15 +48,20 @@ ptytty_openpty(int *amaster, int *aslave, const char **ptytty_ptr)
   }
   *amaster = ptytty_pty(ptytty);
   *aslave  = ptytty_tty(ptytty);
-  *ptytty_ptr = (char *) ptytty ; /* cast to char * in order to expose same sigature as without USE_LIBPTYTTY */
+  *ptytty_ptr = (void *) ptytty ; 
   return 0;
 }
 
 
 
-#else  /* Don't use libptytty, use our own ancient implementation instead,
-          It was shamelessly ripped out of rxvt-2.7.10 (Copyright (c) 1999-2001
-          Geoff Wing <gcw@pobox.com>) by the rlwrap author */
+#else  /*  if ! USE_LIBPTYTTY (i.e. if configured --without-libptytty), use rlwrap's original ancient implementation of
+           the same functionality, shamelessly ripped out of rxvt-2.7.10 ((c) 1999-2001 Geoff Wing
+           <gcw@pobox.com>) This could be useful on really old systems, where libptytty is not available, or not working
+           for some reason.
+          
+*/
+
+
 
 
 
@@ -100,7 +106,7 @@ ptytty_openpty(int *amaster, int *aslave, const char **ptytty_ptr)
 #define O_RWNN  O_RDWR | O_NDELAY | O_NOCTTY
 
 static int
-ptytty_get_pty(int *fd_tty, const char **ttydev)
+ptytty_get_pty(int *fd_tty, const void **ttydev)
 {
   int pfd;
 
@@ -108,13 +114,13 @@ ptytty_get_pty(int *fd_tty, const char **ttydev)
   char tty_name[sizeof "/dev/pts/????\0"];
 
   if (openpty(&pfd, fd_tty, tty_name, NULL, NULL) != -1) {
-    *ttydev = strdup(tty_name);
+    *ttydev = (void *) strdup(tty_name);
     return pfd;
   }
 #endif
 
 #ifdef PTYS_ARE__GETPTY
-  *ttydev = _getpty(&pfd, O_RWNN, 0622, 0);
+  *ttydev = (void *) _getpty(&pfd, O_RWNN, 0622, 0);
   if (*ttydev != NULL)
     return pfd;
 #endif
@@ -153,14 +159,14 @@ ptytty_get_pty(int *fd_tty, const char **ttydev)
 
 #ifdef PTYS_ARE_PTC
   if ((pfd = open("/dev/ptc", O_RWNN, 0)) >= 0) {
-    *ttydev = ttyname(pfd);
+    *ttydev = (void *) ttyname(pfd);
     return pfd;
   }
 #endif
 
 #ifdef PTYS_ARE_CLONE /* HP-UX */
   if ((pfd = open("/dev/ptym/clone", O_RWNN, 0)) >= 0) {
-    *ttydev = ptsname(pfd);
+    *ttydev = (void *) ptsname(pfd);
     return pfd;
   }
 #endif
@@ -183,7 +189,7 @@ ptytty_get_pty(int *fd_tty, const char **ttydev)
       }
       if ((pfd = open(pty_name, O_RWNN, 0)) >= 0) {
         if (access(tty_name, R_OK | W_OK) == 0) {
-          *ttydev = strdup(tty_name);
+          *ttydev = (void *) strdup(tty_name);
           return pfd;
         }
         close(pfd);
@@ -211,7 +217,7 @@ ptytty_get_pty(int *fd_tty, const char **ttydev)
           tty_name[(sizeof(pty_name) - 2)] = *c2;
         if ((pfd = open(pty_name, O_RWNN, 0)) >= 0) {
           if (access(tty_name, R_OK | W_OK) == 0) {
-            *ttydev = strdup(tty_name);
+            *ttydev = (void *) strdup(tty_name);
             return pfd;
           }
           close(pfd);
@@ -235,13 +241,13 @@ ptytty_get_tty(const char *ttydev)
 
 /* Make our tty a controlling tty so that /dev/tty points to us */
 int
-ptytty_control_tty(int fd_tty, const char *ttydev)
+ptytty_control_tty(int fd_tty, const void *ttydev)
 {
 
   
 
   DPRINTF3(DEBUG_TERMIO, "pid: %d, tty fd: %d, dev: %s", getpid(), fd_tty,
-           ttydev);
+           (char *) ttydev);
   DPRINTF2(DEBUG_TERMIO, "tcgetpgrp(): %d  getpgrp(): %d", tcgetpgrp(fd_tty),
            getpgrp());
 
@@ -355,9 +361,9 @@ ptytty_control_tty(int fd_tty, const char *ttydev)
 
 
 int
-ptytty_openpty(int *amaster, int *aslave, const char **name)
+ptytty_openpty(int *amaster, int *aslave, const void **name)
 {
-  const char *scrap = mysavestring("");
+  const void  *scrap = mysavestring("");
 
   *aslave = -1;
   *amaster = ptytty_get_pty(aslave, &scrap);
@@ -369,7 +375,7 @@ ptytty_openpty(int *amaster, int *aslave, const char **name)
     myerror(FATAL|USE_ERRNO, "Could not open slave pty %s", scrap);
   else 
     if (name != NULL)
-      *name = scrap;
+      *  name = scrap;
 
   return 0;
 }

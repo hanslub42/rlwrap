@@ -39,7 +39,7 @@ my_pty_fork(int *ptr_master_fd,
   int fdm, fds = -1;
   int ttyfd, timeout;
   pid_t pid;
-  const char *slave_name_or_ptytty; /* opaque PTYTTY pointer when using libptytty, else slave name */
+  const void *slave_name_or_ptytty; /* opaque PTYTTY pointer when using libptytty, else slave name */
   struct termios pterm;
   int only_sigchld[] = { SIGCHLD, 0 };
   
