@@ -529,10 +529,12 @@ AC_MSG_RESULT($result)
 
 rbfile=src/completion.rb
 echo "Trying to backdate $rbfile a few secs in order to prevent a spurious call to a (possibly not installed) helper 'rbgen'"
-if ! touch -d "$(date -R -r $rbfile) - 2 seconds" $rbfile 2>/dev/null; then
-    echo "... which didn't work (old system?). If make complains about a missing rbgen, simply do a 'touch $rbfile', unless you have modified $rbfile"
-    echo "in which case you'll have to install rbgen from https://github.com/hanslub42/libredblack"
-fi
+rbdate=$(date -R -r $rbfile 2>/dev/null)
+if test x"$rbdate" = x || ! touch -d "$rbdate - 2 seconds" $rbfile 2>/dev/null ; then
+   echo "... which didn't work (old system?). If 'make' complains about a missing 'rbgen', simply do a 'touch $rbfile', unless you want to modify $rbfile"
+   echo "in which case you'll have to install 'rbgen' from https://github.com/hanslub42/libredblack"
+fi 
+    
 
 
 if test x$cross_compiling = xyes; then
