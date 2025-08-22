@@ -1,3 +1,7 @@
+
+0.47.1 Correct typo (== instead of = in a configure test) that caused
+      a configuration error on systems where sh is linked to dash
+
 0.47  use libptytty by default and add --with-libptytty option to
       configure.  Keep the original ptytty.c code as a fallback for
       obsolete systems

@@ -1,4 +1,4 @@
-rlwrap v 0.46 October 2022
+rlwrap v 0.47 Aug 2025
 
 ## WHAT IT IS:
 
