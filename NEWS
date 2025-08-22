@@ -1,4 +1,3 @@
-
 0.47.1 Correct typo (== instead of = in a configure test) that caused
       a configuration error on systems where sh is linked to dash
 
