@@ -212,7 +212,7 @@ AC_CHECK_FUNCS(setitimer setsid setrlimit sigaction  system)
 
 AC_CHECK_DECLS([mkstemps,snprintf,strlcat,strnlen,setenv,putenv,readlink,nice])
 
-if test x$with_libptytty == xno
+if test x$with_libptytty = xno
 then
   # If we don't use libtyttty, try to determine the kind of pty support on this system
   # This is not so easy and may guess wrong; if this happens:
