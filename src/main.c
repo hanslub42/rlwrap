@@ -800,6 +800,7 @@ read_options_and_command_name(int argc, char **argv)
   int option_count = 0;
   int opt_b = FALSE;
   int opt_f = FALSE;
+  int opt_b_whitespace_included = FALSE;
   int remaining = -1; /* remaining number of arguments on command line */
   int longindex = -1; /* index of current option in longopts[], set by getopt_long */
   
@@ -836,7 +837,13 @@ read_options_and_command_name(int argc, char **argv)
         bleach_the_prompt = TRUE;
       break;
     case 'b':
-      rl_basic_word_break_characters = add3strings("\r\n \t", optarg, "");
+      opt_b_whitespace_included = strchr(optarg, '\r')
+              || strchr(optarg, '\n')
+              || strchr(optarg, ' ')
+              || strchr(optarg, '\t');
+      rl_basic_word_break_characters
+              = add3strings((opt_b_whitespace_included ? "\r\n \t" : ""),
+			    optarg, "");
       opt_b = TRUE;
       break;
     case 'c':   complete_filenames = TRUE;
