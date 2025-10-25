@@ -122,7 +122,7 @@ def edit_history(doc, prefix, postfix, history, histpos):
 def split_off_last_word(string):
     '''split_off_last_word("In the gener") = ("In the ", "gener") '''
     break_chars = os.environ['RLWRAP_BREAK_CHARS'] if 'RLWRAP_BREAK_CHARS' in os.environ else " \t\n" # old rlwrap with newer filter - use a sensible default
-    break_chars =  re.sub(r'([\[\]])', r'\\1', break_chars)      
+    break_chars =  re.sub(r'(.)', r'\\1', break_chars)    # escape all chars in break_chars  
     break_chars = break_chars or ' ' # prevent python from choking on a bad regex '[]' in the next line
     words       = re.split('[{}]'.format(break_chars), string)
     last_word  = words[-1]

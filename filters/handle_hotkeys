@@ -146,7 +146,8 @@ sub split_off_last_word {
     # split_off_last_word("In the gener") = ["In the ", "gener"]
     my ($string) = @_;
     my $break_chars = $ENV{RLWRAP_BREAK_CHARS};
-    $break_chars =~ s/([\[\]])/\\$1/g; # escape any [ and ]
+    #$break_chars =~ s/([\[\]])/\\$1/g; # escape any [ and ]
+    $break_chars =~ s/(.)/\\$1/g; # escape all chars
     $break_chars ||= ' '; # prevent perl from choking on the regex /[]/ in the next line
     my @words = split /[$break_chars]/, $string;
     my $last_word = $words[-1];
