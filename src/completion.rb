@@ -157,8 +157,9 @@ feed_line_into_completion_list(const char *line)
   
   char **words = split_with(line, rl_basic_word_break_characters);
   char **plist, *word;
-  for(plist = words;(word = *plist); plist++)
+  for(plist = words;(word = *plist); plist++) {
     add_word_to_completions(word);
+  }
   free_splitlist(words);
 }
 

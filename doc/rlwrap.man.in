@@ -72,12 +72,13 @@ from the prompt.
 
 .TP
 .OL  \-b \-\-break\-chars  \fIlist_of_characters\fP
-Consider the specified characters word\-breaking (whitespace is
-always word\-breaking). This determines what is considered a "word",
+Consider the specified characters word\-breaking. This determines what is considered a "word",
 both when completing and when building a completion word list from
 files specified by \fB\-f\fP options following (not preceding!) it.
 Default list (){}[],'+\-=&^%$#@";|\\ Unless \-c is specified, \" "quote to keep emacs happy
-/ and \. (period) are included in the default list.
+/ and \. (period) are added to this default list.
+Whitespace is always considered word\-breaking, except if you prefix the list with \fB"precisely:"\fP. For example: \fB\-b $'precisely:\\t'\fP will
+break on tabs, but not on spaces. Due to a limitation in \fBrlwrap\fP, newlines are always word-breaking.
 
 .TP
 .OL \-c \-\-complete\-filenames

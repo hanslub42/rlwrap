@@ -238,6 +238,14 @@ count_str_occurrences(const char *haystack, const char* needle)
   return count;
 }
 
+/* skip prefix and return the remainder, or, if prefix not found, return default_val). All return values are copies on the heap */
+char *
+skip_prefix_or_else(const char *haystack, const char *prefix, const char *default_val) {
+  assert(haystack !=NULL && prefix != NULL && strlen(prefix) != 0);
+  return (strstr(haystack, prefix) == haystack) ? mysavestring(haystack + strlen(prefix)) : mysavestring(default_val);
+}
+
+
 static int
 count_char_occurrences(const char *haystack, char c)
 {

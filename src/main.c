@@ -840,8 +840,10 @@ read_options_and_command_name(int argc, char **argv)
         bleach_the_prompt = TRUE;
       break;
     case 'b':
-      rl_basic_word_break_characters = add3strings("\r\n \t", optarg, "");
+      rl_basic_word_break_characters = skip_prefix_or_else(optarg, "precisely:", add2strings("\r\n \t", optarg));
       opt_b = TRUE;
+      if (opt_f)
+        myerror(WARNING|NOERRNO, "if you want to split a completion file with your given --break-chars, the -f (--file) option needs to come *after* the --break-chars (-b) option ");  
       break;
     case 'c':   complete_filenames = TRUE;
 #ifndef CAN_FOLLOW_COMMANDS_CWD
