@@ -87,26 +87,27 @@ static void mypipe(int filedes[2]) {
 }       
 
 
-void spawn_filter(const char *filter_command) {
+void spawn_filter(const char *filter_commandline) {
   int input_pipe_fds[2];
   int output_pipe_fds[2];
-  char *filter_command_full_path;
+  char *filter_commandline_full_path;
   
   mypipe(input_pipe_fds);
   filter_input_fd = input_pipe_fds[1]; /* rlwrap writes filter input to this */ 
   
   mypipe(output_pipe_fds);
   filter_output_fd = output_pipe_fds[0]; /* rlwrap  reads filter output from here */
-  DPRINTF1(DEBUG_FILTERING, "preparing to spawn filter <%s>", filter_command);
+  DPRINTF1(DEBUG_FILTERING, "preparing to spawn filter <%s>", filter_commandline);
   assert(!command_pid || signal_handlers_were_installed);  /* if there is a command, then signal handlers are installed */
 
   fflush(NULL);
   if ((filter_pid = fork()) < 0)
-    myerror(FATAL|USE_ERRNO, "Cannot spawn filter '%s'", filter_command); 
+    myerror(FATAL|USE_ERRNO, "Cannot spawn filter '%s'", filter_commandline); 
   else if (filter_pid == 0) { /* child */
     int signals_to_allow[] = {SIGPIPE, SIGCHLD, SIGALRM, SIGUSR1, SIGUSR2, 0}; 
     char **argv;
 
+    
     i_am_filter = TRUE;
     if (debug) 
        my_fopen(&debug_fp, DEBUG_FILENAME, "a+", "debug log");
@@ -119,7 +120,6 @@ void spawn_filter(const char *filter_command) {
     
     if ((! getenv("RLWRAP_FILTERDIR")) || (! *getenv("RLWRAP_FILTERDIR")))
       mysetenv("RLWRAP_FILTERDIR", add2strings(DATADIR,"/rlwrap/filters"));
-    filter_command_full_path = add3strings(getenv("RLWRAP_FILTERDIR"), "/",filter_command);
 
     mysetenv("RLWRAP_VERSION", VERSION);
     mysetenv("RLWRAP_COMMAND_PID",  as_string(command_pid));
@@ -136,14 +136,20 @@ void spawn_filter(const char *filter_command) {
     close(filter_input_fd);
     close(filter_output_fd);
 
-    /* @@@TODO: split the command in words (possibly quoted when containing spaces). DONT use the shell (|, < and > are never used on filter command lines */
-    if (scan_metacharacters(filter_command_full_path, "'|\"><"))  { /* if filter_command contains shell metacharacters, let the shell unglue them */
-      char *exec_command = add3strings("exec", " ", filter_command);
-      argv = list4("/bin/sh", "-c", exec_command, NULL);
-      DPRINTF1(DEBUG_FILTERING, "exec_command = <%s>", exec_command);
+
+    /* Unless filter_commandline starts with an absolute path, prepend RLWRAP_FILTERDIR: */
+    filter_commandline_full_path = (filter_commandline[0] == '/' 
+                                    ? mysavestring(filter_commandline) 
+                                    : add3strings(getenv("RLWRAP_FILTERDIR"), "/",filter_commandline));
+    
+    /* @@@TODO: split the command line in words (possibly quoted when containing spaces). DONT use the shell (|, < and > are never used on filter command lines */
+    if (scan_metacharacters(filter_commandline_full_path, "'|\"><$`"))  { /* if filter_commandline contains shell metacharacters, let the shell unglue them */
+      char *exec_commandline = add3strings("exec", " ", filter_commandline_full_path);
+      argv = list4("/bin/sh", "-c", exec_commandline, NULL);
+      DPRINTF1(DEBUG_FILTERING, "exec_commandline = <%s>", exec_command);
 
     } else {                                              /* if not, split and feed to execvp directly (cheaper, better error message) */
-      argv = split_with(filter_command_full_path, " ");
+      argv = split_with(filter_commandline_full_path, " ");
     }   
     assert(argv[0]);    
     if(execv(argv[0], argv) < 0) {

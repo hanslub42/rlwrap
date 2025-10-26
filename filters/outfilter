@@ -14,6 +14,7 @@ $filter->help_text("Usage: rlwrap -z '$name <filter-command> [<filter-command-ar
 # prevent quoting headaches
 foreach my $arg (@ARGV) {
     $arg = "'$arg'";
+    print("$arg\n");
 }
 
 my $filter_command = join ' ', @ARGV;
@@ -22,14 +23,18 @@ die $filter -> help_text . "\n" if not $filter_command and $ENV{RLWRAP_COMMAND_P
 $filter->output_handler(sub {""});
 $filter->prompt_handler(\&prompt);
 
+print("BLA\n");
+
+
 $filter->run;
 
 sub prompt {
     my $prompt = shift;
+    print("BLO\n");
 
     my $output = $filter->cumulative_output;
     $output =~ s/\r//g;
-
+    print("filter_command: <$filter_command>\n");
     open (PIPE, "| $filter_command")
         or die "Failed to create pipe: $!";
     print PIPE $output;
