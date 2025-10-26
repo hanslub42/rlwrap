@@ -189,7 +189,6 @@ read_patiently2 (int fd,
   int total_read =  0;
   int interruptible = FALSE;
 
-  DPRINTF2(DEBUG_AD_HOC, "read_patiently2 tries to read %d bytes (uninterruptible: %d msec)", count, uninterruptible_msec);
 
   assert (count >= 0);
   if (count > 0) {
@@ -220,7 +219,6 @@ read_patiently2 (int fd,
   }     
   myalarm(0); /* reset alarm */
   block_all_signals();
-  DPRINTF2(DEBUG_AD_HOC, "read_patiently2 read %d bytes: %s", total_read, mangle_buffer_for_debug_log(buffer, total_read));
   return;
 }      
 
@@ -263,7 +261,6 @@ write_patiently2(int fd,
       break;
   }
   myalarm(0);
-  DPRINTF2(DEBUG_AD_HOC, "write_patiently2 wrote %d bytes: %s", total_written, mangle_buffer_for_debug_log(buffer, total_written));
   return;
 }       
 

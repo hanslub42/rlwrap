@@ -539,7 +539,6 @@ list4 (char *el0, char *el1, char *el2, char *el3)
   list[1] = el1;
   list[2] = el2;
   list[3] = el3;
-  DPRINTF4(DEBUG_AD_HOC, "el0: <%s> el1: <%s> el2: <%s> el3: <%s>", el0, el1, el2, el3);
   return list;
 }
 
@@ -722,7 +721,6 @@ mark_invisible(const char *buf)
   char *result = scratchpad;
   const char **original = &buf;
   char **copy = &scratchpad;
-  DPRINTF1(DEBUG_AD_HOC, "mark_invisible(%s) ...", M(buf));
   
   if (strchr(buf, RL_PROMPT_START_IGNORE))
     return mysavestring(buf); /* "invisible" parts already marked */
@@ -732,7 +730,6 @@ mark_invisible(const char *buf)
     assert(*copy - scratchpad < padsize);
   }
   **copy = '\0';
-  DPRINTF1(DEBUG_AD_HOC, "mark_invisible(...) = <%s>", M(result));
   return(result);       
 }       
 
@@ -1310,7 +1307,6 @@ char *protect_or_cleanup(char *prompt, bool free_prompt) {
   
   if (!unwanted_codes_regexp) {
     unwanted_codes_regexp = unsplit_with(-1, &unwanted_codes[0], "|");
-    DPRINTF1(DEBUG_AD_HOC, "unwanted_codes_regexp: %s", M(unwanted_codes_regexp));
     compiled_and_protected_unwanted_codes_regexp =  my_regcomp(protect(unwanted_codes_regexp, RL_PROMPT_START_IGNORE, RL_PROMPT_END_IGNORE), REG_EXTENDED);
   }
   result = replace_special(result1, compiled_and_protected_unwanted_codes_regexp, "");

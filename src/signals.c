@@ -464,12 +464,10 @@ void myalarm(int msecs) {
   awhile.it_value.tv_usec = (msecs -  secs * 1000) * 1000;
   received_sigALRM = FALSE;
   retval = setitimer(ITIMER_REAL, &awhile, NULL);
-  DPRINTF3(DEBUG_AD_HOC, "setitimer() = %d (tv_sec = %d, tv_usec=%ld)", retval, secs, awhile.it_value.tv_usec);
 #else
   received_sigALRM = FALSE;
   alarm(msecs == 0 ? 0 : 1 + msecs/1000)); 
 #endif
-DPRINTF1(DEBUG_AD_HOC, "set alarm (%d msecs)", msecs);
 if (msecs == 0)
   return;
 myalarm_was_set = TRUE;

@@ -332,7 +332,6 @@ main_loop(void)
 
 
 
-    DPRINTF1(DEBUG_AD_HOC, "prompt_is_still_uncooked =  %d", prompt_is_still_uncooked);
     if (command_is_dead || ignore_queued_input) {
       select_timeout = immediately;
       select_timeoutptr = &select_timeout;
@@ -452,7 +451,6 @@ main_loop(void)
       */ 
       if (FD_ISSET(master_pty_fd, &readfds)) { /* there is something (or nothing, if EOF) to read on master pty: */
         nread = read(master_pty_fd, buf, BUFFSIZE - 1); /* read it */
-        DPRINTF1(DEBUG_AD_HOC, "nread: %d", nread);
         if (nread <= 0) { 
           if (command_is_dead || nread == 0) { /*  we catched a SIGCHLD,  or slave command has closed its stdout */
             if (promptlen > 0) /* commands dying words were not terminated by \n ... */
@@ -486,7 +484,6 @@ main_loop(void)
             advise_always_readline = FALSE;
           }
           write_patiently(STDOUT_FILENO, buf, nread, "to stdout"); /* ... and print it before the clients output */
-          DPRINTF1(DEBUG_AD_HOC, "advise_always_readline = %d", advise_always_readline);
           DPRINTF2(DEBUG_TERMIO, "read from pty and wrote to stdout  %d  bytes in direct mode  <%s>",  nread, M(buf));
           yield();
           continue;

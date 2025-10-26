@@ -168,13 +168,11 @@ restore_rl_state(void)
   
   DPRINTF1(DEBUG_READLINE,"newprompt now %s", M(newprompt));
   rl_callback_handler_install(newprompt, &line_handler);
-  DPRINTF0(DEBUG_AD_HOC, "freeing newprompt");
   free(newprompt);             /* readline docs don't say it, but we can free newprompt now (readline apparently
                                   uses its own copy) */
   rl_insert_text(saved_rl_state.input_buffer);
   rl_point = saved_rl_state.point;
   saved_rl_state.already_saved = 0;
-  DPRINTF0(DEBUG_AD_HOC, "Starting redisplay");
   rl_redisplay(); 
   rl_prep_terminal(1);
   prompt_is_still_uncooked =  FALSE; /* has been done right now */
@@ -417,7 +415,6 @@ my_homegrown_redisplay(int hide_passwords)
   int i, printed_length,
     new_curpos,                    /* cursor position on screen */
     keep_old_line, vlinestart, printwidth, last_column;
-  DPRINTF3(DEBUG_AD_HOC,"hgrown: rl_prompt: <%s>, prompt_without_ignore_markers: <%s>,  prompt_plus_line: <%s>", rl_prompt, prompt_without_ignore_markers, prompt_plus_line);   
 
   /* In order to handle prompt with colour we either print the whole prompt, or start past it:
      starting in the middle is too difficult (i.e. I am too lazy) to get it right.
@@ -503,7 +500,6 @@ my_homegrown_redisplay(int hide_passwords)
       previous_line = mysavestring(new_line);
     }
   }
-  /* DPRINTF2(DEBUG_AD_HOC, "keep_old_line=%d, new_line=<%s>", keep_old_line, new_line); */
   /* keep_old_line = TRUE; */
   if (!keep_old_line) {
     clear_line();
