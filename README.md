@@ -78,7 +78,11 @@ storing) passwords:
     rlwrap -cra -assword: smbclient '\\PEANUT\C' 
 
 ## INSTALLATION:
+
 Usually just
+
+    autoreconf --install;
+
 
     ./configure;
     make
