@@ -146,7 +146,7 @@ void spawn_filter(const char *filter_commandline) {
     if (scan_metacharacters(filter_commandline_full_path, "'|\"><$`"))  { /* if filter_commandline contains shell metacharacters, let the shell unglue them */
       char *exec_commandline = add3strings("exec", " ", filter_commandline_full_path);
       argv = list4("/bin/sh", "-c", exec_commandline, NULL);
-      DPRINTF1(DEBUG_FILTERING, "exec_commandline = <%s>", exec_command);
+      DPRINTF1(DEBUG_FILTERING, "exec_commandline = <%s>", exec_commandline);
 
     } else {                                              /* if not, split and feed to execvp directly (cheaper, better error message) */
       argv = split_with(filter_commandline_full_path, " ");

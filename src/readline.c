@@ -161,12 +161,12 @@ restore_rl_state(void)
 
   cook_prompt_if_necessary();
   newprompt =  mark_invisible(saved_rl_state.cooked_prompt); /* bracket (colour) control sequences with \001 and \002 */
-  if (!strings_are_equal(newprompt, saved_rl_state.cooked_prompt))
-    DPRINTF2(DEBUG_READLINE, "newprompt: <%s>, cooked prompt: <%s>", M(newprompt), M(saved_rl_state.cooked_prompt));
+  DPRINTF2(DEBUG_READLINE, "newprompt: <%s>, cooked prompt: <%s>", M(newprompt), M(saved_rl_state.cooked_prompt));
   rl_expand_prompt(newprompt);
+  DPRINTF1(DEBUG_READLINE, "newprompt after rl_expand_prompt(): <%s>", M(newprompt));
   mirror_slaves_echo_mode();    /* don't show passwords etc */
   
-  DPRINTF1(DEBUG_READLINE,"newprompt now %s", M(newprompt));
+  DPRINTF1(DEBUG_READLINE,"newprompt now <%s>", M(newprompt));
   rl_callback_handler_install(newprompt, &line_handler);
   DPRINTF0(DEBUG_AD_HOC, "freeing newprompt");
   free(newprompt);             /* readline docs don't say it, but we can free newprompt now (readline apparently
@@ -175,10 +175,12 @@ restore_rl_state(void)
   rl_point = saved_rl_state.point;
   saved_rl_state.already_saved = 0;
   DPRINTF0(DEBUG_AD_HOC, "Starting redisplay");
+  DPRINTF2(DEBUG_READLINE, "rl_prompt: <%s>, rl_display_prompt: <%s>", M(rl_prompt), M(rl_display_prompt)); /* zie expand_prompt() in libreadline's display.c */
   rl_redisplay(); 
   rl_prep_terminal(1);
   prompt_is_still_uncooked =  FALSE; /* has been done right now */
 }
+
 
 /* display (or remove, if message == NULL) message in echo area, with the appropriate bookkeeping */
 void
@@ -946,7 +948,6 @@ char *process_new_output(const char* buffer, struct rl_state* UNUSED(state)) {
   }     
   return result;
 }
-
 
 
 
