@@ -413,7 +413,7 @@ main_loop(void)
           cook_prompt_if_necessary();
           DPRINTF2(DEBUG_READLINE,"After cooking, raw_prompt=%s, cooked=%s", M(saved_rl_state.raw_prompt), M(saved_rl_state.cooked_prompt));
           restore_rl_state(); /* print (cooked) prompt, possibly including modestring */ 
-          save_rl_state();  
+          within_line_edit = TRUE;
           rlwrap_already_prompted = TRUE;
          
         }
