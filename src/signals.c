@@ -457,13 +457,14 @@ static int myalarm_was_set = FALSE;
 
 void myalarm(int msecs) {
 #ifdef HAVE_SETITIMER
-  int retval;
+  int setitimer_retval;
   struct itimerval awhile = {{0,0},{0,0}};
   int secs = msecs/1000;
   awhile.it_value.tv_sec = secs;
   awhile.it_value.tv_usec = (msecs -  secs * 1000) * 1000;
   received_sigALRM = FALSE;
-  retval = setitimer(ITIMER_REAL, &awhile, NULL);
+  setitimer_retval = setitimer(ITIMER_REAL, &awhile, NULL);
+  assert(setitimer_retval == 0);
 #else
   received_sigALRM = FALSE;
   alarm(msecs == 0 ? 0 : 1 + msecs/1000)); 

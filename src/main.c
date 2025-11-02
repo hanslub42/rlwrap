@@ -349,11 +349,6 @@ main_loop(void)
     
 
     nfds = my_pselect(1 + master_pty_fd, &readfds, &writefds, NULL, select_timeoutptr, &no_signals_blocked);
-
-    /* DPRINTF3(DEBUG_TERMIO, "select() returned  %d (stdin|pty in|pty out = %03d), within_line_edit=%d", nfds, */
-    /*          100*(FD_ISSET(STDIN_FILENO, &readfds)?1:0) + 10*(FD_ISSET(master_pty_fd, &readfds)?1:0) + (FD_ISSET(master_pty_fd, &writefds)?1:0),  */
-    /*          within_line_edit); */
-
     
     DPRINTF5(DEBUG_TERMIO, "... returning %d%s %s %s %s"
              , nfds
@@ -416,8 +411,10 @@ main_loop(void)
              to the raw prompt */
           cook_prompt_if_necessary();
           DPRINTF2(DEBUG_READLINE,"After cooking, raw_prompt=%s, cooked=%s", M(saved_rl_state.raw_prompt), M(saved_rl_state.cooked_prompt));
-          my_putstr(saved_rl_state.cooked_prompt);
+          restore_rl_state(); /* print (cooked) prompt, possibly including modestring */ 
+          within_line_edit = TRUE;
           rlwrap_already_prompted = TRUE;
+         
         }
         prompt_is_still_uncooked = FALSE;
       } else if (polling) {
@@ -551,7 +548,7 @@ main_loop(void)
           if (regexp_means_prompt && prompt_regexp && match_regexp(saved_rl_state.raw_prompt, prompt_regexp, FALSE)) {
             /* user specified -O!.... so any natching candidate prompt will be cooked and output immediately: */
             move_cursor_to_start_of_prompt(ERASE);  /* erase already printed raw prompt */
-            cook_prompt_if_necessary();             
+            cook_prompt_if_necessary();
             my_putstr(saved_rl_state.cooked_prompt);
           }     
             
@@ -592,7 +589,7 @@ main_loop(void)
           if (errno == EINTR)
             continue;
           else
-            myerror(FATAL|USE_ERRNO, "Unexpected error");
+            myerror(FATAL|USE_ERRNO, "Unexpected error reading from stdin");
         else if (nread == 0) /* EOF on stdin */
           cleanup_rlwrap_and_exit(EXIT_SUCCESS);
         else if (ignore_queued_input)

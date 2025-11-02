@@ -417,6 +417,7 @@ char *search_and_replace(char *patt, const char *repl, const char *string,
                          int cursorpos, int *line, int *col);
 char *first_of(char **strings);
 char *as_string(int i);
+
 char *append_and_expand_history_format(char *line);
 void remove_padding_and_terminate(char *buf, int length);
 void unbackspace(char* buf);
