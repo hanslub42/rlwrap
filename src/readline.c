@@ -29,6 +29,7 @@ char *pre_given = NULL;                 /* pre-given user input when rlwrap star
 struct rl_state saved_rl_state = { "", "", 0, 0, 0 };      /* saved state of readline */
 bool bracketed_paste_enabled = FALSE;
 static char return_key;                 /* Key pressed to enter line */
+static bool invoked_by_operate_and_get_next = FALSE;
 static int forget_line;
 static char *colour_start, *colour_end;        /* colour codes */
 
@@ -39,6 +40,7 @@ static void line_handler(char *);
 static void my_add_history(char *);
 static int my_accept_line(int, int);
 static int my_accept_line_and_forget(int, int);
+static int my_operate_and_get_next(int, int);
 static void munge_file_in_editor(const char *filename, int lineno, int colno);
 static Keymap getmap(const char *name);
 static void bindkey(int key, rl_command_func_t *function, const char *function_name, const char *maplist);
@@ -64,6 +66,7 @@ init_readline(char *UNUSED(prompt))
   rl_add_defun("rlwrap-accept-line", my_accept_line,-1);
   rl_add_defun("rlwrap-accept-line-and-forget", my_accept_line_and_forget,-1);
   rl_add_defun("rlwrap-call-editor", munge_line_in_editor, -1);
+  rl_add_defun("operate-and-get-next", my_operate_and_get_next, -1); /* Even if the readline doc doesn't say so, it seems to be OK to re-bind  existing readline bindable commands */
   rl_add_defun("rlwrap-direct-keypress", direct_keypress, -1);  
   rl_add_defun("rlwrap-direct-prefix", direct_prefix, -1);
   rl_add_defun("rlwrap-hotkey", handle_hotkey, -1);
@@ -79,9 +82,11 @@ init_readline(char *UNUSED(prompt))
   
   /* put the next variable binding(s) *before* rl_initialize(), so they can be overridden */
   rl_variable_bind("blink-matching-paren","on");  
-  
+
+  /* NB: there are more bindable readline commands that accept a line (like operate-and-get-next) */
   bindkey('\n', RL_COMMAND_FUN(my_accept_line), "emacs-standard; vi-insert; vi-command"); 
-  bindkey('\r', RL_COMMAND_FUN(my_accept_line), "emacs-standard; vi-insert; vi-command"); 
+  bindkey('\r', RL_COMMAND_FUN(my_accept_line), "emacs-standard; vi-insert; vi-command");
+  
   bindkey(15, RL_COMMAND_FUN(my_accept_line_and_forget), "emacs-standard; vi-insert; vi-command");	/* ascii #15 (Control-O) is unused in readline's emacs and vi keymaps */
   if (multiline_separator) 
     bindkey(30, RL_COMMAND_FUN(munge_line_in_editor), "emacs-standard;vi-insert;vi-command");           /* CTRL-^: unused in vi-insert-mode, hardly used in emacs  (doubles arrow-up) */
@@ -205,19 +210,29 @@ static void
 line_handler(char *line)
 {
   char *rewritten_line, *filtered_line;
-  
+  bool history_can_safely_be_extended =
+    !invoked_by_operate_and_get_next ||  
+    !history_is_stifled () ||
+       (history_length <  history_max_entries &&
+        history_duplicate_avoidance_policy != ELIMINATE_ALL_DOUBLES);
   if (line == NULL) {           /* EOF on input, forward it  */
     DPRINTF1(DEBUG_READLINE, "EOF detected, writing character %d", term_eof);
     /* colour_the_prompt = FALSE; don't mess with the cruft that may come out of dying command @@@ but command may not die!*/
     write_EOF_to_master_pty();
   } else {
     /* NB: with bracketed-paste, "line" may actually contain newline characters */
+    DPRINTF2(DEBUG_READLINE, "return_key: %d , invoked_by_operate_and_get_next: %d" , return_key, invoked_by_operate_and_get_next);
+
+    
+    
     if (*line &&                 /* forget empty lines  */
         redisplay &&             /* forget passwords    */
         !forget_line &&          /* forget lines entered by CTRL-O */
-        !match_regexp(line, forget_regexp, TRUE)) {     /* forget lines (case-inseitively) matching -g option regexp */ 
+        !match_regexp(line, forget_regexp, TRUE) &&
+        history_can_safely_be_extended) {     /* forget lines (case-inseitively) matching -g option regexp */ 
       my_add_history(line); /* if line consists of multiple lines, each line is added to history separately. Is this documented somewhere? */
     }
+    
     forget_line = FALSE; /* until CTRL-O is used again */
 
     /* Time for a design decision: when we send the accepted line to the client command, it will most probably be echoed
@@ -234,7 +249,7 @@ line_handler(char *line)
        O.K, we know for sure that cursor is at start of line (after the prompt, or at position 0, if bracketed paste is
        enabled)). When clients output arrives, it will be printed at just the right place - but first we 'll erase the
        user input (as it may be about to be changed by the filter) */
-      
+
     rl_delete_text(0, rl_end);  /* clear line  (after prompt) */
     rl_point = 0;
     my_redisplay();             /* and redisplay (now without user input, which will be echoed back, cf. comments above) */
@@ -268,13 +283,14 @@ line_handler(char *line)
     put_in_output_queue(filtered_line);
     DPRINTF2(DEBUG_READLINE, "putting %d bytes %s in output queue", (int) strlen(rewritten_line),
              M(rewritten_line));
-    write_EOL_to_master_pty(return_key ? &return_key : "\n");
+    write_EOL_to_master_pty((return_key && !invoked_by_operate_and_get_next) ? &return_key : "\n");
 
     accepted_lines++;
     free_foreign(line);         /* free_foreign because line was malloc'ed by readline, not by rlwrap */
     free(filtered_line);        /* we're done with them  */
         
     return_key = 0;
+    invoked_by_operate_and_get_next = FALSE;
     within_line_edit = FALSE;
     if(!RL_ISSTATE(RL_STATE_MACROINPUT)) /* when called during playback of a multi-line macro, line_handler() will be called more 
                                             than once whithout re-entering main_loop(). If we'd remove it here, the second call
@@ -316,7 +332,26 @@ my_accept_line(int UNUSED(count), int key)
   return 0;
 }
 
-/* this function will be bound to rl_accept_key_and_forget key (normally CTRL-O) */
+static int
+my_operate_and_get_next(int count, int key)
+{
+#ifdef HAVE_RL_OPERATE_AND_GET_NEXT
+  rl_operate_and_get_next(count, key);
+  curs_up(); /* Kludge alert! rl_operate_and_get_next() calls rl_newline() directly, while line_handler() expects the cursor  to still be on the original command line */ 
+  rl_point = 0;			/* leave cursor on predictable place */
+  return_key = (char) key;
+  my_redisplay();
+  invoked_by_operate_and_get_next = TRUE;
+#else
+  MAYBE_UNUSED(count);
+  MAYBE_UNUSED(key);
+#endif
+  return 0;
+}
+
+
+
+/* this function will be bound to rlwrap-accept-line-and-forget (CTRL-O by default) */
 static int
 my_accept_line_and_forget(int count, int UNUSED(key))
 {
@@ -334,7 +369,7 @@ dump_all_keybindings(int count, int key)
 }       
 
 
-/* format line and add it to history list, avoiding duplicates if necessary */
+/* filter line and add it to history list, avoiding duplicates if necessary */
 static void
 my_add_history(char *line)
 {       

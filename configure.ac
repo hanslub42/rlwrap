@@ -439,6 +439,8 @@ AC_EGREP_RL_HEADER_AND_CHECK_FUNC([rl_readline_version],[printf("%d",rl_readline
 
 AC_EGREP_RL_HEADER_AND_CHECK_FUNC([rl_executing_keyseq],[printf("%s", rl_executing_keyseq)], [HAVE_RL_EXECUTING_KEYSEQ]) 
 
+AC_EGREP_RL_HEADER_AND_CHECK_FUNC([rl_operate_and_get_next], [rl_operate_and_get_next(1,15)], [HAVE_RL_OPERATE_AND_GET_NEXT]) 
+
 # rlwrap tries to read a global (but private) readline variable _rl_horizontal_scroll_mode if the the option spy-on-realine is enabled
 # Depending on the linker (or linker options like gcc's -fvisibility=xxx) it may or may not be visible:
 
