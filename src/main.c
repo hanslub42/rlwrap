@@ -405,13 +405,7 @@ main_loop(void)
             restore_rl_state();
             continue;
           }
-     
-          move_cursor_to_start_of_prompt(ERASE); /* cooked prompt may be shorter than raw prompt, hence the ERASE */
-          /* move and erase before cooking, as we need to move/erase according
-             to the raw prompt */
-          cook_prompt_if_necessary();
-          DPRINTF2(DEBUG_READLINE,"After cooking, raw_prompt=%s, cooked=%s", M(saved_rl_state.raw_prompt), M(saved_rl_state.cooked_prompt));
-          restore_rl_state(); /* print (cooked) prompt, possibly including modestring */ 
+          restore_rl_state(); /* this will erase the (possibly still uncooked) prompt, cook it and print the result, possibly including e.g. vi-cmd-mode-string if show-mode-in-prompt is set */
           within_line_edit = TRUE;
           rlwrap_already_prompted = TRUE;
          

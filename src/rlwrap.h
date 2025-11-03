@@ -265,6 +265,7 @@ extern int bleach_the_prompt;
 extern int colour_the_prompt;
 extern int received_WINCH;
 extern int prompt_is_still_uncooked;
+extern int wait_before_prompt;
 extern int mirror_arguments;
 extern int impatient_prompt;
 extern int we_just_got_a_signal_or_EOF;
@@ -673,7 +674,7 @@ typedef enum  {TEST_AT_PROGRAM_START, TEST_AFTER_OPTION_PARSING, TEST_AFTER_SPAW
 
 #  define ERRMSG(b)              (b && (errno != 0) ? add3strings("(", strerror(errno), ")") : "" )
 
-#  define SHOWCURSOR(c)          if (debug & DEBUG_SHOWCURSOR) {my_putchar(c); mymicrosleep(1000); curs_left();} /* (may work incorrectly at last column!)*/
+#  define SHOWCURSOR(c,t)          if (debug & DEBUG_SHOWCURSOR) {my_putchar(c); mymicrosleep(t); curs_left();} /* (may work incorrectly at last column!)*/
 
 #  define DEBUG_RANDOM_SLEEP        if (debug & DEBUG_RACES) {int sleeptime=rand()&31; DPRINTF1(DEBUG_RACES,"sleeping for %d msecs", sleeptime); mymicrosleep(sleeptime);}
 

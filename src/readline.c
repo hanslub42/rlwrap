@@ -157,8 +157,7 @@ restore_rl_state(void)
 {
   
   char *newprompt;
-  move_cursor_to_start_of_prompt(impatient_prompt ? ERASE : DONT_ERASE);
-
+  move_cursor_to_start_of_prompt(impatient_prompt ? ERASE : DONT_ERASE); /* we do this before cooking, as the uncooked prompt may be longer than the cooked one */
   cook_prompt_if_necessary();
   newprompt =  mark_invisible(saved_rl_state.cooked_prompt); /* bracket (colour) control sequences with \001 and \002 */
   DPRINTF2(DEBUG_READLINE, "newprompt: <%s>, cooked prompt: <%s>", M(newprompt), M(saved_rl_state.cooked_prompt));

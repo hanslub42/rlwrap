@@ -71,7 +71,7 @@ while(1) {
   /^:R/ and raw();
   /^:s/ and segfault();
   /^:t/ and trickle();
-  /^:S/ and trickle2();
+  /^:S(\s*(\d+)\s+(\d+)?)?/ and trickle2($2 ? $2 : 0, $3 ? $3 : 300);
   /^:u/ and utf8();
   /^:T/ and test_controlling_terminal();
   /^:v/ and toggle_verbosity();
@@ -128,8 +128,8 @@ rlwraps behaviour when the client does things like:
 :r reset prompt
 :R raw mode (char-at-a-time)
 :s and sefgault
-:S and trickle slowly
-:t trickle output (10 chars)
+:S [N M] trickle slowly (every M msec, 10 chars, starting with N chars)
+:t trickle output (multiple lines))
 :T test controlling terminal
 :u try some utf-8
 :v toggle verbosity (e.g. when receiving a signal)
@@ -228,10 +228,12 @@ sub trickle {
 
 sub trickle2 {
   local $prompting;
+  my ($N, $M) = @_;
   my $i;
-  foreach my $c (split //, "trickle, trackle > ") {
+  print "X" x $N;
+  foreach my $c (split //, "trickle > ") {
     print $c;
-    sleep 1;
+    select(undef, undef, undef, $M * 0.001);
   }
   my $input = <>;
   show_input($input);
