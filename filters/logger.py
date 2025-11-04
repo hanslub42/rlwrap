@@ -23,9 +23,10 @@ filter = rlwrapfilter.RlwrapFilter()
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument('--logfile', '-l', nargs='?',
-                    type=argparse.FileType('a'),
-                    default=open("/tmp/filterlog." + str(os.getpid()), mode='a'))
+parser.add_argument('--long_format', '-l',action='store_true', dest = 'long_format')
+parser.add_argument('--log-all', '-i', action='store_true', dest = 'log_all')
+parser.add_argument('logfile', nargs='?',type=argparse.FileType('w'), default=open("/tmp/filterlog." + str(os.getpid()), mode='a'))                    
+
 args = parser.parse_args()
 fd = args.logfile
 
@@ -51,12 +52,37 @@ def logit(message, tag):
 
 filter = rlwrapfilter.RlwrapFilter(message_handler=logit);
 
+# "do nothing" handler
+def just_copy(arg):
+    return arg
 
-filter.help_text = "Usage: rlwrap -z 'logger [-l] logfile' <command>\n"\
+def just_copy_list(*arg):
+    return arg
+
+# "do nothing" completion handler  (returning unchanged list of completions, without  input line and prefix)
+def just_copy_completions(*arg):
+    return list(arg[2:])
+
+if args.log_all:
+    filter.prompt_handler = just_copy
+    filter.completion_handler = just_copy_completions
+    filter.history_handler = just_copy
+    filter.input_handler = just_copy
+    filter.output_handler = just_copy
+    filter.echo_handler = just_copy
+    filter.hotkey_handler = just_copy_list
+    filter.signal_handler = just_copy
+
+
+
+filter.help_text = "Usage: rlwrap -z 'logger [-i] [-l] [logfile]' <command>\n"\
                    + "log messages to a file (for debugging)\n"\
-                   + "give logfile name as an argument, -l for long format\n"\
-                   + "useful in a pipeline "\
-                   + "(rlwrap -z 'pipeline logger in:filter:logger out')"
+                   + "give logfile name as an argument (default: /tmp/filterlog.$$), -l for long format\n"\
+                   + "useful in a pipeline (rlwrap -z 'pipeline logger in:filter:logger out')\n"\
+                   + "the -i option will make logger log all message types, not just those that are\n"\
+                   + "relevant for filters up- or downstream in the pipeline" 
 
+#filter.help_text = parser.format_help()
+ 
 
 filter.run()

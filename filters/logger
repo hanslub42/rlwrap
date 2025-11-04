@@ -5,8 +5,8 @@ use RlwrapFilter;
 use strict;
 use Getopt::Std;
 
-our ($opt_l);
-getopts("l");
+our ($opt_l, $opt_i);
+getopts("li");
 
 
 
@@ -17,14 +17,50 @@ my $oldfh = select(LOG); $| = 1; select($oldfh); # flush LOG after each write
 
 my $filter = new RlwrapFilter(message_handler => \&logit);
 
+# Make filter "interested" in all message types, by adding "do nothing" handlers, so that we can log them
+if ($opt_i) {
+    $filter -> prompt_handler(\&just_copy);
+    $filter -> completion_handler(\&just_copy_completions);
+    $filter -> history_handler(\&just_copy);
+    $filter -> input_handler(\&just_copy);
+    $filter -> echo_handler(\&just_copy);
+    $filter -> output_handler(\&just_copy);
+    $filter -> signal_handler(\&just_copy);
+    $filter -> hotkey_handler(\&just_copy_array);
+}
+
 $filter -> help_text(
-	"Usage: rlwrap -z 'logger [-l] logfile' <command>\n" .
+	"Usage: rlwrap -z 'logger [-i] [-l] [logfile]' <command>\n" .
 	"log messages to a file (for debugging)\n".
-	"give logfile name as an argument, -l for long format\n" .
-  "useful in a pipeline (rlwrap -z 'pipeline logger in:filter:logger out')");
+  "give logfile name (default: /tmp/filterlog.\$\$)  as an argument, -l for long format\n" .    
+  "useful in a pipeline (rlwrap -z 'pipeline logger in:filter:logger out')\n".
+  "the -i option will make logger log all message types, not just those that are\n" .
+  "relevant for filters up- or downstream in the pipeline" );
 
 $filter -> run;
 
+
+
+
+# "do nothing" handler for filters that are called with just one argument (like prompt, output,...)
+sub just_copy {
+    return $_[0];        
+}
+
+# "do nothing" handler for filters that are called with, and return, a list (like hotkey)
+sub just_copy_array {
+    return @_;      }
+
+# "do nothing" completion handler  (returning only an unchanged list of completions, without  input line and prefix
+sub just_copy_completions {
+    my($line, $prefix, @completions) = @_;
+    return @completions;
+}
+
+
+sub copy_complex {
+    return RlwrapFilter::merge_fields(@_); 
+}
 
 # a message_handler is seldom used (as it cannot change messages, only examine them) 
 # It gets called with the tag as its second argument
@@ -38,7 +74,7 @@ sub logit {
   $mangled =~ s/\t/\\t/g;
   $mangled =~ s/\x1b/\\e/g;
   $mangled =~ s/([[:cntrl:]])/sprintf("\\x%02x", unpack("C", $1))/ge;
-  
+  $mangled = "<$mangled>";
   format LOG =
   @<<<<<<<<<<<<<<<<<<<<    ^<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
   $tagname,                $mangled

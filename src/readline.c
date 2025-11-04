@@ -790,7 +790,8 @@ handle_hotkey2(int UNUSED(count), int hotkey, int without_history)
   
   /* OK, we now have to read back everything. After splitting the message, here should be exactly 5 components*/
   fragments = split_filter_message(filtered, &nfilter_fields);
-  assert(nfilter_fields == 5); 
+  if (nfilter_fields != 5)
+    myerror(FATAL, "found %d fields (expected 5) in filtered hotkey message <%s>", nfilter_fields, filtered); 
   message               = fragments[0]; 
   new_prefix            = fragments[1];
   new_postfix           = fragments[2];

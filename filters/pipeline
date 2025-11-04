@@ -116,7 +116,8 @@ sub spawn_component  {
     foreach my $fd (@all_pipes) { # close all other pipes
       POSIX::close($fd) unless is_in ($fd, $input_pipe_fd, $output_pipe_fd);
     }
-
+    #prepend $RLWRAP_FILTERDIR to command (unless it is an absolute pathname)
+    $command_and_args[0] = "$ENV{RLWRAP_FILTERDIR}/$command_and_args[0]" unless $command_and_args[0] =~ /^\//;
     exec @command_and_args;
     # the original  FILTER_IN and FILTER_OUT are still open (they were duped with ">&$fd", not re-used with ">&=$fd"
     # this is important as the DIE handler uses FILTER_OUT
