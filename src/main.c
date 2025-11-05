@@ -1076,9 +1076,10 @@ cleanup_rlwrap_and_exit(int status)
   unblock_all_signals();
   DPRINTF0(DEBUG_TERMIO, "Cleaning up");
 
-  if (write_histfile && (histsize==0 ||  history_total_bytes() > 0)) /* avoid creating empty .speling_eror_history file after typo */
+  if (write_histfile && (histsize==0 ||  history_total_bytes() > 0))  {/* avoid creating empty .speling_eror_history file after typo */
+    DPRINTF2(DEBUG_HISTORY, "Writing history file %s (%d bytes)", history_filename, history_total_bytes());
     write_history(history_filename); /* ignore errors */
-
+  }
   close_logfile();
   
   DPRINTF4(DEBUG_SIGNALS, "command_pid: %d, commands_exit_status: %x, filter_pid: %d, filters_exit_status: %x",

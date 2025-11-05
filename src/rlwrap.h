@@ -305,6 +305,7 @@ void move_cursor_to_start_of_prompt(int erase);
 int prompt_is_single_line(void);
 char *process_new_output(const char* buffer, struct rl_state* state);
 int cook_prompt_if_necessary (void);
+void log_history_info(int lookback, const char* tag);
 
 extern int transparent; 
 extern char *multiline_separator;
@@ -614,18 +615,18 @@ typedef enum  {TEST_AT_PROGRAM_START, TEST_AFTER_OPTION_PARSING, TEST_AFTER_SPAW
 #  define DEBUG_TERMIO                           1
 #  define DEBUG_SIGNALS                          2
 #  define DEBUG_READLINE                         4
-#  define DEBUG_MEMORY_MANAGEMENT                8   /* used with malloc_debug.c */
+#  define DEBUG_MEMORY_MANAGEMENT                8    /* used with malloc_debug.c */
 #  define DEBUG_FILTERING                        16
 #  define DEBUG_COMPLETION                       32
-#  define DEBUG_AD_HOC                           64  /* only used during rlwrap development */
-#  define DEBUG_WITH_TIMESTAMPS                  128 /* add timestamps to every line in debug log    */
-#  define FORCE_HOMEGROWN_REDISPLAY              256 /* force use of my_homegrown_redisplay()        */
-#  define DEBUG_LONG_STRINGS                     512 /* log all strings completely, however long they are */ 
+#  define DEBUG_AD_HOC                           64   /* only used during rlwrap development */
+#  define DEBUG_WITH_TIMESTAMPS                  128  /* add timestamps to every line in debug log    */
+#  define FORCE_HOMEGROWN_REDISPLAY              256  /* force use of my_homegrown_redisplay()        */
+#  define DEBUG_LONG_STRINGS                     512  /* log all strings completely, however long they are */ 
 #  define DEBUG_RACES                            1024 /* introduce random delays */  
 #  define DEBUG_RANDOM_FAIL                      2048 /* fail tests randomly */
 #  define DEBUG_SHOWCURSOR                       4096 /* run test_main and exit  */
-
-#  define DEBUG_MAX                              DEBUG_SHOWCURSOR
+#  define DEBUG_HISTORY                          8192 
+#  define DEBUG_MAX                              DEBUG_HISTORY
 #  define MANGLE_LENGTH                          ((debug_saved & DEBUG_LONG_STRINGS) ? 0 : 20) /* debug_saved is defined within DPRINTF macro */ 
 #  define DEBUG_DEFAULT                          (DEBUG_TERMIO | DEBUG_SIGNALS | DEBUG_READLINE)
 #  define DEBUG_ALL                              (2*DEBUG_MAX-1)

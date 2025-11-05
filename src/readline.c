@@ -37,7 +37,7 @@ int multiline_prompts = TRUE;
 
 /* forward declarations */
 static void line_handler(char *);
-static void my_add_history(char *);
+static void my_add_history(const char *);
 static int my_accept_line(int, int);
 static int my_accept_line_and_forget(int, int);
 static int my_operate_and_get_next(int, int);
@@ -215,6 +215,7 @@ line_handler(char *line)
     !history_is_stifled () ||
        (history_length <  history_max_entries &&
         history_duplicate_avoidance_policy != ELIMINATE_ALL_DOUBLES);
+  DPRINTF1(DEBUG_HISTORY, "history_can_safely_be_extended: %d", history_can_safely_be_extended);
   if (line == NULL) {           /* EOF on input, forward it  */
     DPRINTF1(DEBUG_READLINE, "EOF detected, writing character %d", term_eof);
     /* colour_the_prompt = FALSE; don't mess with the cruft that may come out of dying command @@@ but command may not die!*/
@@ -223,8 +224,7 @@ line_handler(char *line)
     /* NB: with bracketed-paste, "line" may actually contain newline characters */
     DPRINTF2(DEBUG_READLINE, "return_key: %d , invoked_by_operate_and_get_next: %d" , return_key, invoked_by_operate_and_get_next);
 
-    
-    
+         
     if (*line &&                 /* forget empty lines  */
         redisplay &&             /* forget passwords    */
         !forget_line &&          /* forget lines entered by CTRL-O */
@@ -294,19 +294,22 @@ line_handler(char *line)
     within_line_edit = FALSE;
     if(!RL_ISSTATE(RL_STATE_MACROINPUT)) /* when called during playback of a multi-line macro, line_handler() will be called more 
                                             than once whithout re-entering main_loop(). If we'd remove it here, the second call
-                                            would crash  */ 
-       rl_callback_handler_remove();
+                                            would crash  */
+    rl_free_undo_list();                 /* prevent readline from "reverting" the most recently entered history item  */
+    rl_callback_handler_remove();
     set_echo(FALSE);
     free(saved_rl_state.input_buffer);
     free(saved_rl_state.raw_prompt);
     free(saved_rl_state.cooked_prompt); 
-    
+   
+ 
     saved_rl_state.input_buffer = mysavestring("");
     saved_rl_state.raw_prompt = mysavestring("");
     saved_rl_state.cooked_prompt = NULL;
     saved_rl_state.point = 0;
     saved_rl_state.already_saved = TRUE;
     redisplay  = TRUE;
+
 
     if (one_shot_rlwrap)
       write_EOF_to_master_pty();
@@ -369,20 +372,40 @@ dump_all_keybindings(int count, int key)
 }       
 
 
+void log_history_info(int lookback, const char* tag) {
+  #ifndef DEBUG
+    return;
+  #else
+    int count,here;
+    if (debug & DEBUG_HISTORY) {
+      DPRINTF3(DEBUG_HISTORY, "(%s) %d history items, from #%d and back:", tag, lookback, history_length);
+      for (count = 0, here = history_length - 1;
+           count < lookback ;
+           count++, here--) {
+        DPRINTF4(DEBUG_HISTORY,"(%s) item %d (base: %d): <%s>", tag, here, history_base, history_get(history_base + here)->line); 
+      }
+    }
+  #endif
+}
+
+
 /* filter line and add it to history list, avoiding duplicates if necessary */
 static void
-my_add_history(char *line)
+my_add_history(const char *line)
 {       
   int lookback, count, here;
   char *new_entry, *filtered_line, **lineptr, **list;
 
-  /* with bracketed-paste mode, line may actually be multiple lines. We'll treat each of those lines */
-  /* as a separate history item (I believe that is what bash does as well).                          */
 
+  /* with bracketed-paste mode, line may actually be multiple lines. (Is that so??) We'll treat each of those lines */
+  /* as a separate history item (I believe that is what bash does as well).                                         */
+
+  DPRINTF1(DEBUG_HISTORY, "my_add_history: %s", line);
   list = split_with(line,"\n"); 
   for (lineptr = list; *lineptr; lineptr++) {
     filtered_line =  pass_through_filter(TAG_HISTORY, *lineptr);
- 
+    DPRINTF1(DEBUG_HISTORY, "after splitting (and filtering) %s", filtered_line);
+    
   
     switch (history_duplicate_avoidance_policy) { 
     case KEEP_ALL_DOUBLES:
@@ -401,11 +424,11 @@ my_add_history(char *line)
     for (count = 0, here = history_length - 1;
          count < lookback ;
          count++, here--) {
-      DPRINTF4(DEBUG_READLINE, "comparing <%s> and <%s> (count = %d, here = %d)", line
+      DPRINTF4(DEBUG_HISTORY, "comparing <%s> and <%s> (count = %d, here = %d)", line
              , history_get(history_base + here)->line ,count, here);
       if (strncmp(new_entry, history_get(history_base + here) -> line, 10000) == 0) { /* history_get uses the logical offset history_base .. */
         HIST_ENTRY *entry = remove_history (here);                                   /* .. but remove_history doesn't!                      */
-        DPRINTF2(DEBUG_READLINE, "removing duplicate entry #%d (%s)", here, entry->line);
+        DPRINTF2(DEBUG_HISTORY, "removing duplicate entry #%d (%s)", here, entry->line);
         free_foreign(entry->line);
         free_foreign(entry);
       }
