@@ -230,6 +230,7 @@ sub trickle2 {
   local $prompting;
   my ($N, $M) = @_;
   my $i;
+  sleep 2;
   print "X" x $N;
   foreach my $c (split //, "trickle > ") {
     print $c;

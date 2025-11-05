@@ -150,6 +150,8 @@ save_rl_state(void)
   rl_delete_text(0, rl_end);    /* clear line  (after prompt) */
   rl_point = 0;
   my_redisplay();               /* and redisplay (this time without user input, cf the comments for the line_handler() function below) */
+  
+  rl_free_undo_list();          /* prevent readline from reverting the most recently entered history item  */
   rl_callback_handler_remove(); /* restore original terminal settings */
   rl_deprep_terminal();
 }
@@ -210,11 +212,7 @@ static void
 line_handler(char *line)
 {
   char *rewritten_line, *filtered_line;
-  bool history_can_safely_be_extended =
-    !invoked_by_operate_and_get_next ||  
-    !history_is_stifled () ||
-       (history_length <  history_max_entries &&
-        history_duplicate_avoidance_policy != ELIMINATE_ALL_DOUBLES);
+  bool history_can_safely_be_extended = !invoked_by_operate_and_get_next ||  history_duplicate_avoidance_policy != ELIMINATE_ALL_DOUBLES;
   DPRINTF1(DEBUG_HISTORY, "history_can_safely_be_extended: %d", history_can_safely_be_extended);
   if (line == NULL) {           /* EOF on input, forward it  */
     DPRINTF1(DEBUG_READLINE, "EOF detected, writing character %d", term_eof);
@@ -295,7 +293,7 @@ line_handler(char *line)
     if(!RL_ISSTATE(RL_STATE_MACROINPUT)) /* when called during playback of a multi-line macro, line_handler() will be called more 
                                             than once whithout re-entering main_loop(). If we'd remove it here, the second call
                                             would crash  */
-    rl_free_undo_list();                 /* prevent readline from "reverting" the most recently entered history item  */
+    rl_free_undo_list();                 /* prevent readline from reverting the most recently entered history item  */
     rl_callback_handler_remove();
     set_echo(FALSE);
     free(saved_rl_state.input_buffer);
