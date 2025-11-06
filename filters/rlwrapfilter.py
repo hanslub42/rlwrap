@@ -33,6 +33,8 @@ rlwrapfilter.py makes it very simple to write rlwrap
 filters in Python 3. A filter only needs to instantiate a RlwrapFilter
 object, change a few of its default handlers and then call its 'run'
 method.
+
+This module and numerous python filters were contributed by Hisanobu Okuda.
 """
 
 
@@ -214,6 +216,9 @@ def read_from_stdin():
         if not m:
             sys.exit()
         tagname, message = m.groups()
+        tagname=tagname.upper()            # allow lowercase tag names
+        if not re.match(r'TAG_', tagname): # allow omitting the tiresome "TAG_" prefix
+            tagname = "TAG_" + tagname
         message.replace("\\t","\t").replace("\\n","\n")
         tag = name2tag(tagname)
     return tag, message

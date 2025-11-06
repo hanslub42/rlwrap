@@ -338,6 +338,8 @@ sub read_from_stdin {
     print $prompt;
     ($tagname, $message) = (<STDIN> =~ /(\S+) (.*?)\r?\n/);
     exit unless $tagname;
+    $tagname = uc($tagname); # allow lowercase tag names 
+    $tagname = "TAG_" . $tagname unless $tagname =~ /^TAG_/; # allow omitting the tiresome "TAG_" prefix
     $message =~ s/\\t/\t/g; # allow TABs to be input as '\t'
     $message =~ s/\\n/\n/g; # the same for newlines
     $tag = name2tag(undef, $tagname); # call as function, not method
@@ -847,7 +849,8 @@ Send C<$question> to I<command>'s input and read back everything that
 comes back until C<$prompt> is seen at "end-of-chunk", or no new
 chunks arrive for $timeout seconds, whichever comes first.  Return the
 response (without the final C<$prompt>).  B<rlwrap> remains completely
-unaware of this conversation.
+unaware of this conversation; it won't even show up in B<rlwrap>'s debug logs
+or in the output of the B<logger> filter. Hence we also have:
 
 =item $f -> cloak_and_dagger_verbose($verbosity)
 
@@ -1022,12 +1025,13 @@ input messages on its standard input of the form
 
   TAG_PROMPT myprompt >
 
-(i.a. a tag name, one space and a message followed by a newline. The
+(i.a. a tag name, one space and a message followed by a newline.  The
 message will not contain the final newline) and it will respond in the
 same way on its standard output. Of course, B<rlwrap> can help with the
-tedious typing of tag names:
+tedious typing of tag names (and, for convenience, you
+can omit the "TAG_" prefix and type the tag name in lowercase)
 
-  rlwrap -f tagnames filter_to_be_debugged
+  rlwrap -i -f TAGNAMES -p -S "filter > "  ./filter_to_be_debugged
 
 Because B<rlwrap> cannot put TABs and newlines in input lines, filters will
 convert '\t' and '\n' into TAB and newline when run directly from the command line.

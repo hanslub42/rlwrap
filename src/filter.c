@@ -214,6 +214,7 @@ int filter_is_interested_in(int tag) {
 static int user_frustration_signals[] = {SIGHUP, SIGINT, SIGQUIT, SIGTERM, SIGALRM};
 
    
+
 char *pass_through_filter(int tag, const char *buffer) {
   char *filtered;
 

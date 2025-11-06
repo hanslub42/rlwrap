@@ -316,7 +316,7 @@ main_loop(void)
   
 
 
-  pass_through_filter(TAG_OUTPUT,""); /* If something is wrong with filter, get the error NOW */
+  output_queue = mysavestring(pass_through_filter(TAG_INPUT,"")); /* Allow filters to stuff the wrapped command's input at startup. Also: fail early if a filter fails to start */
   set_echo(FALSE);        /* This will also put the terminal in CBREAK mode */
   /* ------------------------------  main loop  -------------------------------*/
   while (TRUE) {

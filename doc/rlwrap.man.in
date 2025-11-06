@@ -384,11 +384,16 @@ Any key or key combination can be bound to the \fBreadline\fP command \fIrlwrap-
 define multi-key direct keypresses by defining their first key(s) as a 'direct prefix'
 .TP
 .B (Not currently bound)
-Any key can be bound to the \fBreadline\fP command \fIrlwrap-hotkey\fP. This key will then cause the current
-input line and the current history to be filtered (cf. \fBRlwrapFilter(3pm)\fP) through the current filter (hence be a no-op when there is no filter), which then can re-write the input line, move the cursor and update the history. After that, the user can still edit the resulting input.
+Multiple keys can be bound to the \fBreadline\fP command \fIrlwrap-hotkey\fP. Each of those keys will then cause the key itself, the current
+input line and the current history to be filtered (cf. \fBRlwrapFilter(3pm)\fP) through the current filter (hence be a no-op when there is no filter), which then can re-write the input line, move the cursor and update the history (differently for each key)
+After that, the user can still edit the resulting input.  
 .TP
 .B (Not currently bound)
 \fIrlwrap-hotkey-without-history\fP acts like \fIrlwrap-hotkey\fP, but the history (which can be quite large) is not passed to the filter. This is more efficient if the filter wouldn't do anything useful with the history anyway.
+.TP
+.B (Not currently bound)
+\fIoperate-and-get-next\fP Accept the current line for return to the calling application as if a newline had been entered, and fetch the next line relative to the current line from the history for editing. The default \fBreadline\fP keybinding (CTRL + O)
+is overwritten by \fBrlwrap\fP, but it can be re-bound in \fB~/.inputrc\fP.
 .PP
 The special keys were chosen for no other reason than that they are not currently bound to any
 readline action. If you don't like them, (or your window manager swallows them) they (and the other 4 commands)
