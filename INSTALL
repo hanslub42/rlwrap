@@ -1,10 +1,15 @@
 PREREQUISITES
 
-To build rlwrap, you'll need an ANSI C compiler (gcc will certainly
-do) and GNU readline 4.2 or later. rlwrap should compile on most
-unices and unix-like environments like linux, the BSDs, OS/X, solaris,
-HP/UX, QNX, AIX and cygwin (special thanks to PolarHome for their
-"dinosaur zoo" of ageing Unix systems!)
+- an ANSI C compiler (gcc will certainly do) 
+- libreadline (4.2 or later) - the real thing, not the fake one
+  that OS X installs
+- any one of: termcap, curses, ncurses, tinfow, or tinfo
+- libptytty (unless you configure  --without-libptytty)
+- perl or python (but only if you want to use filters)
+
+rlwrap should compile on most unices and unix-like environments like
+linux, the BSDs, OS/X, solaris, HP/UX, QNX, AIX and cygwin (special
+thanks go to PolarHome for their "dinosaur zoo" of ageing Unix systems!)
 
 
 INSTALLATION
@@ -33,7 +38,7 @@ to see them all. Most of them are not specific to rlwrap, except the
 following:
 
 --with-libptytty (default: YES) Use libptytty instead of rlwrap's own
-  pty handling. 
+  crusty (but still functional) pty handling. 
   
 --enable-spy-on-readline (default: YES) If we want to keep the display
   tidy when re-sizing the terminal window or printing multi-line
@@ -71,10 +76,10 @@ the --prefix option, like:
 
 after which 'make install' will install rlwrap in $HOME/bin
 
-You may have to install GNU readline (e.g using ./configure
+You may have to install GNU readline as well (e.g using ./configure
 --prefix=$HOME in the readline source directory)
 
-rlwrap's configure script will not find this installation automatically, but
+rlwrap's configure script will then not find this installation automatically, but
 
 ./configure --prefix=$HOME CFLAGS=-I$HOME/include CPPFLAGS=-I$HOME/include LDFLAGS=-L$HOME/lib
 
@@ -89,29 +94,17 @@ BUILD PROBLEMS
 
 If configure complains about missing Xyz (where Xyz can be ncurses,
 libptytty, or readline) and you are sure that Xyz is installed on your
-system, consider installing Xyz-devel
+system, chances are that you use a distribution with separate Xyz and
+Xyz-devel packages.  Compiling rlwrap (or any other software) requires
+the -devel packages to be installed.
 
-completion.c is made from completion.rb by the program rbgen
-(https://github.com/hanslub42/libredblack), but both files are included in
-the tarball and the repository; rbgen is only needed when you want to change
-completion.c. Sometimes, however, after a 'git pull', make will try to
-recompile completion.rb and complain about not finding rbgen. A fresh
-clone, or simply 'touch completion.c' will solve this.
+completion.c is generated from completion.rb by the program rbgen
+(https://github.com/hanslub42/libredblack). As this program is
+probably not installed on your machine, both files are included in the
+tarball and the repository; rbgen is only needed when you want to
+change completion.c.
 
-If the configure script is not found, you can recreate it, and all of
-the other files it needs, by:
-
-aclocal
-autoconf
-autoheader
-automake --add-missing
-
-or, even shorter:
-
-autoreconf --install
-
-On recent OS X sytems, libreadline is not the real thing, but a
-non-GNU replacement. If the linker complains about missing
-symbols, install GNU readline and try again (or, better, use
-a tool like brew)
+As mentioned above, on OS X sytems, libreadline is not the real
+thing, but a non-GNU replacement. If the linker complains about
+missing symbols, install GNU readline and try again.
 

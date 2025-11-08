@@ -1354,6 +1354,8 @@ int match_regexp (const char *string, const char *regexp, int case_insensitive) 
   {
     regex_t *compiled_regexp = my_regcomp(regexp, REG_EXTENDED|REG_NOSUB|(case_insensitive ? REG_ICASE : 0));
     result = !regexec(compiled_regexp, string, 0, NULL, 0);
+    DPRINTF3(DEBUG_READLINE, "matching %s with regex %s: result %d", M(string), M(regexp), result);
+
     regfree(compiled_regexp);
   }
 #endif

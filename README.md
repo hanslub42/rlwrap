@@ -1,23 +1,19 @@
-rlwrap v 0.47 Aug 2025
+rlwrap v 0.48 Nov 2025
 
 ## WHAT IT IS:
 
-`rlwrap` is a 'readline wrapper', a small utility that uses the [GNU
+`rlwrap` is a wrapper that uses the [GNU
 Readline](https://tiswww.case.edu/php/chet/readline/rltop.html)
-library to allow the editing of keyboard input for any command.
+library to allow the comfortable editing and recalling of keyboard
+input for other commands.
 
-I couldn't find anything like it when I needed it, so I wrote this one
-back in 1999.  By now, there are (and, in hindsight, even then there
-were) a number of good readline wrappers around, like `rlfe`,
-distributed as part of the GNU readline library, and the amazing
-`socat`.
+There are many other such readline wrappers around, like rlfe and
+socat, but `rlwrap` can be especially useful for those who need
+user-defined completion (by way of completion word lists) or a
+persistent history, and people who want to program 'special effects'
+using the filter mechanism.
 
-You should consider using `rlwrap` especially when you need
-user-defined completion (by way of completion word lists) and
-persistent history, or if you want to program 'special effects' using
-the filter mechanism.
-
-As it is often used with older or even obsolete software, `rlwrap`
+As it is often used with older software on obsolete systems, `rlwrap`
 strives to compile and run on a fairly wide range of not necessarily
 recent Unix-like systems (FreeBSD, OSX, HP-UX, AIX, Solaris, QNX,
 cygwin, linux and probably quite a few more).  This would not have
@@ -25,7 +21,7 @@ been possible without [Polarhome](http://polarhome.com)'s now retired
 'dinosaur zoo' of ageing Unix systems.
 
 
-## HOW TO USE IT:
+## WHEN AND HOW TO USE IT:
 
 If 
 
@@ -62,6 +58,7 @@ by giving the password prompt (excluding trailing space and possibly
 the first few letters) as an argument to the -a option.
  
 ## EXAMPLES:
+
 Run netcat with command-line editing:
 
     rlwrap nc localhost 80
@@ -77,28 +74,29 @@ storing) passwords:
 
     rlwrap -cra -assword: smbclient '\\PEANUT\C' 
 
-## INSTALLATION:
-Usually just
 
-    ./configure;
-    make
-    sudo make install
 
-See the INSTALL file for more information.
+## LIMITATIONS
+
+Programs that already have a sophisticated command-line (like fish or
+fzf) will be unusable with rlwrap, as their virtuoso terminal handling 
+is difficult to understand (rlwrap is not a terminal emulator!).
+Of course, those programs won't *need* rlwrap, either. 
 
 ## FILTERS
 
 Filters are `perl` or `python` plugins that enable complete (albeit
 somewhat fragile) control over `rlwrap`'s input and output, echo,
-prompt, history and completion. They aren't used a lot, and remain
-therefore somewhat untested. `rlwrap -z listing` lists the installed
-filters, `rlwrap -z <somefilter>` displays a short help text for `<somefilter>`
+prompt, history, completion and signal handling. They aren't used a
+lot, and remain therefore somewhat untested. `rlwrap -z listing` lists
+the installed filters, `rlwrap -z <filter>` displays a short help text
+for `<filter>`
 
 ## AUTHORS
 
 The GNU Readline library (written by Brian Fox and Chet Ramey) does
-all the hard work behind the scenes, the pty-handling code (written by
-Geoff C. Wing) was taken practically unchanged from rxvt, and
+the hard work behind the scenes, the pty-handling code (written by
+Geoff C. Wing) was taken practically unchanged from rxvt and
 completion word lists are managed by Damian Ivereigh's libredblack
 library. The rest was written by Hans Lub (hanslub42@gmail.com).
 
