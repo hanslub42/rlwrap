@@ -903,9 +903,8 @@ read_options_and_command_name(int argc, char **argv)
       break;
     case 'p':
       colour_the_prompt = TRUE;
-      initialise_colour_codes(check_optarg('p', remaining, FALSE, "Red") ?
-                              colour_name_to_ansi_code(optarg) :
-                              colour_name_to_ansi_code("Red"));
+      colour_start =  decode_colour_spec(check_optarg('p', remaining, FALSE, "Red") ? optarg : "Red");  
+      colour_end   = "\033[0m";
       break;
     case 'P':
       pre_given = mysavestring(optarg);

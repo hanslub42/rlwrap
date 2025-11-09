@@ -344,6 +344,7 @@ void free_splitlist (char **list) {
    
 
 char *
+
 search_and_replace(char *patt, const char *repl, const char *string, int cursorpos,
                    int *line, int *col)
 {
@@ -364,8 +365,7 @@ search_and_replace(char *patt, const char *repl, const char *string, int cursorp
   assert(string);
   stringlen = strlen(string);
   
-  DPRINTF2(DEBUG_READLINE, "string=%s, cursorpos=%d",
-           M(string), cursorpos);
+  DPRINTF4(DEBUG_READLINE, "search_and_replace(patt='%s',repl='%s', string='%s',cursorpos=%d)", patt, M(repl), M(string), cursorpos);
   scratchsize = max(stringlen, (stringlen * replen) / pattlen) + 1;     /* worst case : repleng > pattlen and string consists of only <patt> */
   DPRINTF1(DEBUG_READLINE, "Allocating %d bytes for scratchpad", (int) scratchsize);
   scratchpad = mymalloc(scratchsize);
@@ -394,6 +394,7 @@ search_and_replace(char *patt, const char *repl, const char *string, int cursorp
   scratchpad[j] = '\0';
   result = mysavestring(scratchpad);
   free(scratchpad);
+  DPRINTF1(DEBUG_READLINE, "result: %s", M(result));
   return (result);
 }
 
@@ -966,12 +967,18 @@ lowercase(const char *str) {
 
 
 char *
-colour_name_to_ansi_code(const char *colour_name) {
-  if (colour_name  && *colour_name && isalpha(*colour_name)) {
-    char *lc_colour_name = mysavestring(lowercase(colour_name));
-    char *bold_code = (isupper(*colour_name) ? "1" : "0");
-
-#define isit(c) (strcmp(c,lc_colour_name)==0)
+decode_colour_spec(const char *colour_spec) {
+  assert(colour_spec && *colour_spec);
+  colour_spec = search_and_replace("ESC", "\033", colour_spec, 0, NULL, NULL);
+  
+  if (colour_spec[0] == '\033') {                        /* CSI colour code. Check whether it makes sense: */
+    if (colour_spec[1] != '[' || colour_spec[strlen(colour_spec)-1] != 'm')
+      myerror(FATAL, "colour specs that start with ESC ('\\033' or '\\0x1b') should be of form 'ESC[....m'");
+    return mysavestring(colour_spec);
+  } else if (isalpha(colour_spec[0])) {                 /* colour name, like red or YELLOW */
+    char *lc_colour_name = mysavestring(lowercase(colour_spec));
+    char *bold_code = (isupper(*colour_spec) ? "1" : "0");
+    #define isit(c) (strcmp(c,lc_colour_name)==0)
     char *colour_code =
       isit("black")   ? "30" :
       isit("red")     ? "31" :
@@ -982,21 +989,32 @@ colour_name_to_ansi_code(const char *colour_name) {
       isit("purple")  ? "35" :
       isit("cyan")    ? "36" :
       isit("white")   ? "37" :
-      NULL ;
-      
-#undef isit
+      NULL ;  
+    #undef isit
     if (colour_code)
-      return add3strings(bold_code,";",colour_code);
+      return add3strings("\033[", add3strings(bold_code,";",colour_code), "m");
     else
-      myerror(FATAL|NOERRNO, "unrecognised colour name '%s'. Use e.g. 'yellow' or 'Blue'.", colour_name);
+      myerror(FATAL|NOERRNO, "unrecognised English colour name '%s'. Use e.g 'yellow' or 'Blue', or else an ANSI code like 'ESC[31m'", colour_spec);
+  } else if (isdigit(colour_spec[0])) {                /* list of numerals, like 1;31. Not recommended from rlwrap 0.48 onwards, but retained for backwards compatibility */
+    int attributes = -1;
+    int foreground = -1;
+    int background = 40; /* don't need to specify background; 40 passes the test automatically */
+    sscanf(colour_spec, "%d;%d;%d", &attributes, &foreground, &background);
+  
+    #define OUTSIDE(lo,hi,val) (val < lo || val > hi)
+  
+    if (OUTSIDE(0,8,attributes) || OUTSIDE(30,37,foreground) || OUTSIDE(40,47,background))
+       myerror(FATAL|NOERRNO, "\n"
+            "  numeric prompt colour specs should be <attr>;<fg>[;<bg>]\n"
+            "  where <attr> ranges over [0...8], <fg> over [30...37] and <bg> over [40...47]\n"
+            "  example: 0;33 for yellow on current background, 1;31;40 for bold red on black ");
+    return add3strings("\033[", colour_spec,"m");
+  } else {
+    myerror(FATAL|NOERRNO, "Unrecognised colour spec %s", colour_spec);
   }
-  return mysavestring(colour_name);
-}       
+  return "not reached";
+}
     
-    
-
-
-
 
 
 
@@ -1262,7 +1280,7 @@ char *protected_codes[]  = { "\x1B\x1B", NULL};
 /* specify separately:                                                                            */ 
 static char *ansi_colour_code_regexp = "(\x1B\\[[0-9;]*m)";          /* colour codes              */
 
-
+                                      
 
 /* All the codes we want to get rid of. cf.                                                                        */
 /* https://stackoverflow.com/questions/14693701/how-can-i-remove-the-ansi-escape-sequences-from-a-string-in-python */

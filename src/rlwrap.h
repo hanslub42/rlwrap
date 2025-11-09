@@ -296,7 +296,7 @@ void restore_rl_state(void);
 void message_in_echo_area(char *message);
 void init_readline(char *);
 void my_redisplay(void);
-void initialise_colour_codes(char *colour);
+char *decode_colour_spec(const char *colour_spec);
 void reprint_prompt(int coloured);
 char *colourise (const char *prompt);
 void move_cursor_to_start_of_prompt(int erase);
@@ -312,7 +312,8 @@ extern char *multiline_separator;
 extern char *pre_given;
 extern int leave_prompt_alone;
 extern bool bracketed_paste_enabled;
-
+extern char *colour_start;
+extern char *colour_end;
 
 /* in signals.c */
 extern volatile int command_is_dead;
@@ -429,7 +430,6 @@ int colourless_strlen(const char *str, char **pcopy_without_ignore_markers, int 
 int colourless_strlen_unmarked (const char *str, int termwidth);
 char *get_last_screenline(char *long_line, int termwidth);
 char *lowercase(const char *str);
-char *colour_name_to_ansi_code(const char *colour_name);
 int match_regexp(const char *string, const char *regexp, int case_insensitive);
 int isnumeric(char *string);
 #define END_FIELD (char*)NULL /* marker object to terminate vargs */

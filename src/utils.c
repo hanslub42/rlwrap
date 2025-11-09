@@ -331,11 +331,11 @@ int open_unique_tempfile(const char *suffix, char **tmpfile_name) {
 static char*
 markup(const char* colour_name, const char*str)
 {
-  char *result, *colour_code;
+  char *result, *colour_spec;
   if (colour_name && isatty(STDOUT_FILENO) && (ansi_colour_aware || term_has_colours || colour_the_prompt)) {
-    colour_code = add3strings("\033[", colour_name_to_ansi_code(colour_name), "m");
-    result = add3strings(colour_code, str,"\033[0m");
-    free(colour_code);
+    colour_spec = decode_colour_spec(colour_name);
+    result = add3strings(colour_spec, str,"\033[0m");
+    free(colour_spec);
   } else {
     result =  mysavestring(str);
   }

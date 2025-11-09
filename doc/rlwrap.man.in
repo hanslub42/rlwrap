@@ -188,13 +188,10 @@ immediately ("confident mode").
 
 .TP
 .OB \-p \-\-prompt\-colour \fIcolour\fP
-Use one of the colour names \fIblack, red, green, yellow, blue, cyan, purple (=magenta)\fP or \fIwhite\fP, or an ANSI\-conformant <colour_spec> to colour any prompt displayed by
-\fIcommand\fP. An uppercase colour name (\fIYellow\fP or \fIYELLOW\fP ) gives a bold prompt. Prompts that already contain
-(colour) escape sequences or one of the readline "ignore markers" (ASCII 0x01 and 0x02) are not coloured. This option implies \-\-ansi\-colour\-aware.
-You can also use a \fIcolour spec\fP of the form
-<attr>;<fg>[;<bg>], for example  \-p'1;31' will give a bold red prompt on the
-current background (this is the default when no argument is
-given). Google for 'ANSI color' to learn more about colour codes.
+Use one of the colour names \fIblack, red, green, yellow, blue, cyan, purple (=magenta)\fP or \fIwhite\fP, or an ANSI colour code like $'\\033[1;33m' or 'ESC[38;5;209m'. An
+uppercase colour name (\fIYellow\fP or \fIYELLOW\fP )results in a bold prompt. Prompts that already contain
+(colour) escape sequences or one of the readline "ignore markers" (ASCII 0x01 and 0x02) are never coloured. This option implies \-\-ansi\-colour\-aware.
+Google for 'ANSI color' to learn more about colour codes.
 .OA \-p \-\-prompt\-colour 'Red' 'Red'
 
 .TP

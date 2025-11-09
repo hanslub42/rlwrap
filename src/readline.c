@@ -31,7 +31,8 @@ bool bracketed_paste_enabled = FALSE;
 static char return_key;                 /* Key pressed to enter line */
 static bool invoked_by_operate_and_get_next = FALSE;
 static int forget_line;
-static char *colour_start, *colour_end;        /* colour codes */
+char *colour_start = "";                /* ANSI colour codes for ... */
+char *colour_end   = "";                /* colouring prompts         */
 
 int multiline_prompts = TRUE;
 
@@ -875,24 +876,10 @@ handle_hotkey_without_history(int count, int hotkey)
 }       
 
 
-void
-initialise_colour_codes(char *colour)
-{
-  int attributes, foreground, background;
-  DPRINTF1(DEBUG_READLINE, "initialise_colour_codes(\"%s\")", colour);
-  attributes = foreground = -1;
-  background = 40; /* don't need to specify background; 40 passes the test automatically */
-  sscanf(colour, "%d;%d;%d", &attributes, &foreground, &background);
+
   
-#define OUTSIDE(lo,hi,val) (val < lo || val > hi) 
-  if (OUTSIDE(0,8,attributes) || OUTSIDE(30,37,foreground) || OUTSIDE(40,47,background))
-    myerror(FATAL|NOERRNO, "\n"
-            "  prompt colour spec should be <attr>;<fg>[;<bg>]\n"
-            "  where <attr> ranges over [0...8], <fg> over [30...37] and <bg> over [40...47]\n"
-            "  example: 0;33 for yellow on current background, 1;31;40 for bold red on black ");
-  colour_start= add3strings("\033[", colour,"m");
-  colour_end  = "\033[0m";
-}
+
+
 
 /* returns a colourised copy of prompt, trailing space is not colourised */
 char*
@@ -900,10 +887,10 @@ colourise (const char *prompt)
 {
   char *prompt_copy, *trailing_space, *colour_end_with_space, *result, *p;
   prompt_copy = mysavestring(prompt);
-  /* if (strchr(prompt_copy, '\033') || strchr(prompt_copy, RL_PROMPT_START_IGNORE) ) {     /\* prompt contains escape codes? *\/ */
-  /*   DPRINTF1(DEBUG_READLINE, "colourise %s: left as-is", prompt); */
-  /*   return prompt_copy; /\* if so, leave prompt alone  *\/ */
-  /* } */
+  if (strchr(prompt_copy, '\033') || strchr(prompt_copy, RL_PROMPT_START_IGNORE) ) {     /* prompt contains escape codes? */ 
+     DPRINTF1(DEBUG_READLINE, "colourise %s: left as-is", prompt); 
+     return prompt_copy; /* if so, leave prompt alone  */ 
+  }
   for (p = prompt_copy + strlen(prompt_copy); p > prompt_copy && *(p-1) == ' '; p--)
     ; /* skip back over trailing space */
   trailing_space = mysavestring(p); /* p now points at first trailing space, or else the final NULL */
