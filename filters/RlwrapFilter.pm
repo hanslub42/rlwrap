@@ -379,7 +379,7 @@ sub cwd {
 # talking, and only listens, when it has displayed the $prompt
 sub cloak_and_dagger {
   my ($self, $question, $prompt, $timeout) = @_;
-  $prompt ||= $self -> last('prompt');
+  # $prompt ||= $self -> last('prompt'); TODO: remember last prompt
   write_patiently(*CMD_IN, "$question\n");
   $self -> send_output_oob("cloak_and_dagger question: $question\n") if $self -> {cloak_and_dagger_verbose};
   my $response = read_until(*CMD_OUT, $prompt, $timeout);

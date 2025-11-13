@@ -1,3 +1,22 @@
+0.48  rlwrap would mess up history when compiled with readline-8.3
+
+      allow full user control of word-breakers with
+      --break-chars='precisely:...'
+
+      simplify handling of --prompt-colour, enable general (ANSI)
+      color codes for e.g. 256-color terminals
+    
+      --filter 'filter_commandline $with <shell_matachars' would
+      not find filters in $RLWRAP_FILTERDIR
+
+      rlwrap in vi mode would not always honour show-mode-in-prompt 
+
+      make 'pipeline' filter find filters in $RLWRAP_FILTERDIR; add
+      -i option to 'logger' and 'logger.py'
+
+      add example filter null2.py (to show how to make argparse print
+      filter help with 'rlwrap -z filter')
+
 0.47.1 Correct typo (== instead of = in a configure test) that caused
       a configuration error on systems where sh is linked to dash
 

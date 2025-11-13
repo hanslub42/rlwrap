@@ -151,8 +151,9 @@ save_rl_state(void)
   rl_delete_text(0, rl_end);    /* clear line  (after prompt) */
   rl_point = 0;
   my_redisplay();               /* and redisplay (this time without user input, cf the comments for the line_handler() function below) */
-  
-  rl_free_undo_list();          /* prevent readline from reverting the most recently entered history item  */
+#ifdef HAVE_RL_FREE_UNDO_LIST
+  rl_free_undo_list();          /* prevent readline > 8.3 from reverting the most recently entered history item  */
+#endif  
   rl_callback_handler_remove(); /* restore original terminal settings */
   rl_deprep_terminal();
 }
@@ -294,7 +295,9 @@ line_handler(char *line)
     if(!RL_ISSTATE(RL_STATE_MACROINPUT)) /* when called during playback of a multi-line macro, line_handler() will be called more 
                                             than once whithout re-entering main_loop(). If we'd remove it here, the second call
                                             would crash  */
-    rl_free_undo_list();                 /* prevent readline from reverting the most recently entered history item  */
+#ifdef HAVE_RL_FREE_UNDO_LIST
+    rl_free_undo_list();                 /* prevent readline >8.3 from reverting the most recently entered history item  */
+#endif
     rl_callback_handler_remove();
     set_echo(FALSE);
     free(saved_rl_state.input_buffer);
