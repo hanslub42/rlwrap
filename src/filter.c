@@ -173,6 +173,7 @@ void spawn_filter(const char *filter_commandline) {
 void kill_filter(void)  {
   int status;
   assert (filter_pid && filter_input_fd);
+  pass_through_filter(TAG_EXIT, "");
   close(filter_input_fd); /* filter will see EOF and should exit  */
   myalarm(40); /* give filter 0.04seconds to go away */
   if(!filter_is_dead &&                     /* filter's SIGCHLD hasn't been caught  */
@@ -356,6 +357,7 @@ static char* tag2description(int tag) {
   case TAG_PROMPT:                     return "PROMPT";
   case TAG_HOTKEY:                     return "HOTKEY";
   case TAG_SIGNAL:                     return "SIGNAL";
+  case TAG_EXIT:                       return "EXIT";
   case TAG_WHAT_ARE_YOUR_INTERESTS:    return "WHAT_ARE_YOUR_INTERESTS";
   case TAG_IGNORE:                     return "TAG_IGNORE";
   case TAG_ADD_TO_COMPLETION_LIST:     return "ADD_TO_COMPLETION_LIST";

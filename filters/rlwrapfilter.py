@@ -61,6 +61,7 @@ TAG_COMPLETION                  = 3
 TAG_PROMPT                      = 4
 TAG_HOTKEY                      = 5
 TAG_SIGNAL                      = 6
+TAG_EXIT                        = 7
 TAG_WHAT_ARE_YOUR_INTERESTS     = 127
 TAG_IGNORE                      = 251
 TAG_ADD_TO_COMPLETION_LIST      = 252
@@ -246,6 +247,7 @@ def tag2name(tag):
                  'TAG_COMPLETION',
                  'TAG_HOTKEY',
                  'TAG_SIGNAL',
+                 'TAG_EXIT',
                  'TAG_HISTORY',
                  'TAG_OUTPUT_OUT_OF_BAND',
                  'TAG_ERROR',
@@ -415,6 +417,7 @@ class RlwrapFilter:
             'prompt_handler':is_callable,
             'hotkey_handler':is_callable,
             'signal_handler':is_callable,
+            'exit_handler':is_callable,
             'echo_handler':is_callable,
             'message_handler':is_callable,
             'history_handler':is_callable,
@@ -529,7 +532,8 @@ class RlwrapFilter:
                        TAG_COMPLETION  : self.completion_handler,
                        TAG_PROMPT      : self.prompt_handler,
                        TAG_HOTKEY      : self.hotkey_handler,
-                       TAG_SIGNAL      : self.signal_handler}
+                       TAG_SIGNAL      : self.signal_handler,
+                       TAG_EXIT        : self.exit_handler}
 
         for tag in range(0, len(message)):
             if interested[tag] == 'y':
@@ -641,6 +645,8 @@ class RlwrapFilter:
                     send_error('prompts may not contain newlines!')
             elif (tag == TAG_SIGNAL):
                 response = when_defined(self.signal_handler, message)
+            elif (tag == TAG_EXIT):
+                response = when_defined(self.exit_handler, message)
             elif (tag == TAG_WHAT_ARE_YOUR_INTERESTS):
                 response = self.add_interests(message)
             else:

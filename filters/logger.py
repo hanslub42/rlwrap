@@ -72,6 +72,7 @@ if args.log_all:
     filter.echo_handler = just_copy
     filter.hotkey_handler = just_copy_list
     filter.signal_handler = just_copy
+    filter.exit_handler = just_copy
 
 
 
@@ -80,9 +81,9 @@ filter.help_text = "Usage: rlwrap -z 'logger [-i] [-l] [logfile]' <command>\n"\
                    + "give logfile name as an argument (default: /tmp/filterlog.$$), -l for long format\n"\
                    + "useful in a pipeline (rlwrap -z 'pipeline logger in:filter:logger out')\n"\
                    + "the -i option will make logger log all message types, not just those that are\n"\
-                   + "relevant for filters up- or downstream in the pipeline" 
+                   + "relevant for filters up- or downstream in the pipeline"
 
 #filter.help_text = parser.format_help()
- 
+
 
 filter.run()

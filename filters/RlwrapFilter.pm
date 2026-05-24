@@ -15,7 +15,7 @@ require Exporter;
 require AutoLoader;
 @ISA = qw(Exporter AutoLoader);
 
-@EXPORT = qw(TAG_INPUT TAG_OUTPUT TAG_HISTORY TAG_COMPLETION TAG_PROMPT TAG_HOTKEY TAG_SIGNAL DEBUG_FILTERING DEBUG_RANDOM_DELAY);
+@EXPORT = qw(TAG_INPUT TAG_OUTPUT TAG_HISTORY TAG_COMPLETION TAG_PROMPT TAG_HOTKEY TAG_SIGNAL TAG_EXIT DEBUG_FILTERING DEBUG_RANDOM_DELAY);
 $VERSION = '0.01';
 
 use Carp;
@@ -29,6 +29,7 @@ use constant TAG_COMPLETION                    => 3;
 use constant TAG_PROMPT                        => 4;
 use constant TAG_HOTKEY                        => 5;
 use constant TAG_SIGNAL                        => 6;
+use constant TAG_EXIT                          => 7;
 use constant TAG_WHAT_ARE_YOUR_INTERESTS       => 127;
 use constant TAG_IGNORE                        => 251;
 use constant TAG_ADD_TO_COMPLETION_LIST        => 252;
@@ -99,7 +100,7 @@ sub new {
   my @accessors = qw(initialiser help_text input_handler
 		   output_handler prompt_handler echo_handler
 		   message_handler history_handler hotkey_handler completion_handler signal_handler
-		   echo_handler message_handler cloak_and_dagger_verbose
+		   exit_handler echo_handler message_handler cloak_and_dagger_verbose
 		   cumulative_output prompts_are_never_empty
 		   minimal_rlwrap_version);
   foreach my $acc (@accessors) {
@@ -160,6 +161,8 @@ sub run {
       croak "prompts may not contain newlines!" if $response =~ /\n/;
     } elsif ($tag == TAG_SIGNAL) {
       $response = when_defined($self -> signal_handler, $message);
+    } elsif ($tag == TAG_EXIT) {
+    $response = when_defined($self -> exit_handler, $message);
     } elsif ($tag == TAG_WHAT_ARE_YOUR_INTERESTS) {
       $response = $self -> add_interests($message);
     }
@@ -206,7 +209,8 @@ sub add_interests {
       or ($tag == TAG_COMPLETION and $self -> completion_handler)
       or ($tag == TAG_PROMPT     and $self -> prompt_handler)
       or ($tag == TAG_HOTKEY     and $self -> hotkey_handler)
-      or ($tag == TAG_SIGNAL     and $self -> signal_handler);
+      or ($tag == TAG_SIGNAL     and $self -> signal_handler)
+      or ($tag == TAG_EXIT       and $self -> exit_handler);
   }
   return join '', @interested;
 }

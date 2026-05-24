@@ -26,6 +26,7 @@ if ($opt_i) {
     $filter -> echo_handler(\&just_copy);
     $filter -> output_handler(\&just_copy);
     $filter -> signal_handler(\&just_copy);
+    $filter -> exit_handler(\&just_copy);
     $filter -> hotkey_handler(\&just_copy_array);
 }
 

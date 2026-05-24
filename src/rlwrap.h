@@ -505,7 +505,8 @@ extern int newline_came_last;
 #define TAG_PROMPT 4
 #define TAG_HOTKEY 5
 #define TAG_SIGNAL 6
-#define MAX_INTERESTING_TAG 6 /* max tag for which the filter can have a handler */
+#define TAG_EXIT 7
+#define MAX_INTERESTING_TAG 7 /* max tag for which the filter can have a handler */
 
 #define TAG_WHAT_ARE_YOUR_INTERESTS 127
 
