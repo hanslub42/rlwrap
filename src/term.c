@@ -19,6 +19,7 @@
     e-mail:  hanslub42@gmail.com
 */
 
+#include <term.h>
 
 #include "rlwrap.h"
 
