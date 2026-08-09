@@ -37,7 +37,7 @@ You should not notice any difference compared to directly calling `<command>
 its entire input history using the arrow keys.
 
 
-Input history is remembered accross invocations, separately for
+Input history is remembered across invocations, separately for
 different `<command>`s. `CTRL-R` will search the input history, like
 in `bash`.  With the `-r` and `-f` options you can specify the list of
 words which `rlwrap` will use as possible completions, taking them
