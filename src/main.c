@@ -207,10 +207,12 @@ int
 main(int argc, char **argv)
 {
   char *command_name;
+  int locale_ok;
 
-  if (!(setlocale (LC_ALL, "") && setlocale(LC_COLLATE, "C")))/* ANSI C says that all programs start by default in the standard `C' locale...   */ 
-    myerror(WARNING|NOERRNO, "could not set locale");         /* ... To use the locales specified by the environment, we must call  setlocale.  */
-                                                              /* LC_COLLATE = 'C' because we use character ranges  as byte ranges in regexps    */ 
+  locale_ok = (setlocale (LC_ALL, "") && setlocale(LC_COLLATE, "C"));
+  /* ANSI C says that all programs start by default in the standard `C' locale...   */ 
+  /* ... To use the locales specified by the environment, we must call  setlocale.  */
+  /* LC_COLLATE = 'C' because we use character ranges  as byte ranges in regexps    */ 
   
   run_unit_test(argc, argv,TEST_AT_PROGRAM_START);
   rlwrap_command_line = unsplit_with(argc, argv, " ");     
@@ -219,6 +221,8 @@ main(int argc, char **argv)
   /* Harvest options and leave optind pointing to first non-option argument: */
   command_name = read_options_and_command_name(argc, argv);
 
+  if (!locale_ok)
+    myerror(WARNING|NOERRNO, "could not set locale");
 
   /* by now, optind points to slave <command>, and &argv[optind] is <command>'s argv. Remember slave command line: */
   command_line = unsplit_with(argc - optind, argv + optind, " ");
